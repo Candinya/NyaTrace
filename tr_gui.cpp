@@ -91,7 +91,8 @@ void TR_GUI::on_startButton_clicked()
 void TR_GUI::Initialize() {
     // UI 相关初始化
     ui->startButton->setDisabled(true); // 锁定按钮
-     ui->statusbar->showMessage("正在初始化..."); // 提示初始化信息
+    ui->hostInput->setDisabled(true);   // 锁定输入框
+    ui->statusbar->showMessage("正在初始化..."); // 提示初始化信息
 
     // 清理表格数据
     hopResultsModel->clear();
@@ -124,5 +125,13 @@ void TR_GUI::CleanUp() {
     // UI 相关结束
     ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
     ui->startButton->setDisabled(false); // 解锁按钮
+    ui->hostInput->setDisabled(false);   // 解锁输入框
+}
+
+
+void TR_GUI::on_hostInput_returnPressed()
+{
+    // 按下回车，启动追踪
+    StartTracing();
 }
 

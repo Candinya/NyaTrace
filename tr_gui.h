@@ -18,6 +18,7 @@ public:
 
 private slots:
     void on_startButton_clicked();
+    void on_hostInput_returnPressed();
 
 private:
     Ui::TR_GUI *ui;
