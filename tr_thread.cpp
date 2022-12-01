@@ -341,8 +341,7 @@ void TRThread::run() {
 
             emit setMessage(
                 QString("开始追踪路由 %1 [%2] ，最大跃点数为 %3 。")
-                   .arg(hostCharString)
-                   .arg(inet_ntoa(*(in_addr *) (&ulDestIP)))
+                   .arg(hostCharString, inet_ntoa(*(in_addr *) (&ulDestIP)))
                    .arg(DEF_MAX_HOP)
             );
 
