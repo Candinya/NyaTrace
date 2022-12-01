@@ -348,7 +348,7 @@ void TRThread::run() {
         } else { // 主机名解析失败
             cerr << "Failed to resolve host with error: " << WSAGetLastError() << endl;
             emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(WSAGetLastError()));
-            WSACleanup();// 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+            WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
             return; // 结束
         }
     } else {
@@ -424,9 +424,6 @@ void TRThread::run() {
             sizeof(iTTL)
         ); // 为 0 （IPPROTO_IP) 的 raw socket 。用于接收任何的IP数据包。其中的校验和和协议分析由程序自己完成。
 
-        // 填充表格中关于当前跳数的序号项
-        //hopResultsModel->setItem(iTTL-1, 0, new QStandardItem(QString("%1").arg(iTTL)));
-
         // 填充 ICMP 数据报文的剩余字段
         ((ICMP_HEADER *) IcmpSendBuf)->cksum = 0;
         ((ICMP_HEADER *) IcmpSendBuf)->seq = htons(usSeqNo++); // 将无符号短整型主机字节序转换为网络字节序,将一个数的高低位互换, (如:12 34 --> 34 12)
@@ -488,7 +485,7 @@ void TRThread::run() {
                         bReachDestHost = TRUE;
                     }
 
-                    // 填充表格中关于当前跳数的耗时
+                    // 计算当前跳数的耗时
                     stDecodeResult.dwRoundTripTime = GetTickCount() - stDecodeResult.dwRoundTripTime;
                     if (stDecodeResult.dwRoundTripTime) {
                         timeConsumption = QString("%1 毫秒").arg(stDecodeResult.dwRoundTripTime);
@@ -496,7 +493,7 @@ void TRThread::run() {
                         timeConsumption = QString("小于 1 毫秒");
                     }
 
-                    // 填充表格中关于当前跳数的地址
+                    // 记录当前跳数的地址
                     ipAddress = QString("%1").arg(inet_ntoa(stDecodeResult.dwIPaddr));
 
                     // 在 City 数据库中查询当前 IP 对应信息
@@ -529,7 +526,7 @@ void TRThread::run() {
                     break;
                 }
             } else if (WSAGetLastError() == WSAETIMEDOUT) {
-                // 填充表格中关于当前跳数的时间
+                // 记录当前跳的情况：超时未响应
                 timeConsumption = QString("请求超时");
                 // 其余置空
                 ipAddress = QString("");
