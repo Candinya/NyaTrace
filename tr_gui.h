@@ -22,11 +22,11 @@ private slots:
 private:
     Ui::TR_GUI *ui;
 
-    void Initialize();
-    void StartTracing();
-    void CleanUp();
-
     QStandardItemModel* hopResultsModel;
 
+    void Initialize();
+    void CleanUp();
+
 };
+
 #endif // TR_GUI_H
