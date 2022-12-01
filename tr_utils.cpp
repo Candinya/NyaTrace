@@ -1,4 +1,4 @@
-#include "tr.h"
+#include "tr_utils.h"
 
 // 产生网际校验和
 USHORT GenerateChecksum(USHORT *pBuf, int iSize) { // 16

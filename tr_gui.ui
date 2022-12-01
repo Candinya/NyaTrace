@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>TR_GUI</string>
+   <string>TraceRoute GUI</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLineEdit" name="hostInput">

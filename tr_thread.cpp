@@ -4,7 +4,7 @@
 #include <ws2tcpip.h>
 #include <stdio.h>
 
-#include "tr.h"
+#include "tr_utils.h"
 #include "tr_thread.h"
 
 #pragma comment(lib, "ws2_32")

@@ -1,5 +1,5 @@
-#ifndef TR_H
-#define TR_H
+#ifndef TR_UTILS_H
+#define TR_UTILS_H
 
 #include <winsock2.h> // 类型定义
 
@@ -47,7 +47,8 @@ const int DEF_ICMP_DATA_SIZE = 32;     // 默认ICMP数据部分长度
 const int MAX_ICMP_PACKET_SIZE = 1024; // 最大ICMP数据报的大小
 const int DEF_MAX_HOP = 30;            // 最大跳站数
 
+// 工具函数
 USHORT GenerateChecksum(USHORT* pBuf, int iSize);
 BOOL DecodeIcmpResponse(char* pBuf, int iPacketSize, DECODE_RESULT& stDecodeResult);
 
-#endif // TR_H
+#endif // TR_UTILS_H

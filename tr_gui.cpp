@@ -7,7 +7,7 @@
 #include <ws2tcpip.h>
 #include <stdio.h>
 
-#include "tr.h"
+#include "tr_utils.h"
 #include "tr_thread.h"
 
 // #include <QThread>

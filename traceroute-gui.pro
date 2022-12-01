@@ -15,9 +15,9 @@ SOURCES += \
     tr_utils.cpp
 
 HEADERS += \
-    tr.h \
     tr_thread.h \
-    tr_gui.h
+    tr_gui.h \
+    tr_utils.h
 
 FORMS += \
     tr_gui.ui
