@@ -25,6 +25,7 @@ private:
     QStandardItemModel* hopResultsModel;
 
     void Initialize();
+    void StartTracing();
     void CleanUp();
 
 };

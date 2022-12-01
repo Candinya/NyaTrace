@@ -48,6 +48,7 @@ TR_GUI::TR_GUI(QWidget *parent)
 
         // 填充表格
         hopResultsModel->insertRow(ttl-1);
+
         hopResultsModel->setItem(ttl-1, 0, new QStandardItem(timeComnsumption));
         hopResultsModel->setItem(ttl-1, 1, new QStandardItem(ipAddress));
 
@@ -83,15 +84,7 @@ TR_GUI::~TR_GUI()
 void TR_GUI::on_startButton_clicked()
 {
 
-    // 初始化
-    Initialize();
-
-    // 设置主机地址
-    string hostStdString = ui->hostInput->text().toStdString();
-    tracingThread->hostname = hostStdString.c_str();
-
-    // 开始追踪
-    tracingThread->start();
+    StartTracing();
 
 }
 
@@ -113,6 +106,18 @@ void TR_GUI::Initialize() {
 
     // 更新状态
      ui->statusbar->showMessage("就绪"); // 提示初始化信息
+}
+
+void TR_GUI::StartTracing() {
+    // 初始化
+    Initialize();
+
+    // 设置主机地址
+    string hostStdString = ui->hostInput->text().toStdString();
+    tracingThread->hostname = hostStdString.c_str();
+
+    // 开始追踪
+    tracingThread->start();
 }
 
 void TR_GUI::CleanUp() {

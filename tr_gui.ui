@@ -10,6 +10,12 @@
     <height>576</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <family>Microsoft YaHei</family>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>TraceRoute GUI</string>
   </property>
@@ -22,6 +28,12 @@
       <width>911</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei</family>
+      <pointsize>12</pointsize>
+     </font>
     </property>
     <property name="placeholderText">
      <string>在这里输入地址</string>
@@ -36,8 +48,14 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
     <property name="text">
-     <string>开始！</string>
+     <string>开始</string>
     </property>
    </widget>
    <widget class="QTableView" name="hopsTable">
@@ -48,6 +66,12 @@
       <width>1001</width>
       <height>451</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei</family>
+      <pointsize>10</pointsize>
+     </font>
     </property>
     <property name="selectionMode">
      <enum>QAbstractItemView::SingleSelection</enum>
@@ -88,7 +112,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>20</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
