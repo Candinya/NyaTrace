@@ -9,13 +9,18 @@ class TRThread : public QThread
 
 public:
     TRThread(QObject *parent = nullptr);
+    ~TRThread();
     QString hostname;
 
 protected:
     void run() override;
 
 signals:
-    void setTTL(const int ttl, const QString &timeComnsumption, const QString &ipAddress);
+    void setHop(
+        const int ttl, const QString & timeComnsumption, const QString & ipAddress,
+        const QString & cityName, const QString & countryName, const double latitude, const double longitude,
+        const QString & isp, const QString & org, const uint & asn, const QString & asOrg
+    );
     void setMessage(const QString &msg);
     void finish();
 

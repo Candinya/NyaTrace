@@ -3,15 +3,299 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
+#include <direct.h>
 
 #include "tr_utils.h"
 #include "tr_thread.h"
 
+#include "maxminddb.h"
+//#include "maxminddb-compat-util.h"
+
+#include "mmdb_settings.h"
+
 #pragma comment(lib, "ws2_32")
 using namespace std;
 
+// 用于获得地址的 MMDB 数据库操作对象
+MMDB_s CityDB;
+MMDB_s ISPDB;
+
 TRThread::TRThread(QObject *parent) {
-    // Just do nothing
+    // 输出当前工作目录
+    cout << "Now working in: " << getcwd(NULL, 0) << endl;
+
+    // 初始化 MMDB 数据库操作对象
+    int openDatabaseStatus;
+    openDatabaseStatus = MMDB_open(GEOIP2_CITY_MMDB, MMDB_MODE_MMAP, &CityDB);
+    if (openDatabaseStatus != MMDB_SUCCESS) {
+        // Open failed
+        cerr << "Failed to open GeoIP2 City database from " << GEOIP2_CITY_MMDB
+             << " with error: " << MMDB_strerror(openDatabaseStatus)
+             << endl;
+    }
+    openDatabaseStatus = MMDB_open(GEOIP2_ISP_MMDB, MMDB_MODE_MMAP, &ISPDB);
+    if (openDatabaseStatus != MMDB_SUCCESS) {
+        // Open failed
+        cerr << "Failed to open GeoIP2 ISP database from " << GEOIP2_ISP_MMDB
+             << " with error: " << MMDB_strerror(openDatabaseStatus)
+             << endl;
+    }
+
+}
+
+TRThread::~TRThread() {
+    // 关闭 MMDB
+    MMDB_close(&CityDB);
+    MMDB_close(&ISPDB);
+}
+
+// 工具函数：复制指定长度的字符串
+// 我就纳闷了为什么直接用 "maxminddb-compat-util.h" 里面的会报指针类型错误，
+// 是因为 C++ 调用了 C ，您可能是升级版的受害者么
+char * strndup(const char *str, size_t n) {
+    size_t len;
+    char * copy;
+
+    len = strnlen(str, n);
+    if ((copy = (char*)malloc(len + 1)) == NULL)
+        return (NULL);
+    memcpy(copy, str, len);
+    copy[len] = '\0';
+    return (copy);
+}
+
+
+// 工具函数：在 MMDB 中查询 IP 对应的城市信息
+bool LookUpIPCityInfo(
+    const char * ip_address,
+    QString & cityName,
+    QString & countryName,
+    double  & latitude,
+    double  & longitude
+) {
+    int getAddressInfoStatus, mmdbStatus;
+    MMDB_lookup_result_s city_result = MMDB_lookup_string(&CityDB, ip_address, &getAddressInfoStatus, &mmdbStatus);
+    if (getAddressInfoStatus != 0) {
+        // 查询失败，地址无效
+        cerr << "Failed to get address info with error: "
+             << gai_strerror(getAddressInfoStatus)
+             << endl;
+        return false;
+    }
+    if (mmdbStatus != MMDB_SUCCESS) {
+        cerr << "Failed to search from database with error: "
+             << MMDB_strerror(mmdbStatus)
+             << endl;
+        return false;
+    }
+
+    // 似乎没有遇到大问题
+    if (city_result.found_entry) {
+//        // ！！！！调试：这里会输出所有的数据，方便调试，实际生产时候请注释掉这些
+//        MMDB_entry_data_list_s * cityEntryDataList = NULL;
+//        int getEntryDataListStatus = MMDB_get_entry_data_list(&city_result.entry, &cityEntryDataList);
+//        if (getEntryDataListStatus != MMDB_SUCCESS) {
+//            // 失败了
+//            cerr << "Failed to retrieve data with error: "
+//                 << MMDB_strerror(getEntryDataListStatus)
+//                 << endl;
+//        } else {
+//            // 打印所有数据
+//            MMDB_dump_entry_data_list(stdout, cityEntryDataList, 2);
+//        }
+//        // ！！！！结束调试
+
+        // 成功查询，接收数据
+        MMDB_entry_data_s
+            cityEntryData_cityName,
+            cityEntryData_countryName,
+            cityEntryData_latitude,
+            cityEntryData_longitude
+        ;
+        int getEntryDataStatus;
+
+        // 城市名
+        getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_cityName, "city", "names", GEOIP2_NAME_LANG, NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve city name data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            cityName = QString("未知");
+        } else {
+            cout << "Get city name successfully." << endl;
+            cityName = QString(strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size));
+        }
+
+        // 国名
+        getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_countryName, "country", "names", GEOIP2_NAME_LANG, NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve country name data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            countryName = QString("未知");
+        } else {
+            cout << "Get country name successfully." << endl;
+            countryName = QString(strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size));
+        }
+
+        // 纬度
+        getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_latitude, "location", "latitude", NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve latitude data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            latitude = 0.0;
+        } else {
+            cout << "Get latitude successfully: " << cityEntryData_latitude.double_value << endl;
+            latitude = cityEntryData_latitude.double_value;
+        }
+
+        // 经度
+        getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_longitude, "location", "longitude", NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve longitude data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            longitude = 0.0;
+        } else {
+            cout << "Get longitude successfully: " << cityEntryData_longitude.double_value << endl;
+            longitude = cityEntryData_longitude.double_value;
+        }
+
+        return true;
+
+
+    } else {
+        // 查询失败，没找到结果，可能是本地地址
+        cerr << "No entry found for IP: "
+             << ip_address
+             << endl;
+        // return false;
+        cityName    = QString("私有地址");
+        countryName = QString("");
+        return true;
+    }
+}
+
+// 工具函数：在 MMDB 中查询 IP 对应的ISP信息
+bool LookUpIPISPInfo(
+    const char * ip_address,
+    QString & isp,
+    QString & org,
+    uint    & asn,
+    QString & asOrg
+) {
+    int getAddressInfoStatus, mmdbStatus;
+    MMDB_lookup_result_s isp_result = MMDB_lookup_string(&ISPDB, ip_address, &getAddressInfoStatus, &mmdbStatus);
+    if (getAddressInfoStatus != 0) {
+        // 查询失败，地址无效
+        cerr << "Failed to get address info with error: "
+             << gai_strerror(getAddressInfoStatus)
+             << endl;
+        return false;
+    }
+    if (mmdbStatus != MMDB_SUCCESS) {
+        cerr << "Failed to search from database with error: "
+             << MMDB_strerror(mmdbStatus)
+             << endl;
+        return false;
+    }
+
+    // 似乎没有遇到大问题
+    if (isp_result.found_entry) {
+//        // ！！！！调试：这里会输出所有的数据，方便调试，实际生产时候请注释掉这些
+//        MMDB_entry_data_list_s * ispEntryDataList = NULL;
+//        int getEntryDataListStatus = MMDB_get_entry_data_list(&isp_result.entry, &ispEntryDataList);
+//        if (getEntryDataListStatus != MMDB_SUCCESS) {
+//            // 失败了
+//            cerr << "Failed to retrieve data with error: "
+//                 << MMDB_strerror(getEntryDataListStatus)
+//                 << endl;
+//        } else {
+//            // 打印所有数据
+//            MMDB_dump_entry_data_list(stdout, ispEntryDataList, 2);
+//        }
+//        // ！！！！结束调试
+
+        // 成功查询，接收数据
+        MMDB_entry_data_s
+            ispEntryData_isp,
+            ispEntryData_org,
+            ispEntryData_asn,
+            ispEntryData_asOrg
+        ;
+        int getEntryDataStatus;
+
+        // ISP 名字
+        getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_isp, "isp", NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve isp name data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            isp = QString("未知");
+        } else {
+            cout << "Get isp name successfully." << endl;
+            isp = QString(strndup(ispEntryData_isp.utf8_string, ispEntryData_isp.data_size));
+        }
+
+        // 组织
+        getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_org, "organization", NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve organization data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            org = QString("未知");
+        } else {
+            cout << "Get organization successfully." << endl;
+            org = QString(strndup(ispEntryData_org.utf8_string, ispEntryData_org.data_size));
+        }
+
+        // ASN
+        getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_asn, "autonomous_system_number", NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve autonomous system number data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            asn = 0;
+        } else {
+            cout << "Get autonomous system number successfully." << endl;
+            asn = ispEntryData_asn.uint32;
+        }
+
+        // AS 组织
+        getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_asOrg, "autonomous_system_organization", NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            cerr << "Failed to retrieve autonomous system organization data with error: "
+                 << MMDB_strerror(getEntryDataStatus)
+                 << endl;
+            asOrg = QString("未知");
+        } else {
+            cout << "Get autonomous system organization successfully." << endl;
+            asOrg = QString(strndup(ispEntryData_asOrg.utf8_string, ispEntryData_asOrg.data_size));
+        }
+
+
+        return true;
+    } else {
+        // 查询失败，没找到结果，可能是本地地址
+        cerr << "No entry found for IP: "
+             << ip_address
+             << endl;
+        // return false;
+        isp = QString("私有地址");
+        org  = QString("");
+        asOrg   = QString("");
+        return true;
+    }
+
 }
 
 void TRThread::run() {
@@ -161,8 +445,22 @@ void TRThread::run() {
         int iFromLen = sizeof(from);
         int iReadDataLen;
 
+        // 准备用于返回的结果
         QString timeConsumption;
         QString ipAddress;
+
+        // 准备从 City 数据库中查询结果
+        QString cityName;
+        QString countryName;
+        double  latitude  = 0.0;
+        double  longitude = 0.0;
+
+        // 准备从 ISP 数据库中查询结果
+        QString isp;
+        QString org;
+        uint    asn = 0;
+        QString asOrg;
+
 
         while (true) {
             // 等待数据到达
@@ -184,25 +482,55 @@ void TRThread::run() {
                     // 填充表格中关于当前跳数的耗时
                     stDecodeResult.dwRoundTripTime = GetTickCount() - stDecodeResult.dwRoundTripTime;
                     if (stDecodeResult.dwRoundTripTime) {
-                        //hopResultsModel->setItem(iTTL-1, 1, new QStandardItem(QString("%1 毫秒").arg(stDecodeResult.dwRoundTripTime)));
                         timeConsumption = QString("%1 毫秒").arg(stDecodeResult.dwRoundTripTime);
                     } else {
-                        //hopResultsModel->setItem(iTTL-1, 1, new QStandardItem(QString("小于 1 毫秒")));
                         timeConsumption = QString("小于 1 毫秒");
                     }
 
                     // 填充表格中关于当前跳数的地址
-                    //hopResultsModel->setItem(iTTL-1, 2, new QStandardItem(QString("%1").arg(inet_ntoa(stDecodeResult.dwIPaddr)))); // 将网络地址转换成“.”点隔的字符串格式
                     ipAddress = QString("%1").arg(inet_ntoa(stDecodeResult.dwIPaddr));
+
+                    // 在 City 数据库中查询当前 IP 对应信息
+                    if (!LookUpIPCityInfo(
+                        inet_ntoa(stDecodeResult.dwIPaddr),
+                        cityName,
+                        countryName,
+                        latitude,
+                        longitude
+                    )) {
+                        // 查询失败，使用填充字符
+                        cityName    = QString("未知");
+                        countryName = QString("");
+                    }
+
+                    // 在 ISP 数据库中查询当前 IP 对应信息
+                    if (!LookUpIPISPInfo(
+                        inet_ntoa(stDecodeResult.dwIPaddr),
+                        isp,
+                        org,
+                        asn,
+                        asOrg
+                    )) {
+                        // 查询失败，使用填充字符
+                        isp  = QString("未知");
+                        org   = QString("");
+                        asOrg = QString("未知");
+                    }
+
                     break;
                 }
             } else if (WSAGetLastError() == WSAETIMEDOUT) {
                 // 填充表格中关于当前跳数的时间
-                //hopResultsModel->setItem(iTTL-1, 1, new QStandardItem(QString("*"))); // 超时
                 timeConsumption = QString("*");
                 // 填充表格中关于当前跳数的地址
-                //hopResultsModel->setItem(iTTL-1, 2, new QStandardItem(QString("请求超时")));
                 ipAddress = QString("请求超时");
+                // 其余置空
+                cityName = QString("");
+                countryName = QString("");
+
+                isp  = QString("");
+                org   = QString("");
+                asOrg = QString("");
                 break;
             } else {
                 cerr << "Failed to call recvFrom with error: " << WSAGetLastError() << endl;
@@ -214,10 +542,11 @@ void TRThread::run() {
         }
 
         // 更新进度条数据
-        emit setTTL(iTTL, timeConsumption, ipAddress);
-
-        // 刷新表格数据
-        //ui->hopsTable->show();
+        emit setHop(
+            iTTL, timeConsumption, ipAddress,           // 基础信息
+            cityName, countryName, latitude, longitude, // GeoIP2 City
+            isp, org, asn, asOrg                        // GeoIP2 ISP
+        );
 
     }
 

@@ -10,10 +10,9 @@
 #include "tr_utils.h"
 #include "tr_thread.h"
 
-// #include <QThread>
-
 using namespace std;
 
+// 用于路由追踪的子线程
 TRThread * tracingThread;
 
 TR_GUI::TR_GUI(QWidget *parent)
@@ -39,15 +38,28 @@ TR_GUI::TR_GUI(QWidget *parent)
     // 建立路由追踪线程
     tracingThread = new TRThread(this);
 
-    connect(tracingThread, &TRThread::setTTL, this, [=](int ttl, QString timeComnsumption, QString ipAddress) {
+    connect(tracingThread, &TRThread::setHop, this, [=](
+        const int ttl, const QString & timeComnsumption, const QString & ipAddress,
+        const QString & cityName, const QString & countryName, const double latitude, const double longitude,
+        const QString & isp, const QString & org, const uint & asn, const QString & asOrg
+    ) {
         // 更新进度
         ui->tracingProgress->setValue(ttl);
 
         // 填充表格
         hopResultsModel->insertRow(ttl-1);
-        hopResultsModel->setItem(ttl-1, 0, new QStandardItem(QString("%1").arg(ttl)));
-        hopResultsModel->setItem(ttl-1, 1, new QStandardItem(timeComnsumption));
-        hopResultsModel->setItem(ttl-1, 2, new QStandardItem(ipAddress));
+        hopResultsModel->setItem(ttl-1, 0, new QStandardItem(timeComnsumption));
+        hopResultsModel->setItem(ttl-1, 1, new QStandardItem(ipAddress));
+
+        hopResultsModel->setItem(ttl-1, 2, new QStandardItem(cityName));
+        hopResultsModel->setItem(ttl-1, 3, new QStandardItem(countryName));
+        hopResultsModel->setItem(ttl-1, 4, new QStandardItem(QString("%1").arg(latitude)));
+        hopResultsModel->setItem(ttl-1, 5, new QStandardItem(QString("%1").arg(longitude)));
+
+        hopResultsModel->setItem(ttl-1, 6, new QStandardItem(isp));
+        hopResultsModel->setItem(ttl-1, 7, new QStandardItem(org));
+        hopResultsModel->setItem(ttl-1, 8, new QStandardItem(QString("AS %1").arg(asn)));
+        hopResultsModel->setItem(ttl-1, 9, new QStandardItem(asOrg));
     });
 
     connect(tracingThread, &TRThread::setMessage, this, [=](QString msg) {
@@ -59,18 +71,6 @@ TR_GUI::TR_GUI(QWidget *parent)
         // 完成追踪
         CleanUp();
     });
-
-//    connect(ui->startButton, &QPushButton::clicked, this, [=]() {
-//        // 初始化
-//        Initialize();
-
-//        // 设置主机地址
-//        string hostStdString = ui->hostInput->text().toStdString();
-//        tracingThread->hostCharString = hostStdString.c_str();
-
-//        // 开始追踪
-//        tracingThread->start();
-//    });
 }
 
 TR_GUI::~TR_GUI()
@@ -104,7 +104,7 @@ void TR_GUI::Initialize() {
     hopResultsModel->clear();
 
     // 构建表头
-    QStringList hopResultLables = QObject::trUtf8("跳数,时间,地址").simplified().split(",");
+    QStringList hopResultLables = QObject::trUtf8("时间,地址,城市,国,纬度,经度,ISP,组织,ASN,AS组织").simplified().split(",");
     hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 重置进度条
