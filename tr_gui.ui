@@ -80,7 +80,7 @@
      <enum>QAbstractItemView::SelectRows</enum>
     </property>
     <attribute name="verticalHeaderVisible">
-     <bool>false</bool>
+     <bool>true</bool>
     </attribute>
    </widget>
    <widget class="QProgressBar" name="tracingProgress">
