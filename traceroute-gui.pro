@@ -32,6 +32,13 @@ FORMS += \
 LIBS += \
     -lws2_32
 
+RC_ICONS += \
+    icon.ico
+
+TARGET = NyaTrace
+
+VERSION = 0.1.0.0
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
