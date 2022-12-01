@@ -521,10 +521,10 @@ void TRThread::run() {
                 }
             } else if (WSAGetLastError() == WSAETIMEDOUT) {
                 // 填充表格中关于当前跳数的时间
-                timeConsumption = QString("*");
-                // 填充表格中关于当前跳数的地址
-                ipAddress = QString("请求超时");
+                timeConsumption = QString("请求超时");
                 // 其余置空
+                ipAddress = QString("");
+
                 cityName = QString("");
                 countryName = QString("");
 
