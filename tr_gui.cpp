@@ -68,7 +68,7 @@ TR_GUI::TR_GUI(QWidget *parent)
         ui->statusbar->showMessage(msg);
     });
 
-    connect(tracingThread, &TRThread::finish, this, [=]() {
+    connect(tracingThread, &TRThread::finished, this, [=]() {
         // 完成追踪
         CleanUp();
     });
@@ -81,17 +81,25 @@ TR_GUI::~TR_GUI()
 }
 
 
-void TR_GUI::on_startButton_clicked()
+void TR_GUI::on_startStopButton_clicked()
 {
 
-    StartTracing();
+    if (tracingThread->isRunning()) {
+        // 中止按钮
+        cout << "Tracing process is running, abort it..." << endl;
+        AbortTracing();
+    } else {
+        cout << "Tracing process is not running, starting it..." << endl;
+        // 开始按钮
+        StartTracing();
+    }
 
 }
 
 void TR_GUI::Initialize() {
     // UI 相关初始化
-    ui->startButton->setDisabled(true); // 锁定按钮
-    ui->hostInput->setDisabled(true);   // 锁定输入框
+    ui->startStopButton->setText("中止"); // 锁定按钮
+    ui->hostInput->setDisabled(true);    // 锁定输入框
     ui->statusbar->showMessage("正在初始化..."); // 提示初始化信息
 
     // 清理表格数据
@@ -121,10 +129,18 @@ void TR_GUI::StartTracing() {
     tracingThread->start();
 }
 
+void TR_GUI::AbortTracing() {
+    // 中止追踪进程
+    tracingThread->terminate();
+
+    // 设置提示信息
+    ui->statusbar->showMessage("用户中止追踪进程");
+}
+
 void TR_GUI::CleanUp() {
     // UI 相关结束
     ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
-    ui->startButton->setDisabled(false); // 解锁按钮
+    ui->startStopButton->setText("开始"); // 解锁按钮
     ui->hostInput->setDisabled(false);   // 解锁输入框
 }
 

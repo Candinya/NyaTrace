@@ -22,7 +22,6 @@ signals:
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     );
     void setMessage(const QString &msg);
-    void finish();
 
 public slots:
 

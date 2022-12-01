@@ -17,7 +17,7 @@ public:
     ~TR_GUI();
 
 private slots:
-    void on_startButton_clicked();
+    void on_startStopButton_clicked();
     void on_hostInput_returnPressed();
 
 private:
@@ -27,6 +27,7 @@ private:
 
     void Initialize();
     void StartTracing();
+    void AbortTracing();
     void CleanUp();
 
 };
