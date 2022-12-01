@@ -124,7 +124,9 @@ bool LookUpIPCityInfo(
             cityName = QString("未知");
         } else {
             cout << "Get city name successfully." << endl;
-            cityName = QString(strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size));
+            auto cityNameStr = strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size);
+            cityName = QString(cityNameStr);
+            free(cityNameStr);
         }
 
         // 国名
@@ -137,7 +139,9 @@ bool LookUpIPCityInfo(
             countryName = QString("未知");
         } else {
             cout << "Get country name successfully." << endl;
-            countryName = QString(strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size));
+            auto countryNameStr = strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size);
+            countryName = QString(countryNameStr);
+            free(countryNameStr);
         }
 
         // 纬度
@@ -240,7 +244,9 @@ bool LookUpIPISPInfo(
             isp = QString("未知");
         } else {
             cout << "Get isp name successfully." << endl;
-            isp = QString(strndup(ispEntryData_isp.utf8_string, ispEntryData_isp.data_size));
+            auto ispStr = strndup(ispEntryData_isp.utf8_string, ispEntryData_isp.data_size);
+            isp = QString(ispStr);
+            free(ispStr);
         }
 
         // 组织
@@ -253,7 +259,9 @@ bool LookUpIPISPInfo(
             org = QString("未知");
         } else {
             cout << "Get organization successfully." << endl;
-            org = QString(strndup(ispEntryData_org.utf8_string, ispEntryData_org.data_size));
+            auto orgStr = strndup(ispEntryData_org.utf8_string, ispEntryData_org.data_size);
+            org = QString(orgStr);
+            free(orgStr);
         }
 
         // ASN
@@ -279,7 +287,9 @@ bool LookUpIPISPInfo(
             asOrg = QString("未知");
         } else {
             cout << "Get autonomous system organization successfully." << endl;
-            asOrg = QString(strndup(ispEntryData_asOrg.utf8_string, ispEntryData_asOrg.data_size));
+            auto asOrgStr = strndup(ispEntryData_asOrg.utf8_string, ispEntryData_asOrg.data_size);
+            asOrg = QString(asOrgStr);
+            free(asOrgStr);
         }
 
 
