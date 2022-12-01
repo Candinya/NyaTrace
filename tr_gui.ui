@@ -17,7 +17,11 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>TraceRoute GUI</string>
+   <string>NyaTrace</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon.ico</normaloff>icon.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
