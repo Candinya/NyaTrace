@@ -59,7 +59,8 @@ bool IPDB::LookUpIPCityInfo(
     QString & cityName,
     QString & countryName,
     double  & latitude,
-    double  & longitude
+    double  & longitude,
+    bool    & isLocationValid
 ) {
     int getAddressInfoStatus, mmdbStatus;
     MMDB_lookup_result_s city_result = MMDB_lookup_string(&CityDB, ip_address, &getAddressInfoStatus, &mmdbStatus);
@@ -132,6 +133,9 @@ bool IPDB::LookUpIPCityInfo(
             free(countryNameStr);
         }
 
+        // 先认为经纬度信息是有效的
+        isLocationValid = true;
+
         // 纬度
         getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_latitude, "location", "latitude", NULL);
         if (getEntryDataStatus != MMDB_SUCCESS) {
@@ -140,6 +144,8 @@ bool IPDB::LookUpIPCityInfo(
                  << MMDB_strerror(getEntryDataStatus)
                  << endl;
             latitude = 0.0;
+            // 但其实是无效的
+            isLocationValid = false;
         } else {
             cout << "Get latitude successfully: " << cityEntryData_latitude.double_value << endl;
             latitude = cityEntryData_latitude.double_value;
@@ -153,6 +159,8 @@ bool IPDB::LookUpIPCityInfo(
                  << MMDB_strerror(getEntryDataStatus)
                  << endl;
             longitude = 0.0;
+            // 但其实是无效的
+            isLocationValid = false;
         } else {
             cout << "Get longitude successfully: " << cityEntryData_longitude.double_value << endl;
             longitude = cityEntryData_longitude.double_value;
@@ -169,6 +177,8 @@ bool IPDB::LookUpIPCityInfo(
         // return false;
         cityName    = QString("私有地址");
         countryName = QString("");
+        // 其实是无效的
+        isLocationValid = false;
         return true;
     }
 }

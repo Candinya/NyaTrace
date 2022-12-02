@@ -29,7 +29,8 @@ public:
         QString & cityName,
         QString & countryName,
         double  & latitude,
-        double  & longitude
+        double  & longitude,
+        bool    & isLocationValid
     );
 
     bool LookUpIPISPInfo(

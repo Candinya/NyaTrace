@@ -40,7 +40,7 @@ TR_GUI::TR_GUI(QWidget *parent)
 
     connect(tracingThread, &TRThread::setHop, this, [=](
         const int ttl, const QString & timeComnsumption, const QString & ipAddress,
-        const QString & cityName, const QString & countryName, const double latitude, const double longitude,
+        const QString & cityName, const QString & countryName, const double latitude, const double longitude, const bool isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     ) {
         // 更新进度
@@ -54,12 +54,21 @@ TR_GUI::TR_GUI(QWidget *parent)
 
         hopResultsModel->setItem(ttl-1, 2, new QStandardItem(cityName));
         hopResultsModel->setItem(ttl-1, 3, new QStandardItem(countryName));
-        hopResultsModel->setItem(ttl-1, 4, new QStandardItem(QString("%1").arg(latitude)));
-        hopResultsModel->setItem(ttl-1, 5, new QStandardItem(QString("%1").arg(longitude)));
+
+        if (isLocationValid) {
+            // 仅在有效的情况下设置纬度和经度数据（之后为地图服务）
+            hopResultsModel->setItem(ttl-1, 4, new QStandardItem(QString("%1").arg(latitude)));
+            hopResultsModel->setItem(ttl-1, 5, new QStandardItem(QString("%1").arg(longitude)));
+        }
 
         hopResultsModel->setItem(ttl-1, 6, new QStandardItem(isp));
         hopResultsModel->setItem(ttl-1, 7, new QStandardItem(org));
-        hopResultsModel->setItem(ttl-1, 8, new QStandardItem(QString("AS %1").arg(asn)));
+
+        if (asn != 0) {
+            // 仅在有效的情况下设置 ASN 数据
+            hopResultsModel->setItem(ttl-1, 8, new QStandardItem(QString("AS %1").arg(asn)));
+        }
+
         hopResultsModel->setItem(ttl-1, 9, new QStandardItem(asOrg));
     });
 

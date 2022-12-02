@@ -176,6 +176,7 @@ void TRThread::run() {
         QString countryName;
         double  latitude  = 0.0;
         double  longitude = 0.0;
+        bool    isLocationValid = true;
 
         // 准备从 ISP 数据库中查询结果
         QString isp;
@@ -218,11 +219,13 @@ void TRThread::run() {
                         cityName,
                         countryName,
                         latitude,
-                        longitude
+                        longitude,
+                        isLocationValid
                     )) {
                         // 查询失败，使用填充字符
                         cityName    = QString("未知");
                         countryName = QString("");
+                        isLocationValid = false;
                     }
 
                     // 在 ISP 数据库中查询当前 IP 对应信息
@@ -250,6 +253,8 @@ void TRThread::run() {
                 cityName = QString("");
                 countryName = QString("");
 
+                isLocationValid = false;
+
                 isp  = QString("");
                 org   = QString("");
                 asOrg = QString("");
@@ -265,9 +270,9 @@ void TRThread::run() {
 
         // 更新进度条数据
         emit setHop(
-            iTTL, timeConsumption, ipAddress,           // 基础信息
-            cityName, countryName, latitude, longitude, // GeoIP2 City
-            isp, org, asn, asOrg                        // GeoIP2 ISP
+            iTTL, timeConsumption, ipAddress,                            // 基础信息
+            cityName, countryName, latitude, longitude, isLocationValid, // GeoIP2 City
+            isp, org, asn, asOrg                                         // GeoIP2 ISP
         );
 
     }

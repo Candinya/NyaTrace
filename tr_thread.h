@@ -25,7 +25,7 @@ private:
 signals:
     void setHop(
         const int ttl, const QString & timeComnsumption, const QString & ipAddress,
-        const QString & cityName, const QString & countryName, const double latitude, const double longitude,
+        const QString & cityName, const QString & countryName, const double latitude, const double longitude, const bool isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     );
     void setMessage(const QString &msg);
