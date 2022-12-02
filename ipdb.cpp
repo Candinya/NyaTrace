@@ -9,7 +9,7 @@ using namespace std;
 
 IPDB::IPDB() { // 构造函数
     // 输出当前工作目录
-    cout << "Now working in: " << getcwd(NULL, 0) << endl;
+    cout << "Now working in: " << _getcwd(NULL, 0) << endl;
 
     // 初始化 MMDB 数据库操作对象
     int openDatabaseStatus;
