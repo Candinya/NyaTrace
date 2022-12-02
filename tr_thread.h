@@ -12,6 +12,8 @@ class TRThread : public QThread
 public:
     TRThread(QObject *parent = nullptr);
     ~TRThread();
+
+    // 共享变量，需要这个作为传入参数
     QString hostname;
 
 protected:
