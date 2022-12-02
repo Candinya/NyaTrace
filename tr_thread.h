@@ -3,6 +3,8 @@
 
 #include <QThread>
 
+#include "tr_utils.h"
+
 class TRThread : public QThread
 {
     Q_OBJECT
@@ -14,6 +16,11 @@ public:
 
 protected:
     void run() override;
+
+private:
+    // 工具函数
+    USHORT GenerateChecksum(USHORT* pBuf, int iSize);
+    BOOL DecodeIcmpResponse(char* pBuf, int iPacketSize, DECODE_RESULT& stDecodeResult);
 
 signals:
     void setHop(

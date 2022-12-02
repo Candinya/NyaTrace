@@ -1,7 +1,7 @@
-#include "tr_utils.h"
+#include "tr_thread.h"
 
 // 产生网际校验和
-USHORT GenerateChecksum(USHORT *pBuf, int iSize) { // 16
+USHORT TRThread::GenerateChecksum(USHORT *pBuf, int iSize) { // 16
     unsigned long cksum = 0;// 32
     while (iSize > 1) { // 40
         cksum += *pBuf++;
@@ -16,7 +16,7 @@ USHORT GenerateChecksum(USHORT *pBuf, int iSize) { // 16
 }
 
 // 解码得到的数据报，因为涉及到 UI 操作所以放到 TR_GUI 里
-BOOL DecodeIcmpResponse(char *pBuf, int iPacketSize, DECODE_RESULT &stDecodeResult) {
+BOOL TRThread::DecodeIcmpResponse(char *pBuf, int iPacketSize, DECODE_RESULT &stDecodeResult) {
 
     // 检查数据报大小的合法性
     IP_HEADER *pIpHdr = (IP_HEADER *) pBuf;
