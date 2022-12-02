@@ -14,8 +14,7 @@ SOURCES += \
     maxminddb.c \
     tr_thread.cpp \
     tr_gui.cpp \
-    main.cpp \
-    tr_utils.cpp
+    main.cpp
 
 HEADERS += \
     data-pool.h \
