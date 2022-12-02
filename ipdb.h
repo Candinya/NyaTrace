@@ -42,4 +42,6 @@ public:
     );
 };
 
+//#define IPDB_PRINT_ALL
+
 #endif // IPDB_H

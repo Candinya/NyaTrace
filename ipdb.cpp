@@ -80,20 +80,21 @@ bool IPDB::LookUpIPCityInfo(
 
     // 似乎没有遇到大问题
     if (city_result.found_entry) {
-//        // ！！！！调试：这里会输出所有的数据，方便调试，实际生产时候请注释掉这些
-//        MMDB_entry_data_list_s * cityEntryDataList = NULL;
-//        int getEntryDataListStatus = MMDB_get_entry_data_list(&city_result.entry, &cityEntryDataList);
-//        if (getEntryDataListStatus != MMDB_SUCCESS) {
-//            // 失败了
-//            cerr << "Failed to retrieve data with error: "
-//                 << MMDB_strerror(getEntryDataListStatus)
-//                 << endl;
-//        } else {
-//            // 打印所有数据
-//            MMDB_dump_entry_data_list(stdout, cityEntryDataList, 2);
-//        }
-//        // ！！！！结束调试
-
+#ifdef IPDB_PRINT_ALL
+        // ！！！！调试：这里会输出所有的数据，方便调试，实际生产时候请注释掉这些
+        MMDB_entry_data_list_s * cityEntryDataList = NULL;
+        int getEntryDataListStatus = MMDB_get_entry_data_list(&city_result.entry, &cityEntryDataList);
+        if (getEntryDataListStatus != MMDB_SUCCESS) {
+            // 失败了
+            cerr << "Failed to retrieve data with error: "
+                 << MMDB_strerror(getEntryDataListStatus)
+                 << endl;
+        } else {
+            // 打印所有数据
+            MMDB_dump_entry_data_list(stdout, cityEntryDataList, 2);
+        }
+        // ！！！！结束调试
+#endif
         // 成功查询，接收数据
         MMDB_entry_data_s
             cityEntryData_cityName,
@@ -209,20 +210,21 @@ bool IPDB::LookUpIPISPInfo(
 
     // 似乎没有遇到大问题
     if (isp_result.found_entry) {
-//        // ！！！！调试：这里会输出所有的数据，方便调试，实际生产时候请注释掉这些
-//        MMDB_entry_data_list_s * ispEntryDataList = NULL;
-//        int getEntryDataListStatus = MMDB_get_entry_data_list(&isp_result.entry, &ispEntryDataList);
-//        if (getEntryDataListStatus != MMDB_SUCCESS) {
-//            // 失败了
-//            cerr << "Failed to retrieve data with error: "
-//                 << MMDB_strerror(getEntryDataListStatus)
-//                 << endl;
-//        } else {
-//            // 打印所有数据
-//            MMDB_dump_entry_data_list(stdout, ispEntryDataList, 2);
-//        }
-//        // ！！！！结束调试
-
+#ifdef IPDB_PRINT_ALL
+        // ！！！！调试：这里会输出所有的数据，方便调试，实际生产时候请注释掉这些
+        MMDB_entry_data_list_s * ispEntryDataList = NULL;
+        int getEntryDataListStatus = MMDB_get_entry_data_list(&isp_result.entry, &ispEntryDataList);
+        if (getEntryDataListStatus != MMDB_SUCCESS) {
+            // 失败了
+            cerr << "Failed to retrieve data with error: "
+                 << MMDB_strerror(getEntryDataListStatus)
+                 << endl;
+        } else {
+            // 打印所有数据
+            MMDB_dump_entry_data_list(stdout, ispEntryDataList, 2);
+        }
+        // ！！！！结束调试
+#endif
         // 成功查询，接收数据
         MMDB_entry_data_s
             ispEntryData_isp,
