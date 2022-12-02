@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     data-pool.c \
+    ipdb.cpp \
     maxminddb.c \
     tr_thread.cpp \
     tr_gui.cpp \
@@ -18,6 +19,7 @@ SOURCES += \
 
 HEADERS += \
     data-pool.h \
+    ipdb.h \
     maxminddb-compat-util.h \
     maxminddb.h \
     maxminddb_config.h \
