@@ -36,7 +36,7 @@ TR_GUI::TR_GUI(QWidget *parent)
     cout << "Main thread: " << QThread::currentThread() << endl;
 
     // 建立路由追踪线程
-    tracingThread = new TRThread(this);
+    tracingThread = new TRThread;
 
     connect(tracingThread, &TRThread::setHop, this, [=](
         const int ttl, const QString & timeComnsumption, const QString & ipAddress,
