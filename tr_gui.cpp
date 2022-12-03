@@ -142,7 +142,7 @@ void TR_GUI::AbortTracing() {
     // 中止追踪进程
     //tracingThread->terminate();
     tracingThread->isStopping = true; // 正在中止进程
-    ui->startStopButton->setDisabled(true); // 禁用按钮以放置多次触发
+    ui->startStopButton->setDisabled(true); // 禁用按钮以防止多次触发
 
     // 设置提示信息
     ui->statusbar->showMessage("正在回收最后一包...");
