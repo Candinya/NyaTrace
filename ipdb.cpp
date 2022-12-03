@@ -105,33 +105,45 @@ bool IPDB::LookUpIPCityInfo(
         int getEntryDataStatus;
 
         // 城市名
-        getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_cityName, "city", "names", GEOIP2_NAME_LANG, NULL);
-        if (getEntryDataStatus != MMDB_SUCCESS) {
-            // 还是失败了
+        if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_cityName, "city", "names", "zh-CN", NULL)) == MMDB_SUCCESS) {
+            // 获得中文名
+            cout << "Get city zh-CN name successfully." << endl;
+            auto cityNameStr = strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size);
+            cityName = QString(cityNameStr);
+            free(cityNameStr);
+        } else if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_cityName, "city", "names", "en", NULL)) == MMDB_SUCCESS) {
+            // 获得英文名
+            cout << "Get city en name successfully." << endl;
+            auto cityNameStr = strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size);
+            cityName = QString(cityNameStr);
+            free(cityNameStr);
+        } else {
+            // 失败了
             cerr << "Failed to retrieve city name data with error: "
                  << MMDB_strerror(getEntryDataStatus)
                  << endl;
             cityName = QString("未知");
-        } else {
-            cout << "Get city name successfully." << endl;
-            auto cityNameStr = strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size);
-            cityName = QString(cityNameStr);
-            free(cityNameStr);
         }
 
         // 国名
-        getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_countryName, "country", "names", GEOIP2_NAME_LANG, NULL);
-        if (getEntryDataStatus != MMDB_SUCCESS) {
-            // 还是失败了
+        if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_countryName, "country", "names", "zh-CN", NULL)) == MMDB_SUCCESS) {
+            // 获得中文名
+            cout << "Get country zh-CN name successfully." << endl;
+            auto countryNameStr = strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size);
+            countryName = QString(countryNameStr);
+            free(countryNameStr);
+        } else if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_countryName, "country", "names", "en", NULL)) == MMDB_SUCCESS) {
+            // 获得英文名
+            cout << "Get country en name successfully." << endl;
+            auto countryNameStr = strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size);
+            countryName = QString(countryNameStr);
+            free(countryNameStr);
+        } else {
+            // 失败了
             cerr << "Failed to retrieve country name data with error: "
                  << MMDB_strerror(getEntryDataStatus)
                  << endl;
             countryName = QString("未知");
-        } else {
-            cout << "Get country name successfully." << endl;
-            auto countryNameStr = strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size);
-            countryName = QString(countryNameStr);
-            free(countryNameStr);
         }
 
         // 先认为经纬度信息是有效的
