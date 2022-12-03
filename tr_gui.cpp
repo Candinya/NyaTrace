@@ -140,16 +140,19 @@ void TR_GUI::StartTracing() {
 
 void TR_GUI::AbortTracing() {
     // 中止追踪进程
-    tracingThread->terminate();
+    //tracingThread->terminate();
+    tracingThread->isStopping = true; // 正在中止进程
+    ui->startStopButton->setDisabled(true); // 禁用按钮以放置多次触发
 
     // 设置提示信息
-    ui->statusbar->showMessage("用户中止追踪进程");
+    ui->statusbar->showMessage("正在回收最后一包...");
 }
 
 void TR_GUI::CleanUp() {
     // UI 相关结束
     ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
-    ui->startStopButton->setText("开始"); // 解锁按钮
+    ui->startStopButton->setDisabled(false); // 解锁按钮
+    ui->startStopButton->setText("开始"); // 设置功能提示
     ui->hostInput->setDisabled(false);   // 解锁输入框
 }
 

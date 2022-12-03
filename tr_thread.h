@@ -13,8 +13,9 @@ public:
     TRThread(QObject *parent = nullptr);
     ~TRThread();
 
-    // 共享变量，需要这个作为传入参数
-    QString hostname;
+    // 共享变量区
+    QString hostname;   // 用户输入的主机名，需要这个作为传入参数
+    bool    isStopping; // 对进程发出中止信号，回收最后一包再结束
 
 protected:
     void run() override;

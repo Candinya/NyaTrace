@@ -33,6 +33,9 @@ TRThread::~TRThread() {
 
 void TRThread::run() {
 
+    // 设置状态为非中止
+    isStopping = false;
+
     // WinSock2 相关初始化
     WSADATA wsa; // 一种数据结构。这个结构被用来存储被WSAStartup函数调用后返回的Windows Sockets数据
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { // 进行相应的socket库绑定,MAKEWORD(2,2)表示使用WINSOCK2版本
@@ -192,8 +195,8 @@ void TRThread::run() {
 
     BOOL bReachDestHost = FALSE;
 
-    // 开始探测路由，当达到最大跳数或收到来自目标主机的报文时结束
-    for (int iTTL = 1; (iTTL < DEF_MAX_HOP) && !bReachDestHost; iTTL++) {
+    // 开始探测路由，当达到最大跳数或收到来自目标主机的报文，或收到主进程的中止信号时结束
+    for (int iTTL = 1; (iTTL < DEF_MAX_HOP) && !bReachDestHost && !isStopping; iTTL++) {
         cout << "TTL: " << iTTL << endl;
 
         // 准备用于返回的结果
