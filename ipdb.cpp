@@ -179,9 +179,6 @@ bool IPDB::LookUpIPCityInfo(
             longitude = cityEntryData_longitude.double_value;
         }
 
-        return true;
-
-
     } else {
         // 查询失败，没找到结果，可能是本地地址
         cerr << "No entry found for IP: "
@@ -192,8 +189,9 @@ bool IPDB::LookUpIPCityInfo(
         countryName = QString("");
         // 其实是无效的
         isLocationValid = false;
-        return true;
     }
+
+    return true;
 }
 
 // 成员函数：在 MMDB 中查询 IP 对应的ISP信息
@@ -304,8 +302,6 @@ bool IPDB::LookUpIPISPInfo(
             free(asOrgStr);
         }
 
-
-        return true;
     } else {
         // 查询失败，没找到结果，可能是本地地址
         cerr << "No entry found for IP: "
@@ -315,7 +311,7 @@ bool IPDB::LookUpIPISPInfo(
         isp = QString("私有地址");
         org  = QString("");
         asOrg   = QString("");
-        return true;
     }
 
+    return true;
 }
