@@ -1,11 +1,18 @@
 #include <iostream>
-#include <iomanip>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include "tr_utils.h"
 #include "tr_thread.h"
+
+#ifdef SETTING_USE_ICMPDLL
+
+#include <windows.h>
+
+#else
+
+#include <ws2tcpip.h>
+
+#endif
 
 #include "ipdb.h"
 
@@ -81,6 +88,38 @@ void TRThread::run() {
 
     cout << "Target IP: " << inet_ntoa(*(in_addr *) (&ulDestIP)) << endl;
 
+#ifdef SETTING_USE_ICMPDLL
+
+    // 载入 icmp.dll 动态链接库
+    HMODULE hIcmpDll = LoadLibraryA("icmp.dll");
+    if (hIcmpDll == NULL) {
+        cerr << "Failed to load icmp.dll" << endl;
+        emit setMessage(QString("icmp.dll 动态链接库加载失败"));
+        WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+        return; // 结束
+    }
+
+    // 定义 3 个函数指针
+    lpIcmpCreateFile  IcmpCreateFile;
+    lpIcmpCloseHandle IcmpCloseHandle;
+    lpIcmpSendEcho    IcmpSendEcho;
+
+    // 从ICMP.DLL中获取所需的函数入口地址
+    IcmpCreateFile = (lpIcmpCreateFile)GetProcAddress(hIcmpDll,"IcmpCreateFile");
+    IcmpCloseHandle = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"IcmpCloseHandle");
+    IcmpSendEcho = (lpIcmpSendEcho)GetProcAddress(hIcmpDll,"IcmpSendEcho");
+
+    // 打开 ICMP 句柄
+    HANDLE hIcmp;
+    if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE){
+        cerr << "Failed to open ICMP handle" << endl;
+        emit setMessage(QString("ICMP 句柄打开失败"));
+        WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+        return; // 结束
+    }
+
+#else
+
     sockaddr_in destSockAddr;// 用来处理网络通信的地址
     ZeroMemory(&destSockAddr, sizeof(sockaddr_in)); // 用0来填充一块内存区域
     destSockAddr.sin_family = AF_INET; //sin_family： 地址族，协议簇 AF_INET（TCP/IP – IPv4）
@@ -112,7 +151,22 @@ void TRThread::run() {
         return;
     }
 
+#endif
+
     // 创建ICMP包发送缓冲区和接收缓冲区
+#ifdef SETTING_USE_ICMPDLL
+
+    IP_OPTION_INFORMATION IpOption;
+    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
+
+    char SendData[DEF_ICMP_DATA_SIZE];
+    ZeroMemory(SendData, sizeof(SendData));
+
+    char ReplyBuf[sizeof(ICMP_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
+    PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)ReplyBuf;
+
+#else
+
     char IcmpSendBuf[sizeof(ICMP_HEADER) + DEF_ICMP_DATA_SIZE];
     memset(IcmpSendBuf, 0, sizeof(IcmpSendBuf));
     char IcmpRecvBuf[MAX_ICMP_PACKET_SIZE];
@@ -125,47 +179,22 @@ void TRThread::run() {
     pIcmpHeader->id = (USHORT) GetCurrentProcessId();
     memset(IcmpSendBuf + sizeof(ICMP_HEADER), 'E', DEF_ICMP_DATA_SIZE); // 数据部分填充
 
+#endif
+
+#ifndef SETTING_USE_ICMPDLL
+
     // 准备结果存储
     DECODE_RESULT stDecodeResult;
-    BOOL bReachDestHost = FALSE;
+
     USHORT usSeqNo = 0;
+
+#endif
+
+    BOOL bReachDestHost = FALSE;
 
     // 开始探测路由，当达到最大跳数或收到来自目标主机的报文时结束
     for (int iTTL = 1; (iTTL < DEF_MAX_HOP) && !bReachDestHost; iTTL++) {
         cout << "TTL: " << iTTL << endl;
-
-        // 设置IP数据报头的ttl字段
-        setsockopt(
-            sockRaw, IPPROTO_IP, IP_TTL, (char *) &iTTL,
-            sizeof(iTTL)
-        ); // 为 0 （IPPROTO_IP) 的 raw socket 。用于接收任何的IP数据包。其中的校验和和协议分析由程序自己完成。
-
-        // 填充 ICMP 数据报文的剩余字段
-        ((ICMP_HEADER *) IcmpSendBuf)->cksum = 0;
-        ((ICMP_HEADER *) IcmpSendBuf)->seq = htons(usSeqNo++); // 将无符号短整型主机字节序转换为网络字节序,将一个数的高低位互换, (如:12 34 --> 34 12)
-        ((ICMP_HEADER *) IcmpSendBuf)->cksum = GenerateChecksum((USHORT *) IcmpSendBuf, sizeof(ICMP_HEADER) + DEF_ICMP_DATA_SIZE);
-
-        // 记录序列号和当前时间
-        stDecodeResult.usSeqNo = ((ICMP_HEADER *) IcmpSendBuf)->seq;
-        stDecodeResult.dwRoundTripTime = GetTickCount(); // 返回从操作系统启动到当前所经过的毫秒数，常常用来判断某个方法执行的时间
-
-        // 发送ICMP的EchoRequest数据报
-        if (sendto(sockRaw, IcmpSendBuf, sizeof(IcmpSendBuf), 0, (sockaddr *) &destSockAddr, sizeof(destSockAddr)) == SOCKET_ERROR) {
-            // 如果目的主机不可达则直接退出
-            if (WSAGetLastError() == WSAEHOSTUNREACH) {
-                cerr << "Failed to send package with error: " << WSAGetLastError() << endl;
-                emit setMessage(QString("数据报文发送失败，错误代码： %1 。").arg(WSAGetLastError()));
-            }
-            closesocket(sockRaw);
-            WSACleanup();
-            return;
-        }
-
-        // 接收ICMP的EchoReply数据报
-        // 因为收到的可能并非程序所期待的数据报，所以需要循环接收直到收到所要数据或超时
-        sockaddr_in from;
-        int iFromLen = sizeof(from);
-        int iReadDataLen;
 
         // 准备用于返回的结果
         QString timeConsumption;
@@ -184,6 +213,129 @@ void TRThread::run() {
         uint    asn = 0;
         QString asOrg;
 
+        // 设置 TTL 并填充发送报文
+#ifdef SETTING_USE_ICMPDLL
+
+        IpOption.Ttl = iTTL;
+
+#else
+
+        // 设置IP数据报头的ttl字段
+        setsockopt(
+            sockRaw, IPPROTO_IP, IP_TTL, (char *) &iTTL,
+            sizeof(iTTL)
+        ); // 为 0 （IPPROTO_IP) 的 raw socket 。用于接收任何的IP数据包。其中的校验和和协议分析由程序自己完成。
+
+        // 填充 ICMP 数据报文的剩余字段
+        ((ICMP_HEADER *) IcmpSendBuf)->cksum = 0;
+        ((ICMP_HEADER *) IcmpSendBuf)->seq = htons(usSeqNo++); // 将无符号短整型主机字节序转换为网络字节序,将一个数的高低位互换, (如:12 34 --> 34 12)
+        ((ICMP_HEADER *) IcmpSendBuf)->cksum = GenerateChecksum((USHORT *) IcmpSendBuf, sizeof(ICMP_HEADER) + DEF_ICMP_DATA_SIZE);
+
+        // 记录序列号和当前时间
+        stDecodeResult.usSeqNo = ((ICMP_HEADER *) IcmpSendBuf)->seq;
+        stDecodeResult.dwRoundTripTime = GetTickCount(); // 返回从操作系统启动到当前所经过的毫秒数，常常用来判断某个方法执行的时间
+
+#endif
+
+        // 发送数据报并等待消息到达
+#ifdef SETTING_USE_ICMPDLL
+
+        if (
+            IcmpSendEcho(
+                hIcmp, (IPAddr)ulDestIP,
+                SendData, sizeof (SendData), &IpOption,
+                ReplyBuf, sizeof(ReplyBuf),
+                DEF_ICMP_TIMEOUT
+            ) != 0
+        ) {
+            // 得到返回
+
+            cout << "Current hop IP: "<< inet_ntoa(*(in_addr*)&pEchoReply->Address) << " "
+                 << "Target IP: "     << inet_ntoa(*(in_addr*)&ulDestIP) << " "
+                 << "Time: "     << pEchoReply->RoundTripTime << "ms" << endl;
+
+            // 记录当前跳数的耗时
+            if (pEchoReply->RoundTripTime) {
+                timeConsumption = QString("%1 毫秒").arg(pEchoReply->RoundTripTime);
+            } else {
+                timeConsumption = QString("小于 1 毫秒");
+            }
+
+            // 记录当前跳数的地址
+            ipAddress = QString("%1").arg(inet_ntoa(*(in_addr*)&pEchoReply->Address));
+
+            // 判断当前是否完成路由追踪（即目标站点返回的数据包）
+            if ((unsigned long)pEchoReply->Address==ulDestIP) {
+                cout << "Current IP match target, final target reached!" << endl;
+                bReachDestHost = TRUE;
+            }
+
+            // 在 City 数据库中查询当前 IP 对应信息
+            if (!ipdb->LookUpIPCityInfo(
+                inet_ntoa(*(in_addr*)&pEchoReply->Address),
+                cityName,
+                countryName,
+                latitude,
+                longitude,
+                isLocationValid
+            )) {
+                // 查询失败，使用填充字符
+                cityName    = QString("未知");
+                countryName = QString("");
+                isLocationValid = false;
+            }
+
+            // 在 ISP 数据库中查询当前 IP 对应信息
+            if (!ipdb->LookUpIPISPInfo(
+                inet_ntoa(*(in_addr*)&pEchoReply->Address),
+                isp,
+                org,
+                asn,
+                asOrg
+            )) {
+                // 查询失败，使用填充字符
+                isp  = QString("未知");
+                org   = QString("");
+                asOrg = QString("未知");
+            }
+
+        } else {
+            // 记录当前跳的情况：超时未响应
+            timeConsumption = QString("请求超时");
+            // 其余置空
+            ipAddress = QString("");
+
+            cityName = QString("");
+            countryName = QString("");
+
+            isLocationValid = false;
+
+            isp  = QString("");
+            org   = QString("");
+            asOrg = QString("");
+        }
+
+#else
+
+        // 发送ICMP的EchoRequest数据报
+        if (sendto(sockRaw, IcmpSendBuf, sizeof(IcmpSendBuf), 0, (sockaddr *) &destSockAddr, sizeof(destSockAddr)) == SOCKET_ERROR) {
+            // 如果目的主机不可达则直接退出
+            if (WSAGetLastError() == WSAEHOSTUNREACH) {
+                cerr << "Failed to send package with error: " << WSAGetLastError() << endl;
+                emit setMessage(QString("数据报文发送失败，错误代码： %1 。").arg(WSAGetLastError()));
+            }
+            closesocket(sockRaw);
+            WSACleanup();
+            return;
+        }
+
+
+        // 接收ICMP的EchoReply数据报
+        // 因为收到的可能并非程序所期待的数据报，所以需要循环接收直到收到所要数据或超时
+        sockaddr_in from;
+        int iFromLen = sizeof(from);
+        int iReadDataLen;
+
 
         while (true) {
             // 等待数据到达
@@ -197,6 +349,7 @@ void TRThread::run() {
                     cout << "Current hop IP: "<< inet_ntoa(stDecodeResult.dwIPaddr) << " "
                          << "Target IP: "     << inet_ntoa(destSockAddr.sin_addr) << endl;
 
+                    // 判断当前是否完成路由追踪（即目标站点返回的数据包）
                     if (stDecodeResult.dwIPaddr.s_addr == destSockAddr.sin_addr.s_addr) {
                         cout << "Current IP match target, final target reached!" << endl;
                         bReachDestHost = TRUE;
@@ -268,6 +421,8 @@ void TRThread::run() {
             }
         }
 
+#endif
+
         // 更新进度条数据
         emit setHop(
             iTTL, timeConsumption, ipAddress,                            // 基础信息
@@ -278,13 +433,20 @@ void TRThread::run() {
     }
 
     // 追踪完成，更新状态，回收资源
+#ifdef SETTING_USE_ICMPDLL
+    IcmpCloseHandle(hIcmp);
+    FreeLibrary(hIcmpDll);
+#else
     closesocket(sockRaw);
+#endif
     WSACleanup();
 
     cout << "Trace Route finish." << endl;
     emit setMessage("路由追踪完成。"); // 提示完成信息
 
 }
+
+#ifndef SETTING_USE_ICMPDLL
 
 // 工具函数
 // 产生网际校验和
@@ -341,3 +503,5 @@ BOOL TRThread::DecodeIcmpResponse(char *pBuf, int iPacketSize, DECODE_RESULT &st
     }
     return FALSE;
 }
+
+#endif

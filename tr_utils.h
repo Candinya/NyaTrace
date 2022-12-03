@@ -3,6 +3,31 @@
 
 #include <winsock2.h> // 类型定义
 
+// 使用 icmp.dll 构造请求，以避免返回包被防火墙拦截
+#define SETTING_USE_ICMPDLL
+
+#ifdef SETTING_USE_ICMPDLL
+
+#include <IPHlpApi.h>
+
+// 声明3个函数类型的指针
+typedef HANDLE (WINAPI *lpIcmpCreateFile)(VOID);
+typedef BOOL (WINAPI *lpIcmpCloseHandle)(HANDLE  IcmpHandle);
+typedef DWORD (WINAPI *lpIcmpSendEcho)(
+        HANDLE                   IcmpHandle,
+        IPAddr                   DestinationAddress,
+        LPVOID                   RequestData,
+        WORD                     RequestSize,
+        PIP_OPTION_INFORMATION   RequestOptions,
+        LPVOID                   ReplyBuffer,
+        DWORD                    ReplySize,
+        DWORD                    Timeout
+);
+
+#else
+
+// 使用直接构造的方式
+
 #pragma pack(1)
 
 // IP数据报头
@@ -42,9 +67,15 @@ typedef struct {
 const BYTE ICMP_ECHO_REPLY  = 0;       // 回显应答
 const BYTE ICMP_ECHO_REQUEST = 8;      // 请求回显
 const BYTE ICMP_TIMEOUT   = 11;        // 传输超时
-const DWORD DEF_ICMP_TIMEOUT = 3000;   // 默认超时时间，单位ms
-const int DEF_ICMP_DATA_SIZE = 32;     // 默认ICMP数据部分长度
 const int MAX_ICMP_PACKET_SIZE = 1024; // 最大ICMP数据报的大小
+
+#endif
+
+// 共享的常量
+const int DEF_ICMP_DATA_SIZE = 32;     // 默认ICMP数据部分长度
+
+// 一些通用的设置
 const int DEF_MAX_HOP = 30;            // 最大跳站数
+const DWORD DEF_ICMP_TIMEOUT = 3000;   // 默认超时时间，单位ms
 
 #endif // TR_UTILS_H

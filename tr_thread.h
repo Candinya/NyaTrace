@@ -19,10 +19,14 @@ public:
 protected:
     void run() override;
 
+#ifndef SETTING_USE_ICMPDLL
+
 private:
     // 工具函数
     USHORT GenerateChecksum(USHORT* pBuf, int iSize);
     BOOL DecodeIcmpResponse(char* pBuf, int iPacketSize, DECODE_RESULT& stDecodeResult);
+
+#endif
 
 signals:
     void setHop(

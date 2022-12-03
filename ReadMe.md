@@ -31,25 +31,11 @@
 
 ## 提示
 
-1. 如果您发现除了最后一包之外其余的全都超时，您可能需要设置以下的防火墙规则，以放行 `ICMP Time-to-live Exceeded` 包和 `ICMP Destination (Port) Unreachable` 包。我们暂时不知道是否有什么绕过的办法，目前您需要以管理员权限执行以下代码：
-
-    ```
-    netsh advfirewall firewall add rule name="All ICMP v4" dir=in action=allow protocol=icmpv4:any,any
-    netsh advfirewall firewall add rule name="All ICMP v6" dir=in action=allow protocol=icmpv6:any,any
-    ```
-
-    如果您不需要这些规则了（例如不再使用或是我们修复了该问题），请使用以下的代码删除防火墙规则：
-
-    ```
-    netsh advfirewall firewall del rule name="All ICMP v4"
-    netsh advfirewall firewall del rule name="All ICMP v6"
-    ```
-
-2. 如果您没有购买 GeoIP2 数据库，您也可以使用 GeoLite2 （即免费版的）数据库作为替代（ GeoIP2-ISP 请用 GeoLite2-ASN 代替），将其重命名为上文指定的格式即可，需要注意相关的结果和数据可能并不如完整版丰富准确。
+1. 如果您没有购买 GeoIP2 数据库，您也可以使用 GeoLite2 （即免费版的）数据库作为替代（ GeoIP2-ISP 请用 GeoLite2-ASN 代替），将其重命名为上文指定的格式即可，需要注意相关的结果和数据可能并不如完整版丰富准确。
 
 ## 后续的开发方向
 
-1. 解决防火墙拦截包的问题
+1. ~~解决防火墙拦截包的问题~~ 已经解决
 2. 多倍+并行发包以提升质量与追踪速度
 3. 集成一个地图服务（自建 OSM 部署）
 4. 跨平台兼容
