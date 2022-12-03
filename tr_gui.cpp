@@ -2,7 +2,6 @@
 #include "ui_tr_gui.h"
 
 #include <iostream>
-#include <iomanip>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
@@ -44,11 +43,13 @@ TR_GUI::TR_GUI(QWidget *parent)
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     ) {
         // 更新进度
-        ui->tracingProgress->setValue(ttl);
+        //ui->tracingProgress->setValue(ttl);
+
+        cout << "Setting data to table row " << ttl
+             << " IP Address: " << ipAddress.toStdString()
+             << endl;
 
         // 填充表格
-        hopResultsModel->insertRow(ttl-1);
-
         hopResultsModel->setItem(ttl-1, 0, new QStandardItem(timeComnsumption));
         hopResultsModel->setItem(ttl-1, 1, new QStandardItem(ipAddress));
 
@@ -75,6 +76,12 @@ TR_GUI::TR_GUI(QWidget *parent)
     connect(tracingThread, &TRThread::setMessage, this, [=](QString msg) {
         // 更新信息
         ui->statusbar->showMessage(msg);
+    });
+
+
+    connect(tracingThread, &TRThread::incProgress, this, [=](const int packs) {
+        // 完成一跳，进度条更新
+        ui->tracingProgress->setValue(ui->tracingProgress->value() + packs);
     });
 
     connect(tracingThread, &TRThread::finished, this, [=]() {
@@ -119,7 +126,7 @@ void TR_GUI::Initialize() {
     hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 重置进度条
-    ui->tracingProgress->setMaximum(DEF_MAX_HOP);
+    ui->tracingProgress->setMaximum(DEF_MAX_HOP * DEF_MAX_TRY);
     ui->tracingProgress->setValue(0);
 
     // 更新状态
@@ -141,7 +148,7 @@ void TR_GUI::StartTracing() {
 void TR_GUI::AbortTracing() {
     // 中止追踪进程
     //tracingThread->terminate();
-    tracingThread->isStopping = true; // 正在中止进程
+    tracingThread->requestStop(); // 中止进程
     ui->startStopButton->setDisabled(true); // 禁用按钮以防止多次触发
 
     // 设置提示信息
