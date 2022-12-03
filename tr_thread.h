@@ -13,21 +13,28 @@ public:
     TRThread(QObject *parent = nullptr);
     ~TRThread();
 
-    // 共享变量区
+public: // 共享变量区
     QString hostname;   // 用户输入的主机名，需要这个作为传入参数
     bool    isStopping; // 对进程发出中止信号，回收最后一包再结束
 
+private: // 私有变量区
+
+    // 一种数据结构。这个结构被用来存储被 WSAStartup 函数调用后返回的 Windows Sockets 数据
+    WSADATA wsa;
+
+    // 定义动态链接库
+    HMODULE hIcmpDll;
+
+    // 定义 3 个 icmp.dll 的函数指针
+    lpIcmpCreateFile  IcmpCreateFile;
+    lpIcmpCloseHandle IcmpCloseHandle;
+    lpIcmpSendEcho    IcmpSendEcho;
+
+    // 定义动态链接库句柄
+    HANDLE hIcmp;
+
 protected:
     void run() override;
-
-#ifndef SETTING_USE_ICMPDLL
-
-private:
-    // 工具函数
-    USHORT GenerateChecksum(USHORT* pBuf, int iSize);
-    BOOL DecodeIcmpResponse(char* pBuf, int iPacketSize, DECODE_RESULT& stDecodeResult);
-
-#endif
 
 signals:
     void setHop(
