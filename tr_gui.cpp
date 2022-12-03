@@ -107,8 +107,8 @@ void TR_GUI::on_startStopButton_clicked()
 
 void TR_GUI::Initialize() {
     // UI 相关初始化
-    ui->startStopButton->setText("中止"); // 锁定按钮
-    ui->hostInput->setDisabled(true);    // 锁定输入框
+    ui->startStopButton->setText("中止"); // 更新按钮功能提示
+    ui->hostInput->setDisabled(true); // 锁定输入框
     ui->statusbar->showMessage("正在初始化..."); // 提示初始化信息
 
     // 清理表格数据
@@ -153,7 +153,7 @@ void TR_GUI::CleanUp() {
     ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
     ui->startStopButton->setDisabled(false); // 解锁按钮
     ui->startStopButton->setText("开始"); // 设置功能提示
-    ui->hostInput->setDisabled(false);   // 解锁输入框
+    ui->hostInput->setDisabled(false); // 解锁输入框
 }
 
 
