@@ -92,8 +92,14 @@ TR_GUI::TR_GUI(QWidget *parent)
 
 TR_GUI::~TR_GUI()
 {
-    delete ui;
+    // 销毁追踪主线程
     delete tracingThread;
+
+    // 销毁结果模型
+    delete hopResultsModel;
+
+    // 销毁主界面
+    delete ui;
 }
 
 
