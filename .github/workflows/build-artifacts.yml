@@ -33,7 +33,7 @@ jobs:
       run: |
         for /f "delims=" %%d in ( 'vswhere.exe -latest -property installationPath' ) do @( call "%%d\VC\Auxiliary\Build\vcvars64.bat" )
         qmake CONFIG+=release
-        jom
+        nmake
 
     - name: Set short SHA as package name
       if: "!startsWith(github.event.ref, 'refs/tags/')"
