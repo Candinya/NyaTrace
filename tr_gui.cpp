@@ -143,6 +143,9 @@ void TR_GUI::StartTracing() {
     // 初始化
     Initialize();
 
+    // 设置提示信息
+    ui->statusbar->showMessage("正在开始路由追踪...");
+
     // 设置主机地址
     string hostStdString = ui->hostInput->text().toStdString();
     tracingThread->hostname = hostStdString.c_str();
