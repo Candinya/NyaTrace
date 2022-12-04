@@ -35,7 +35,7 @@ jobs:
         nmake
 
     - name: Set short SHA as outputs
-      if: contains(fromJson('["refs/heads/", "refs/pull/"]'), github.event.ref)
+      if: "!startsWith(github.event.ref, 'refs/tags/')"
       run: echo "ARCHIVE_NAME=NyaTrace-$(git rev-parse --short HEAD)-MSVC-64bit" >> $env:GITHUB_ENV
       
     - name: Set tag version as outputs
