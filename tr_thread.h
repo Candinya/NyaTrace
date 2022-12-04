@@ -4,7 +4,6 @@
 #include <QThread>
 #include <QThreadPool>
 #include <QRunnable>
-#include <QMutex>
 
 #include "tr_utils.h"
 #include "ipdb.h"
@@ -95,9 +94,7 @@ private: // 私有变量区
 
     // 当前的最大跳，超过这一跳的数据都应该被丢弃
     int maxHop;
-
-    // 用于顺序管理最大跳的线程锁
-    QMutex * maxHopMutexLock;
+    int oldMaxHop; // 旧的最大跳，用空间换时间（这样可以把更新操作放到最后了）
 
 protected:
     void run() override;

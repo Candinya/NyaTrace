@@ -53,9 +53,6 @@ TRThread::TRThread(QObject *parent) {
     for (int i = 0; i < DEF_MAX_HOP; i++) {
         workers[i] = NULL;
     }
-
-    // 新建一个线程锁
-    maxHopMutexLock = new QMutex;
 }
 
 TRThread::~TRThread() {
@@ -64,9 +61,6 @@ TRThread::~TRThread() {
 
     // 销毁线程池
     delete tracingPool;
-
-    // 销毁线程锁
-    delete maxHopMutexLock;
 
     // 销毁 IPDB 实例
     delete ipdb;
@@ -129,7 +123,8 @@ void TRThread::run() {
     cout << "Target IP: " << inet_ntoa(*(in_addr *) (&ulDestIP)) << endl;
 
     // 初始化最大跳数据
-    maxHop = DEF_MAX_HOP;
+    maxHop    = DEF_MAX_HOP;
+    oldMaxHop = DEF_MAX_HOP;
 
     // 使用子线程开始追踪路由
     for (int i = 0; i < DEF_MAX_HOP; i++) {
@@ -152,32 +147,22 @@ void TRThread::run() {
 
             // 检查是否为目标主机
             if (ipAddress == ulDestIP && ttl <= maxHop) {
-                // 是目标主机，检测此时是否为最大跳
-                // 输出日志
+                // 是目标主机，并且比最大跳还要靠前
 
-                cout << "New max hop found: " << ttl
-                     << " , terminating other workers..." << endl;
-
-                // 提示：我不确定这样是否为严格顺序且线程安全的，也不确定这个锁是否必需，
-                // 但就实验结果来看似乎都还比较稳定，没有出现额外的记录？
-
-                // 线程上锁，封装同源数据的原子操作
-                maxHopMutexLock->lock();
+                // 设定为新的最大跳
+                maxHop = ttl;
 
                 // 终止所有更高跳数的线程（从 maxHop 到 DEF_MAX_HOP 之间的已经在上一轮被清理掉了）
-                for (int i = ttl; i < maxHop; i++) {
+                for (int i = ttl; i < oldMaxHop; i++) {
                     if (workers[i] != NULL) {
                         workers[i]->requestStop();
                     }
                 }
 
-                // 设定为新的最大跳
-                maxHop = ttl;
+                // 更新旧的最大跳数据
+                oldMaxHop = maxHop;
 
                 // 发出状态命令，删除表中的多余行（暂时好像不需要？）
-
-                // 线程解锁
-                maxHopMutexLock->unlock();
 
             }
 
