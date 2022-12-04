@@ -35,8 +35,7 @@ jobs:
     - name: Build exectuable
       shell: cmd
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
-        qmake
+        qmake CONFIG+=release
         nmake
 
     - name: Set short SHA as outputs
@@ -66,23 +65,24 @@ jobs:
     - name: Win Deploy Qt
       shell: cmd
       run: |
+        set OLDDIR=%CD%
         call "%Qt5_DIR%\bin\qtenv2.bat"
-        cd workspace\${env:ARCHIVE_NAME}
-        windeployqt NyaTrace.exe
+        chdir /d %OLDDIR% &
+        windeployqt --qmldir . workspace\${env:ARCHIVE_NAME}\NyaTrace.exe
+
+    - name: Prepare MMDB notices
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory workspace\${env:ARCHIVE_NAME}\mmdb
+        $mmdbNotice = '请将 MMDB 文件放置在这里，具体操作请参见 https://github.com/Candinya/NyaTrace 相关的说明。'
+        $mmdbNotice | Out-File workspace\${env:ARCHIVE_NAME}\mmdb\'请将 MMDB 文件放置在这里.txt'
 
     - name: Package artifacts
       shell: pwsh
       run: |
-        # Create MMDB notice dir
-        New-Item -ItemType Directory workspace\${env:ARCHIVE_NAME}\mmdb
-        # Write notice
-        $mmdbNotice = '请将 MMDB 文件放置在这里，具体操作请参见 https://github.com/Candinya/NyaTrace 相关的说明。'
-        $mmdbNotice | Out-File workspace\${env:ARCHIVE_NAME}\mmdb\'请将 MMDB 文件放置在这里.txt'
-        # Copy LICENSE file
         Copy-Item LICENSE workspace\
-        # Make archive
         Compress-Archive -Path workspace\* ${env:ARCHIVE_NAME}'.zip'
-        
+
     - name: Create release draft
       if: startsWith(github.event.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
