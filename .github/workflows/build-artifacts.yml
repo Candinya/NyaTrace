@@ -60,7 +60,8 @@ jobs:
       shell: cmd
       run: |
         call "%Qt5_DIR%\bin\qtenv2.bat"
-        chdir /d ${GITHUB_WORKSPACE}
+        chdir /d %GITHUB_WORKSPACE%
+        cd
         windeployqt --qmldir . "workspace\%ARCHIVE_NAME%\NyaTrace.exe"
 
     - name: Prepare MMDB notices
