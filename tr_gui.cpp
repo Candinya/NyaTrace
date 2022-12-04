@@ -132,7 +132,7 @@ void TR_GUI::Initialize() {
     hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 重置进度条
-    ui->tracingProgress->setMaximum(DEF_MAX_HOP * DEF_MAX_TRY * 3); // 三种任务，三倍进度
+    ui->tracingProgress->setMaximum(DEF_MAX_HOP * 3); // 三种任务，三倍进度
     ui->tracingProgress->setValue(0);
 
     // 更新状态

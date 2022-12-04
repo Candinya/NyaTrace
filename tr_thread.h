@@ -18,7 +18,6 @@ public:
 
 public: // 共享变量区
     int iTTL;        // 当前包的 TTL 值
-    int maxTry;      // 最大重试次数
     u_long ulDestIP; // 目标的 IP 地址
 
     // 定义动态链接库句柄
@@ -116,7 +115,7 @@ signals:
 
     // 变更 UI 组件
     void setMessage(const QString &msg);
-    void incProgress(const int progress = DEF_MAX_TRY);
+    void incProgress(const int progress = 1);
 
 public slots:
     void requestStop();

@@ -133,7 +133,6 @@ void TRThread::run() {
         workers[i] = new TRTWorker;
 
         workers[i]->iTTL = i + 1;
-        workers[i]->maxTry = DEF_MAX_TRY;
         workers[i]->ulDestIP = ulDestIP;
         workers[i]->hIcmp = hIcmp;
         workers[i]->ipdb = ipdb;
@@ -187,11 +186,7 @@ void TRThread::run() {
 
                 // 记录当前跳的情况：超时未响应
                 timeConsumptionStr = QString("请求超时");
-                // 其余置空
-                ipAddressStr = QString("");
-
-                // 进一包
-                emit incProgress(1);
+                ipAddressStr       = QString("重试 %1 次").arg(timeConsumption);
 
             }
 
@@ -273,7 +268,8 @@ void TRTWorker::run() {
     // 执行第一项任务：获得 IP
     GetIP();
 
-    // 这份任务的权重已经被回报了，所以不需要在这里再提交
+    // 回报一份权重，作为进度条增长的数值
+    emit incProgress(1);
 
     // 如果获得的结果有效，并且并非正在停止，再执行第二项任务：获得 IP 信息
     if (isIPValid && !isStopping) {
@@ -281,7 +277,7 @@ void TRTWorker::run() {
     }
 
     // 回报一份权重，作为进度条增长的数值
-    emit incProgress(DEF_MAX_TRY);
+    emit incProgress(1);
 
     // 如果获得的结果有效，并且并非正在停止，再执行第三项任务：获得对应的主机名
     if (isIPValid && !isStopping) {
@@ -289,7 +285,7 @@ void TRTWorker::run() {
     }
 
     // 回报一份权重，作为进度条增长的数值
-    emit incProgress(DEF_MAX_TRY);
+    emit incProgress(1);
 
     // 全部任务完成
     emit fin(iTTL);
@@ -299,10 +295,6 @@ void TRTWorker::run() {
 void TRTWorker::GetIP() {
 
     // 第一步：追踪
-
-    // 记录残余包数
-    int remainPacks = maxTry;
-
     // ICMP 包发送缓冲区和接收缓冲区
     IP_OPTION_INFORMATION IpOption;
     char SendData[DEF_ICMP_DATA_SIZE];
@@ -322,7 +314,10 @@ void TRTWorker::GetIP() {
     // 设置有效值
     isIPValid = false;
 
-    for (; (remainPacks > 0) && !isStopping; remainPacks--) {
+    // 设置超时次数
+    int timeoutCount = 0;
+
+    while (!isStopping) {
 
         // 发送数据报并等待消息到达
         if (
@@ -341,8 +336,9 @@ void TRTWorker::GetIP() {
             break;
         } else {
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
+            timeoutCount++;
             emit reportIPAndTimeConsumption(
-                iTTL, 0, 0, false
+                iTTL, timeoutCount, 0, false
             );
         }
     }
@@ -354,9 +350,6 @@ void TRTWorker::GetIP() {
             iTTL, pEchoReply->RoundTripTime, pEchoReply->Address, true
         );
     }
-
-    // 回报剩余的包数，作为进度条增长的数值
-    emit incProgress(remainPacks);
 
 }
 
