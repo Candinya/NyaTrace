@@ -149,37 +149,39 @@ void TRThread::run() {
             cout << "Worker " << i << " with TTL " << ttl << " returned data."
                  << " TTL: " << ttl << " Time Consumption: " << timeConsumption << " IP Address: " << ipAddress << endl;
 
+            if (ttl > maxHop) {
+                // 超过目标主机，丢弃
+                return;
+            }
+
             // 检查是否为目标主机
-            if (ipAddress == ulDestIP) {
+            if (ipAddress == ulDestIP && ttl <= maxHop) {
                 // 是目标主机，检测此时是否为最大跳
-                if (ttl > maxHop) {
-                    // 丢弃
-                    return;
-                } else {
+                // 输出日志
 
-                    // 输出日志
-                    cout << "New max hop found: " << ttl
-                         << " , terminating other workers..." << endl;
-                    // 这里需要一个并发锁，防止读写错乱
-                    // 提示：我不确定这样是否为严格顺序且线程安全的，
-                    // 但就实验结果来看似乎都还比较稳定，没有出现额外的记录？
-                    maxHopMutexLock->lock(); // 上锁，防止意外操作
-                    if (ttl <= maxHop) {
+                cout << "New max hop found: " << ttl
+                     << " , terminating other workers..." << endl;
 
-                        // 终止所有更高跳数的线程（从 maxHop 到 DEF_MAX_HOP 之间的已经在上一轮被清理掉了）
-                        for (int i = ttl; i < maxHop; i++) {
-                            if (workers[i] != NULL) {
-                                workers[i]->requestStop();
-                            }
-                        }
+                // 提示：我不确定这样是否为严格顺序且线程安全的，也不确定这个锁是否必需，
+                // 但就实验结果来看似乎都还比较稳定，没有出现额外的记录？
 
-                        // 设定为新的最大跳
-                        maxHop = ttl;
+                // 线程上锁，封装同源数据的原子操作
+                maxHopMutexLock->lock();
 
-                        // 发出状态命令，删除表中的多余行（暂时好像不需要？）
+                // 终止所有更高跳数的线程（从 maxHop 到 DEF_MAX_HOP 之间的已经在上一轮被清理掉了）
+                for (int i = ttl; i < maxHop; i++) {
+                    if (workers[i] != NULL) {
+                        workers[i]->requestStop();
                     }
-                    maxHopMutexLock->unlock(); // 解锁
                 }
+
+                // 设定为新的最大跳
+                maxHop = ttl;
+
+                // 发出状态命令，删除表中的多余行（暂时好像不需要？）
+
+                // 线程解锁
+                maxHopMutexLock->unlock();
 
             }
 
@@ -344,14 +346,20 @@ void TRTWorker::run() {
             cout << "Current hop IP: "<< inet_ntoa(*(in_addr*)&pEchoReply->Address) << " "
                  << "Time: "     << pEchoReply->RoundTripTime << "ms" << endl;
 
-            // 完成追踪，回报信息，退出线程
-            emit reportHop(
-                iTTL, pEchoReply->RoundTripTime, pEchoReply->Address, true
-            );
+            // 完成追踪
+            if (!isStopping) {
 
+                // 仅在没有被请求停止的时候回报
+                emit reportHop(
+                    iTTL, pEchoReply->RoundTripTime, pEchoReply->Address, true
+                );
+            }
+
+            // 任务完成，退出线程
             break;
 
         } else {
+            // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             emit reportHop(
                 iTTL, 0, 0, false
             );
