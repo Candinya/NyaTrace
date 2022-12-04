@@ -75,6 +75,8 @@ TRThread::~TRThread() {
 
 void TRThread::run() {
 
+    isStopping = false;
+
     // 获得主机名字符串
     string hostStdString = hostname.toStdString();
     const char * hostCharString = hostStdString.c_str();
@@ -126,8 +128,11 @@ void TRThread::run() {
     maxHop    = DEF_MAX_HOP;
     oldMaxHop = DEF_MAX_HOP;
 
+    // 置线程池最大线程计数为跳数上限，让所有的线程能一起运行
+    tracingPool->setMaxThreadCount(DEF_MAX_HOP);
+
     // 使用子线程开始追踪路由
-    for (int i = 0; i < DEF_MAX_HOP; i++) {
+    for (int i = 0; (i < DEF_MAX_HOP) && !isStopping; i++) {
         cout << "TTL: " << i + 1 << endl;
 
         workers[i] = new TRTWorker;
@@ -240,6 +245,9 @@ void TRThread::run() {
 }
 
 void TRThread::requestStop() {
+    // 设置自身需要停止
+    isStopping = true;
+
     // 对每一个子线程发出停止信号
     for (int i = 0; i < DEF_MAX_HOP; i++) {
         if (workers[i] != NULL) {

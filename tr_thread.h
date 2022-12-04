@@ -100,6 +100,8 @@ private: // 私有变量区
     int maxHop;
     int oldMaxHop; // 旧的最大跳，用空间换时间（这样可以把更新操作放到最后了）
 
+    bool isStopping; // 是否中止
+
 protected:
     void run() override;
 
