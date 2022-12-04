@@ -15,10 +15,10 @@ jobs:
     - name: Install Qt environment
       uses: jurplel/install-qt-action@v3
       with:
-        version: '5.12.12'
+        version: '5.15.2'
         host: 'windows'
         target: 'desktop'
-        arch: 'win64_msvc2017_64'
+        arch: 'win64_msvc2019_64'
         install-deps: 'true'
         modules: 'qtcharts qtwebengine'
         
@@ -28,7 +28,7 @@ jobs:
     - name: Build exectuable
       shell: cmd
       run: |
-        call "%programfiles(x86)%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         qmake CONFIG+=release
         nmake
 
