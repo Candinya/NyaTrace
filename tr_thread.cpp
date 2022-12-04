@@ -152,22 +152,19 @@ void TRThread::run() {
             // 检查是否为目标主机
             if (ipAddress == ulDestIP) {
                 // 是目标主机，检测此时是否为最大跳
-                // 这里需要一个并发锁，防止读写错乱
                 if (ttl > maxHop) {
                     // 丢弃
                     return;
                 } else {
+
+                    // 输出日志
+                    cout << "New max hop found: " << ttl
+                         << " , terminating other workers..." << endl;
+                    // 这里需要一个并发锁，防止读写错乱
                     // 提示：我不确定这样是否为严格顺序且线程安全的，
                     // 但就实验结果来看似乎都还比较稳定，没有出现额外的记录？
                     maxHopMutexLock->lock(); // 上锁，防止意外操作
-                    if (ttl < maxHop) {
-
-                        // 输出日志
-                        cout << "New max hop found: " << ttl
-                             << " , terminating other workers..." << endl;
-
-                        // 设定为新的最大跳
-                        maxHop = ttl;
+                    if (ttl <= maxHop) {
 
                         // 终止所有更高跳数的线程（从 maxHop 到 DEF_MAX_HOP 之间的已经在上一轮被清理掉了）
                         for (int i = ttl; i < maxHop; i++) {
@@ -175,6 +172,9 @@ void TRThread::run() {
                                 workers[i]->requestStop();
                             }
                         }
+
+                        // 设定为新的最大跳
+                        maxHop = ttl;
 
                         // 发出状态命令，删除表中的多余行（暂时好像不需要？）
                     }
