@@ -2,6 +2,7 @@
 #define TR_THREAD_H
 
 #include <QThread>
+#include <QThreadPool>
 #include <QRunnable>
 #include <QMutex>
 
