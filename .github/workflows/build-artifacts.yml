@@ -21,13 +21,6 @@ jobs:
         arch: 'win64_msvc2017_64'
         install-deps: 'true'
         modules: 'qtcharts qtwebengine'
-        archives: 'qtbase qtsvg'
-        cache: 'true'
-        cache-key-prefix: 'install-qt-action'
-        setup-python: 'true'
-        tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
-        set-env: 'true'
-        tools-only: 'false'
         
     - name: Checkout codes
       uses: actions/checkout@v3
@@ -35,7 +28,7 @@ jobs:
     - name: Build exectuable
       shell: cmd
       run: |
-        call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        call "%programfiles(x86)%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         qmake CONFIG+=release
         nmake
 
