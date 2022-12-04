@@ -61,7 +61,7 @@ jobs:
       run: |
         set OLDDIR=%CD%
         call "%Qt5_DIR%\bin\qtenv2.bat"
-        chdir /d %OLDDIR% &
+        chdir /d %OLDDIR%
         windeployqt --qmldir . workspace\${env:ARCHIVE_NAME}\NyaTrace.exe
 
     - name: Prepare MMDB notices
