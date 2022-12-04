@@ -211,18 +211,24 @@ void TRThread::run() {
         });
 
         connect(workers[i], &TRTWorker::reportHostname, this, [=](const int ttl, const QString & hostname) {
+
             if (ttl <= maxHop) {
                 emit setHostname(ttl, hostname);
             }
+
         });
 
-        connect(workers[i], &TRTWorker::fin, this, [=](const int remainPacks) {
+        connect(workers[i], &TRTWorker::incProgress, this, [=](const int progress) {
+            // 发送进度
+            emit incProgress(progress);
+        });
+
+        connect(workers[i], &TRTWorker::fin, this, [=](const int ttl) {
+
             // 子线程运行完成，标记当前 worker 为 NULL
             cout << "Worker " << i << " finished." << endl;
-            workers[i] = NULL;
+            workers[ttl - 1] = NULL;
 
-            // 发送剩余包数
-            emit incProgress(remainPacks);
         });
 
         // 将任务分配到线程池并启动
@@ -264,16 +270,29 @@ void TRTWorker::run() {
     // 标记为非停止
     isStopping = false;
 
-    // 开始第一步：获得 IP
+    // 执行第一项任务：获得 IP
     GetIP();
 
-    // 如果获得的结果有效，并且并非正在停止，再执行第 2 、 3 步
+    // 这份任务的权重已经被回报了，所以不需要在这里再提交
+
+    // 如果获得的结果有效，并且并非正在停止，再执行第二项任务：获得 IP 信息
     if (isIPValid && !isStopping) {
         GetInfo();
     }
+
+    // 回报一份权重，作为进度条增长的数值
+    emit incProgress(DEF_MAX_TRY);
+
+    // 如果获得的结果有效，并且并非正在停止，再执行第三项任务：获得对应的主机名
     if (isIPValid && !isStopping) {
         GetHostname(); // 这一步最耗时，所以放到最后
     }
+
+    // 回报一份权重，作为进度条增长的数值
+    emit incProgress(DEF_MAX_TRY);
+
+    // 全部任务完成
+    emit fin(iTTL);
 
 }
 
@@ -320,6 +339,11 @@ void TRTWorker::GetIP() {
 
             // 任务完成，退出线程
             break;
+        } else {
+            // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
+            emit reportIPAndTimeConsumption(
+                iTTL, 0, 0, false
+            );
         }
     }
 
@@ -329,15 +353,10 @@ void TRTWorker::GetIP() {
         emit reportIPAndTimeConsumption(
             iTTL, pEchoReply->RoundTripTime, pEchoReply->Address, true
         );
-    } else {
-        // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
-        emit reportIPAndTimeConsumption(
-            iTTL, 0, 0, false
-        );
     }
 
     // 回报剩余的包数，作为进度条增长的数值
-    emit fin(remainPacks);
+    emit incProgress(remainPacks);
 
 }
 

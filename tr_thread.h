@@ -42,6 +42,7 @@ private: // 成员函数区
     void GetHostname(); // 第三步：得到主机名
 
 signals:
+    // 回报信息
     void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress, const bool isValid);
     void reportInformation(
         const int ttl,
@@ -50,7 +51,11 @@ signals:
     );
     void reportHostname(const int ttl, const QString & hostname);
 
-    void fin(const int remainPacks); // 运行结束
+    // 增加进度
+    void incProgress(const int progress);
+
+    // 报告完成
+    void fin(const int ttl);
 
 public slots:
     void requestStop();
@@ -111,7 +116,7 @@ signals:
 
     // 变更 UI 组件
     void setMessage(const QString &msg);
-    void incProgress(const int packs = DEF_MAX_TRY);
+    void incProgress(const int progress = DEF_MAX_TRY);
 
 public slots:
     void requestStop();
