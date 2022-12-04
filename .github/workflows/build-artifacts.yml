@@ -1,0 +1,103 @@
+name: Build artifacts
+
+on:
+  push:
+    branches: [ master, feat/ci ]
+    tags:
+    - 'v*'
+    
+jobs:
+  build:
+    name: Build
+    runs-on: windows-latest
+        
+    steps: 
+    - name: Install Qt environment
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.12.12'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2017_64'
+        install-deps: 'true'
+        modules: 'qtcharts qtwebengine'
+        archives: 'qtbase qtsvg'
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action'
+        setup-python: 'true'
+        tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
+        set-env: 'true'
+        tools-only: 'false'
+        
+    - name: Checkout codes
+      uses: actions/checkout@v3
+      
+    - name: Build exectuable
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+        qmake
+        nmake
+
+    - name: Set short SHA as outputs
+      if: startsWith(github.event.ref, 'refs/heads/')
+      run: echo "ARCHIVE_NAME=NyaTrace-$(git rev-parse --short HEAD)-MSVC-64bit" >> $env:GITHUB_ENV
+      
+    - name: Set tag version as outputs
+      if: startsWith(github.event.ref, 'refs/tags/')
+      run: |
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+          tag_name="${GITHUB_REF##*/}"
+          echo Tag $tag_name
+          git checkout $tag_name
+          echo "TAG_NAME=${tag_name}" >> $env:GITHUB_ENV
+          echo "ARCHIVE_NAME=NyaTrace-v${tag_name}-MSVC-64bit" >> $env:GITHUB_ENV
+
+    - name: Prepare workspace
+      shell: pwsh
+      run: |
+        # Prepare workspace dir
+        New-Item -ItemType Directory workspace
+        # Prepare target dir
+        New-Item -ItemType Directory workspace\${env:ARCHIVE_NAME}
+        # Copy executable
+        Copy-Item release\NyaTrace.exe workspace\${env:ARCHIVE_NAME}\
+        
+    - name: Win Deploy Qt
+      shell: cmd
+      run: |
+        call "%Qt5_DIR%\bin\qtenv2.bat"
+        cd workspace\${env:ARCHIVE_NAME}
+        windeployqt NyaTrace.exe
+
+    - name: Package artifacts
+      shell: pwsh
+      run: |
+        # Create MMDB notice dir
+        New-Item -ItemType Directory workspace\${env:ARCHIVE_NAME}\mmdb
+        # Write notice
+        $mmdbNotice = '请将 MMDB 文件放置在这里，具体操作请参见 https://github.com/Candinya/NyaTrace 相关的说明。'
+        $mmdbNotice | Out-File workspace\${env:ARCHIVE_NAME}\mmdb\'请将 MMDB 文件放置在这里.txt'
+        # Copy LICENSE file
+        Copy-Item LICENSE workspace\
+        # Make archive
+        Compress-Archive -Path workspace\* ${env:ARCHIVE_NAME}'.zip'
+        
+    - name: Create release draft
+      if: startsWith(github.event.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        name: NyaTrace - ${{ env.TAG_NAME }}
+        tag_name: ${{ env.TAG_NAME }}
+        generate_release_notes: true
+        draft: true
+        files: |
+          ${{ env.ARCHIVE_NAME }}.zip
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload built file as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ARCHIVE_NAME }}
+        path: ${{ env.ARCHIVE_NAME }}.zip
