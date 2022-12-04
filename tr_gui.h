@@ -21,10 +21,16 @@ private slots:
     void on_hostInput_returnPressed();
 
 private:
+    // 界面 UI
     Ui::TR_GUI *ui;
 
-    QStandardItemModel* hopResultsModel;
+    // 用于存储结果的模型
+    QStandardItemModel * hopResultsModel;
 
+    // 开始时间计时器
+    clock_t startTime;
+
+    // 成员函数
     void Initialize();
     void StartTracing();
     void AbortTracing();

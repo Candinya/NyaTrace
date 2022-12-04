@@ -236,7 +236,6 @@ void TRThread::run() {
 
     // 追踪完成，更新状态
     cout << "Trace Route finish." << endl;
-    emit setMessage("路由追踪完成。"); // 提示完成信息
 
 }
 

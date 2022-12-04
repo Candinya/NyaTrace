@@ -31,9 +31,6 @@ TR_GUI::TR_GUI(QWidget *parent)
     Initialize();
     CleanUp();
 
-    // 确认当前线程
-    cout << "Main thread: " << QThread::currentThread() << endl;
-
     // 建立路由追踪线程
     tracingThread = new TRThread;
 
@@ -150,6 +147,9 @@ void TR_GUI::StartTracing() {
     string hostStdString = ui->hostInput->text().toStdString();
     tracingThread->hostname = hostStdString.c_str();
 
+    // 记录开始时间
+    startTime = clock();
+
     // 开始追踪
     tracingThread->start();
 }
@@ -170,6 +170,12 @@ void TR_GUI::CleanUp() {
     ui->startStopButton->setDisabled(false); // 解锁按钮
     ui->startStopButton->setText("开始"); // 设置功能提示
     ui->hostInput->setDisabled(false); // 解锁输入框
+
+    // 记录结束时间
+    clock_t endTime = clock();
+
+    // 设置提示信息
+    ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg((endTime - startTime) / CLOCKS_PER_SEC));
 }
 
 
