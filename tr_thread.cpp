@@ -4,7 +4,9 @@
 
 #include "tr_thread.h"
 
-#pragma comment(lib, "ws2_32")
+#pragma comment(lib, "iphlpapi.lib")
+#pragma comment(lib, "ws2_32.lib")
+
 using namespace std;
 
 TRThread::TRThread(QObject *parent) {
@@ -23,19 +25,18 @@ TRThread::TRThread(QObject *parent) {
         exit(-1); // 结束
     }
 
-    // 载入 icmp.dll 动态链接库
-    hIcmpDll = LoadLibraryA("icmp.dll");
+    // 载入依赖的动态链接库
+    hIcmpDll = LoadLibraryA("IPHLPAPI.DLL");
     if (hIcmpDll == NULL) {
-        cerr << "Failed to load icmp.dll" << endl;
+        cerr << "Failed to load ICMP module" << endl;
         //emit setMessage(QString("icmp.dll 动态链接库加载失败"));
         WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
         exit(-1); // 结束
     }
 
-    // 从ICMP.DLL中获取所需的函数入口地址
+    // 从动态链接库中获取所需的函数入口地址
     IcmpCreateFile  = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"IcmpCreateFile" );
     IcmpCloseHandle = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"IcmpCloseHandle");
-    IcmpSendEcho    = (lpIcmpSendEcho   )GetProcAddress(hIcmpDll,"IcmpSendEcho"   );
 
     // 打开 ICMP 句柄
     if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE) {
@@ -139,7 +140,6 @@ void TRThread::run() {
         workers[i]->iTTL = i + 1;
         workers[i]->maxTry = DEF_MAX_TRY;
         workers[i]->ulDestIP = ulDestIP;
-        workers[i]->IcmpSendEcho = IcmpSendEcho;
         workers[i]->hIcmp = hIcmp;
 
         connect(workers[i], &TRTWorker::reportHop, this, [=](
@@ -332,9 +332,9 @@ void TRTWorker::run() {
 
         // 发送数据报并等待消息到达
         if (
-            IcmpSendEcho(
-                hIcmp, (IPAddr)ulDestIP,
-                SendData, sizeof (SendData), &IpOption,
+            IcmpSendEcho2(
+                hIcmp, NULL, NULL, NULL,
+                (IPAddr)ulDestIP, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
                 DEF_ICMP_TIMEOUT
             ) != 0

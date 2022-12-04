@@ -31,7 +31,8 @@ FORMS += \
     tr_gui.ui
 
 LIBS += \
-    -lws2_32
+    -lws2_32 \
+    -liphlpapi
 
 RC_ICONS += \
     icon.ico

@@ -3,20 +3,11 @@
 
 #include <winsock2.h> // 类型定义
 #include <IPHlpApi.h>
+#include <IcmpAPI.h>
 
-// 声明3个函数类型的指针
-typedef HANDLE (WINAPI *lpIcmpCreateFile)(VOID);
-typedef BOOL (WINAPI *lpIcmpCloseHandle)(HANDLE  IcmpHandle);
-typedef DWORD (WINAPI *lpIcmpSendEcho)(
-        HANDLE                   IcmpHandle,
-        IPAddr                   DestinationAddress,
-        LPVOID                   RequestData,
-        WORD                     RequestSize,
-        PIP_OPTION_INFORMATION   RequestOptions,
-        LPVOID                   ReplyBuffer,
-        DWORD                    ReplySize,
-        DWORD                    Timeout
-);
+// 声明 2 个函数类型的指针
+typedef HANDLE (WINAPI *lpIcmpCreateFile )(VOID);
+typedef BOOL   (WINAPI *lpIcmpCloseHandle)(HANDLE  IcmpHandle);
 
 // 常量定义
 const int DEF_ICMP_DATA_SIZE = 32;   // 默认ICMP数据部分长度

@@ -22,9 +22,6 @@ public: // 共享变量区
     int maxTry;      // 最大重试次数
     u_long ulDestIP; // 目标的 IP 地址
 
-    // 用于发送 ICMP ECHO 的调用程序入口地址
-    lpIcmpSendEcho IcmpSendEcho;
-
     // 定义动态链接库句柄
     HANDLE hIcmp;
 
@@ -75,7 +72,6 @@ private: // 私有变量区
     // 定义 3 个 icmp.dll 的函数指针
     lpIcmpCreateFile  IcmpCreateFile;
     lpIcmpCloseHandle IcmpCloseHandle;
-    lpIcmpSendEcho    IcmpSendEcho;
 
     // 定义动态链接库句柄
     HANDLE hIcmp;
