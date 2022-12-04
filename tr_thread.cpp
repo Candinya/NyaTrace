@@ -141,13 +141,9 @@ void TRThread::run() {
         workers[i]->maxTry = DEF_MAX_TRY;
         workers[i]->ulDestIP = ulDestIP;
         workers[i]->hIcmp = hIcmp;
+        workers[i]->ipdb = ipdb;
 
-        connect(workers[i], &TRTWorker::reportHop, this, [=](
-            const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress,
-            const bool isValid
-        ) {
-            cout << "Worker " << i << " with TTL " << ttl << " returned data."
-                 << " TTL: " << ttl << " Time Consumption: " << timeConsumption << " IP Address: " << ipAddress << endl;
+        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress, const bool isValid) {
 
             if (ttl > maxHop) {
                 // 超过目标主机，丢弃
@@ -190,21 +186,7 @@ void TRThread::run() {
             QString timeConsumptionStr;
             QString hostNameStr;
 
-            // 准备从 City 数据库中查询结果
-            QString cityName;
-            QString countryName;
-            double  latitude  = 0.0;
-            double  longitude = 0.0;
-            bool    isLocationValid = true;
-
-            // 准备从 ISP 数据库中查询结果
-            QString isp;
-            QString org;
-            uint    asn = 0;
-            QString asOrg;
-
             if (isValid) {
-
                 auto targetIp = inet_ntoa(*(in_addr*)&ipAddress);
 
                 // 记录当前跳数的地址
@@ -216,57 +198,6 @@ void TRThread::run() {
                 } else {
                     timeConsumptionStr = QString("小于 1 毫秒");
                 }
-
-                // 查询当前 IP 对应的主机名
-                sockaddr_in saGNI;
-                char hostnameBuf[NI_MAXHOST];
-
-                saGNI.sin_family = AF_INET;
-                saGNI.sin_addr.s_addr = ipAddress;
-                saGNI.sin_port = htons(DEF_PORT_TO_GET_HOSTNAME);
-
-                if (
-                    getnameinfo(
-                        (struct sockaddr *)&saGNI,
-                        sizeof (sockaddr),
-                        hostnameBuf, NI_MAXHOST,
-                        NULL, 0,
-                        NI_NAMEREQD
-                    ) == 0
-                ) {
-                    // 查询到了主机名
-                    hostNameStr = QString(hostnameBuf);
-                }
-
-                // 在 City 数据库中查询当前 IP 对应信息
-                if (!ipdb->LookUpIPCityInfo(
-                    targetIp,
-                    cityName,
-                    countryName,
-                    latitude,
-                    longitude,
-                    isLocationValid
-                )) {
-                    // 查询失败，使用填充字符
-                    cityName    = QString("未知");
-                    countryName = QString("");
-                    isLocationValid = false;
-                }
-
-                // 在 ISP 数据库中查询当前 IP 对应信息
-                if (!ipdb->LookUpIPISPInfo(
-                    targetIp,
-                    isp,
-                    org,
-                    asn,
-                    asOrg
-                )) {
-                    // 查询失败，使用填充字符
-                    isp  = QString("未知");
-                    org   = QString("");
-                    asOrg = QString("未知");
-                }
-
             } else {
 
                 // 记录当前跳的情况：超时未响应
@@ -274,25 +205,30 @@ void TRThread::run() {
                 // 其余置空
                 ipAddressStr = QString("");
 
-                cityName = QString("");
-                countryName = QString("");
-
-                isLocationValid = false;
-
-                isp  = QString("");
-                org   = QString("");
-                asOrg = QString("");
-
                 // 进一包
                 emit incProgress(1);
+
             }
 
-            // 更新数据
-            emit setHop(
-                ttl, timeConsumptionStr, ipAddressStr, hostNameStr,          // 基础信息
-                cityName, countryName, latitude, longitude, isLocationValid, // GeoIP2 City
-                isp, org, asn, asOrg                                         // GeoIP2 ISP
-            );
+            emit setIPAndTimeConsumption(ttl, timeConsumptionStr, ipAddressStr);
+        });
+
+        connect(workers[i], &TRTWorker::reportInformation, this, [=](
+            const int ttl,
+            const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+            const QString & isp, const QString & org, const uint & asn, const QString & asOrg
+        ) {
+
+            if (ttl <= maxHop) {
+                emit setInformation(ttl, cityName, countryName, latitude, longitude, isLocationValid, isp, org, asn, asOrg);
+            }
+
+        });
+
+        connect(workers[i], &TRTWorker::reportHostname, this, [=](const int ttl, const QString & hostname) {
+            if (ttl <= maxHop) {
+                emit setHostname(ttl, hostname);
+            }
         });
 
         connect(workers[i], &TRTWorker::fin, this, [=](const int remainPacks) {
@@ -328,11 +264,6 @@ void TRThread::requestStop() {
 }
 
 TRTWorker::TRTWorker(QObject *parent) {
-    // 初始化工作进程
-
-    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
-    ZeroMemory(SendData, sizeof(SendData));
-    pEchoReply = (PICMP_ECHO_REPLY)ReplyBuf;
 
     // 设置运行完成后自动销毁
     setAutoDelete(true);
@@ -345,14 +276,47 @@ TRTWorker::~TRTWorker() {
 
 void TRTWorker::run() {
 
-    // 设置 TTL
-    IpOption.Ttl = iTTL;
-
     // 标记为非停止
     isStopping = false;
 
+    // 开始第一步：获得 IP
+    GetIP();
+
+    // 如果获得的结果有效，并且并非正在停止，再执行第 2 、 3 步
+    if (isIPValid && !isStopping) {
+        GetInfo();
+    }
+    if (isIPValid && !isStopping) {
+        GetHostname(); // 这一步最耗时，所以放到最后
+    }
+
+}
+
+void TRTWorker::GetIP() {
+
+    // 第一步：追踪
+
     // 记录残余包数
     int remainPacks = maxTry;
+
+    // ICMP 包发送缓冲区和接收缓冲区
+    IP_OPTION_INFORMATION IpOption;
+    char SendData[DEF_ICMP_DATA_SIZE];
+    char ReplyBuf[sizeof(ICMP_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
+
+    // ICMP 回复的结果
+    PICMP_ECHO_REPLY pEchoReply;
+
+    // 初始化内存区间
+    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
+    ZeroMemory(SendData, sizeof(SendData));
+    pEchoReply = (PICMP_ECHO_REPLY)ReplyBuf;
+
+    // 设置 TTL
+    IpOption.Ttl = iTTL;
+
+    // 设置有效值
+    isIPValid = false;
 
     for (; (remainPacks > 0) && !isStopping; remainPacks--) {
 
@@ -366,31 +330,117 @@ void TRTWorker::run() {
             ) != 0
         ) {
             // 得到返回
-
-            cout << "Current hop IP: "<< inet_ntoa(*(in_addr*)&pEchoReply->Address) << " "
-                 << "Time: "     << pEchoReply->RoundTripTime << "ms" << endl;
-
-            // 完成追踪
-            if (!isStopping) {
-
-                // 仅在没有被请求停止的时候回报
-                emit reportHop(
-                    iTTL, pEchoReply->RoundTripTime, pEchoReply->Address, true
-                );
-            }
+            ipAddress = pEchoReply->Address;
+            isIPValid = true;
 
             // 任务完成，退出线程
             break;
-
-        } else {
-            // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
-            emit reportHop(
-                iTTL, 0, 0, false
-            );
         }
     }
 
+    // 完成追踪
+    if (isIPValid && !isStopping) {
+        // 仅在没有被请求停止的时候回报
+        emit reportIPAndTimeConsumption(
+            iTTL, pEchoReply->RoundTripTime, pEchoReply->Address, true
+        );
+    } else {
+        // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
+        emit reportIPAndTimeConsumption(
+            iTTL, 0, 0, false
+        );
+    }
+
+    // 回报剩余的包数，作为进度条增长的数值
     emit fin(remainPacks);
+
+}
+
+void TRTWorker::GetInfo() {
+
+    // 查询 IP 对应的信息
+
+    // 准备从 City 数据库中查询结果
+    QString cityName;
+    QString countryName;
+    double  latitude  = 0.0;
+    double  longitude = 0.0;
+    bool    isLocationValid = true;
+
+    // 准备从 ISP 数据库中查询结果
+    QString isp;
+    QString org;
+    uint    asn = 0;
+    QString asOrg;
+
+    // 初始化 IP 数据
+    auto targetIp = inet_ntoa(*(in_addr*)&ipAddress);
+
+    // 在 City 数据库中查询当前 IP 对应信息
+    if (!ipdb->LookUpIPCityInfo(
+        targetIp,
+        cityName,
+        countryName,
+        latitude,
+        longitude,
+        isLocationValid
+    )) {
+        // 查询失败，使用填充字符
+        cityName    = QString("未知");
+        countryName = QString("");
+        isLocationValid = false;
+    }
+
+    // 在 ISP 数据库中查询当前 IP 对应信息
+    if (!ipdb->LookUpIPISPInfo(
+        targetIp,
+        isp,
+        org,
+        asn,
+        asOrg
+    )) {
+        // 查询失败，使用填充字符
+        isp  = QString("未知");
+        org   = QString("");
+        asOrg = QString("未知");
+    }
+
+    // 更新数据
+    emit reportInformation(
+        iTTL,
+        cityName, countryName, latitude, longitude, isLocationValid, // GeoIP2 City
+        isp, org, asn, asOrg                                         // GeoIP2 ISP
+    );
+
+}
+
+void TRTWorker::GetHostname() {
+
+    // 这一步是最耗时的操作，它基本上请求必定会超时，所以放到这里来尽可能优化一下体验
+
+    // 参考 https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getnameinfo
+    sockaddr_in saGNI;
+    char hostnameBuf[NI_MAXHOST];
+
+    saGNI.sin_family = AF_INET;
+    saGNI.sin_addr.s_addr = ipAddress;
+    saGNI.sin_port = htons(DEF_PORT_TO_GET_HOSTNAME);
+
+    if (
+        getnameinfo(
+            (struct sockaddr *)&saGNI,
+            sizeof (sockaddr),
+            hostnameBuf, NI_MAXHOST,
+            NULL, 0,
+            NI_NAMEREQD
+        ) == 0
+    ) {
+        // 查询到了主机名
+        emit reportHostname(iTTL, QString(hostnameBuf));
+    }
+
+    // 否则就是打咩
+
 }
 
 void TRTWorker::requestStop() {

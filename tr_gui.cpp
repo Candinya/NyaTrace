@@ -37,23 +37,17 @@ TR_GUI::TR_GUI(QWidget *parent)
     // 建立路由追踪线程
     tracingThread = new TRThread;
 
-    connect(tracingThread, &TRThread::setHop, this, [=](
-        const int ttl, const QString & timeComnsumption, const QString & ipAddress, const QString & hostName,
-        const QString & cityName, const QString & countryName, const double latitude, const double longitude, const bool isLocationValid,
-        const QString & isp, const QString & org, const uint & asn, const QString & asOrg
-    ) {
-        // 更新进度
-        //ui->tracingProgress->setValue(ttl);
-
-        cout << "Setting data to table row " << ttl
-             << " IP Address: " << ipAddress.toStdString()
-             << endl;
-
-        // 填充表格
+    // 填充表格
+    connect(tracingThread, &TRThread::setIPAndTimeConsumption, this, [=](const int ttl, const QString & timeComnsumption, const QString & ipAddress) {
         hopResultsModel->setItem(ttl-1, 0, new QStandardItem(timeComnsumption));
         hopResultsModel->setItem(ttl-1, 1, new QStandardItem(ipAddress));
-        hopResultsModel->setItem(ttl-1, 2, new QStandardItem(hostName));
+    });
 
+    connect(tracingThread, &TRThread::setInformation, this, [=](
+        const int ttl,
+        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+        const QString & isp, const QString & org, const uint & asn, const QString & asOrg
+    ) {
         hopResultsModel->setItem(ttl-1, 3, new QStandardItem(cityName));
         hopResultsModel->setItem(ttl-1, 4, new QStandardItem(countryName));
 
@@ -74,6 +68,11 @@ TR_GUI::TR_GUI(QWidget *parent)
         hopResultsModel->setItem(ttl-1, 10, new QStandardItem(asOrg));
     });
 
+    connect(tracingThread, &TRThread::setHostname, this, [=](const int ttl, const QString & hostName) {
+        hopResultsModel->setItem(ttl-1, 2, new QStandardItem(hostName));
+    });
+
+    // 更新 UI
     connect(tracingThread, &TRThread::setMessage, this, [=](QString msg) {
         // 更新信息
         ui->statusbar->showMessage(msg);

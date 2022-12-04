@@ -25,24 +25,32 @@ public: // 共享变量区
     // 定义动态链接库句柄
     HANDLE hIcmp;
 
+    // 用于读取 IP 对应数据的类操作接口
+    IPDB * ipdb;
+
 protected:
     void run() override;
 
 private: // 私有变量区
     bool isStopping; // 是否中止
+    bool isIPValid;  // IP 结果是否有效
 
-    // ICMP 包发送缓冲区和接收缓冲区
-    IP_OPTION_INFORMATION IpOption;
-    char SendData[DEF_ICMP_DATA_SIZE];
-    char ReplyBuf[sizeof(ICMP_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
+    unsigned long ipAddress;
 
-    // ICMP 回复的结果指针
-    PICMP_ECHO_REPLY pEchoReply;
+private: // 成员函数区
+    void GetIP();        // 第一步：得到目标 IP
+    void GetInfo();      // 第二步：得到 IP 对应的数据库信息
+    void GetHostname(); // 第三步：得到主机名
 
 signals:
-    void reportHop(
-        const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress, const bool isValid
+    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress, const bool isValid);
+    void reportInformation(
+        const int ttl,
+        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+        const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     );
+    void reportHostname(const int ttl, const QString & hostname);
+
     void fin(const int remainPacks); // 运行结束
 
 public slots:
@@ -95,11 +103,16 @@ protected:
     void run() override;
 
 signals:
-    void setHop(
-        const int ttl, const QString & timeComnsumption, const QString & ipAddress, const QString & hostName,
-        const QString & cityName, const QString & countryName, const double latitude, const double longitude, const bool isLocationValid,
+    // 填充表格
+    void setIPAndTimeConsumption(const int ttl, const QString & timeComnsumption, const QString & ipAddress);
+    void setInformation(
+        const int ttl,
+        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     );
+    void setHostname(const int ttl, const QString & hostname);
+
+    // 变更 UI 组件
     void setMessage(const QString &msg);
     void incProgress(const int packs = DEF_MAX_TRY);
 
