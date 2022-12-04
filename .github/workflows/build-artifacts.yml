@@ -5,7 +5,9 @@ on:
     branches: [ master ]
     tags:
     - 'v*'
-    
+  pull_request:
+    branches: [ master ]
+
 jobs:
   build:
     name: Build
@@ -33,7 +35,7 @@ jobs:
         nmake
 
     - name: Set short SHA as outputs
-      if: startsWith(github.event.ref, 'refs/heads/')
+      if: startsWith(github.event.ref, 'refs/heads/') || startsWith(github.event.ref, 'refs/pull/')
       run: echo "ARCHIVE_NAME=NyaTrace-$(git rev-parse --short HEAD)-MSVC-64bit" >> $env:GITHUB_ENV
       
     - name: Set tag version as outputs
