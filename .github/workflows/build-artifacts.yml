@@ -35,15 +35,17 @@ jobs:
         qmake CONFIG+=release
         nmake
 
-    - name: Set short SHA as outputs
+    - name: Set short SHA as package name
       if: "!startsWith(github.event.ref, 'refs/tags/')"
       run: echo "ARCHIVE_NAME=NyaTrace-$(git rev-parse --short HEAD)-MSVC-64bit" >> $env:GITHUB_ENV
       
-    - name: Set tag version as outputs
+    - name: Set tag version into env
       if: startsWith(github.event.ref, 'refs/tags/')
-      run: |
-          echo "TAG_NAME=${env:GITHUB_REF_NAME}" >> $env:GITHUB_ENV
-          echo "ARCHIVE_NAME=NyaTrace-${env:TAG_NAME}-MSVC-64bit" >> $env:GITHUB_ENV
+      run: echo "TAG_NAME=${env:GITHUB_REF_NAME}" >> $env:GITHUB_ENV
+      
+    - name: Set tag version as package name
+      if: startsWith(github.event.ref, 'refs/tags/')
+      run: echo "ARCHIVE_NAME=NyaTrace-${env:TAG_NAME}-MSVC-64bit" >> $env:GITHUB_ENV
 
     - name: Prepare workspace
       shell: pwsh
