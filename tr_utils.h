@@ -20,6 +20,7 @@ typedef DWORD (WINAPI *lpIcmpSendEcho)(
 
 // 常量定义
 const int DEF_ICMP_DATA_SIZE = 32;   // 默认ICMP数据部分长度
+const u_short DEF_PORT_TO_GET_HOSTNAME = 36872;
 
 // 一些通用的设置
 const int DEF_MAX_HOP = 30;          // 最大跳站数

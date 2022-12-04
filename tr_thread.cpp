@@ -89,9 +89,9 @@ void TRThread::run() {
     // 将命令行参数转换为IP地址
     u_long ulDestIP = inet_addr(hostCharString); // 初始化目标地址，将一个点分十进制的IP转换成一个长整数型数（u_long类型）
 
-    if (ulDestIP == INADDR_NONE) { // INADDR_NONE 是个宏定义，代表IpAddress 无效的IP地址。
+    if (ulDestIP == INADDR_NONE) { // INADDR_NONE 是个宏定义，代表 IpAddress 是无效的 IP 地址。
         // 转换不成功时按域名解析
-        hostent *pHostent = gethostbyname(hostCharString); // 返回对应于给定主机名的包含主机名字和地址信息的hostent结构的指针
+        hostent *pHostent = gethostbyname(hostCharString); // 返回对应于给定主机名的包含主机名字和地址信息的 hostent 结构的指针
         if (pHostent) {
             ulDestIP = (*(in_addr *) pHostent->h_addr).s_addr;//in_addr 用来表示一个32位的IPv4地址.
 
@@ -186,6 +186,7 @@ void TRThread::run() {
             // 基础信息
             QString ipAddressStr;
             QString timeConsumptionStr;
+            QString hostNameStr;
 
             // 准备从 City 数据库中查询结果
             QString cityName;
@@ -202,8 +203,10 @@ void TRThread::run() {
 
             if (isValid) {
 
+                auto targetIp = inet_ntoa(*(in_addr*)&ipAddress);
+
                 // 记录当前跳数的地址
-                ipAddressStr = QString("%1").arg(inet_ntoa(*(in_addr*)&ipAddress));
+                ipAddressStr = QString("%1").arg(targetIp);
 
                 // 记录当前跳数的耗时
                 if (timeConsumption > 0) {
@@ -212,9 +215,30 @@ void TRThread::run() {
                     timeConsumptionStr = QString("小于 1 毫秒");
                 }
 
+                // 查询当前 IP 对应的主机名
+                sockaddr_in saGNI;
+                char hostnameBuf[NI_MAXHOST];
+
+                saGNI.sin_family = AF_INET;
+                saGNI.sin_addr.s_addr = ipAddress;
+                saGNI.sin_port = htons(DEF_PORT_TO_GET_HOSTNAME);
+
+                if (
+                    getnameinfo(
+                        (struct sockaddr *)&saGNI,
+                        sizeof (sockaddr),
+                        hostnameBuf, NI_MAXHOST,
+                        NULL, 0,
+                        NI_NAMEREQD
+                    ) == 0
+                ) {
+                    // 查询到了主机名
+                    hostNameStr = QString(hostnameBuf);
+                }
+
                 // 在 City 数据库中查询当前 IP 对应信息
                 if (!ipdb->LookUpIPCityInfo(
-                    inet_ntoa(*(in_addr*)&ipAddress),
+                    targetIp,
                     cityName,
                     countryName,
                     latitude,
@@ -229,7 +253,7 @@ void TRThread::run() {
 
                 // 在 ISP 数据库中查询当前 IP 对应信息
                 if (!ipdb->LookUpIPISPInfo(
-                    inet_ntoa(*(in_addr*)&ipAddress),
+                    targetIp,
                     isp,
                     org,
                     asn,
@@ -263,7 +287,7 @@ void TRThread::run() {
 
             // 更新数据
             emit setHop(
-                ttl, timeConsumptionStr, ipAddressStr,                       // 基础信息
+                ttl, timeConsumptionStr, ipAddressStr, hostNameStr,          // 基础信息
                 cityName, countryName, latitude, longitude, isLocationValid, // GeoIP2 City
                 isp, org, asn, asOrg                                         // GeoIP2 ISP
             );
