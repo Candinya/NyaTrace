@@ -234,6 +234,9 @@ void TRThread::run() {
         // 将任务分配到线程池并启动
         tracingPool->start(workers[i]);
 
+        // 休息一会，来尽可能创造到达目标主机的首包时间差
+        usleep(DEF_INTERVAL_PER_THREAD);
+
     }
 
     // 等待所有的线程运行结束

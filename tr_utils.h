@@ -16,5 +16,6 @@ const u_short DEF_PORT_TO_GET_HOSTNAME = 36872;
 // 一些通用的设置
 const int DEF_MAX_HOP = 30;          // 最大跳站数
 const DWORD DEF_ICMP_TIMEOUT = 3000; // 默认超时时间，单位ms
+const unsigned long DEF_INTERVAL_PER_THREAD = 100; // 每一条线程启动距离上一条的等待时间
 
 #endif // TR_UTILS_H
