@@ -173,7 +173,6 @@ void TRThread::run() {
             // 基础信息
             QString ipAddressStr;
             QString timeConsumptionStr;
-            QString hostNameStr;
 
             if (isValid) {
                 auto targetIp = inet_ntoa(*(in_addr*)&ipAddress);
