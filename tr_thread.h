@@ -13,7 +13,7 @@ class TRTWorker : public QObject, public QRunnable
     Q_OBJECT
 
 public:
-    explicit TRTWorker(QObject *parent = nullptr);
+    explicit TRTWorker();
     ~TRTWorker();
 
 public: // 共享变量区
@@ -66,7 +66,7 @@ class TRThread : public QThread
     Q_OBJECT
 
 public:
-    explicit TRThread(QObject *parent = nullptr);
+    explicit TRThread();
     ~TRThread();
 
 public: // 共享变量区

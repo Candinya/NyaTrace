@@ -9,7 +9,7 @@
 
 using namespace std;
 
-TRThread::TRThread(QObject *parent) {
+TRThread::TRThread() {
 
     cout << "TRThread start constructing..." << endl;
 
@@ -258,7 +258,7 @@ void TRThread::requestStop() {
     }
 }
 
-TRTWorker::TRTWorker(QObject *parent) {
+TRTWorker::TRTWorker() {
 
     // 设置运行完成后自动销毁
     setAutoDelete(true);
