@@ -430,7 +430,6 @@ void TRTWorker::GetHostname() {
 
     saGNI.sin_family = AF_INET;
     saGNI.sin_addr.s_addr = ipAddress;
-    saGNI.sin_port = htons(DEF_PORT_TO_GET_HOSTNAME);
 
     if (
         getnameinfo(
