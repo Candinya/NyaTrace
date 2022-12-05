@@ -94,4 +94,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.ARCHIVE_NAME }}.zip
-        path: workspace/${{ env.ARCHIVE_NAME }}/
+        path: workspace/
