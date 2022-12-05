@@ -35,12 +35,20 @@ TRThread::TRThread() {
     }
 
     // 从动态链接库中获取所需的函数入口地址
-    IcmpCreateFile  = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"IcmpCreateFile" );
-    IcmpCloseHandle = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"IcmpCloseHandle");
+    IcmpCreateFile   = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"IcmpCreateFile"  );
+    IcmpCloseHandle  = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"IcmpCloseHandle" );
+    Icmp6CreateFile  = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"Icmp6CreateFile" );
+    Icmp6CloseHandle = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"Icmp6CloseHandle");
 
     // 打开 ICMP 句柄
     if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE) {
         cerr << "Failed to open ICMP handle" << endl;
+        //emit setMessage(QString("ICMP 句柄打开失败"));
+        WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+        exit(-1); // 结束
+    }
+    if ((hIcmp6 = Icmp6CreateFile()) == INVALID_HANDLE_VALUE) {
+        cerr << "Failed to open ICMP6 handle" << endl;
         //emit setMessage(QString("ICMP 句柄打开失败"));
         WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
         exit(-1); // 结束
@@ -67,7 +75,10 @@ TRThread::~TRThread() {
 
     // 回收资源
     IcmpCloseHandle(hIcmp);
+    Icmp6CloseHandle(hIcmp6);
+
     FreeLibrary(hIcmpDll);
+
     WSACleanup();
 
     cout << "TRThread destroied." << endl;
@@ -78,51 +89,81 @@ void TRThread::run() {
     isStopping = false;
 
     // 获得主机名字符串
-    string hostStdString = hostname.toStdString();
-    const char * hostCharString = hostStdString.c_str();
+    string hostStdStr = hostname.toStdString();
+    const char * hostCharStr = hostStdStr.c_str();
 
-    cout << "Target host: " << hostCharString << endl;
+    cout << "Target host: " << hostCharStr << endl;
 
-    // 将命令行参数转换为IP地址
-    u_long ulDestIP = inet_addr(hostCharString); // 初始化目标地址，将一个点分十进制的IP转换成一个长整数型数（u_long类型）
 
-    if (ulDestIP == INADDR_NONE) { // INADDR_NONE 是个宏定义，代表 IpAddress 是无效的 IP 地址。
-        // 转换不成功时按域名解析
-        hostent *pHostent = gethostbyname(hostCharString); // 返回对应于给定主机名的包含主机名字和地址信息的 hostent 结构的指针
-        if (pHostent) {
-            ulDestIP = (*(in_addr *) pHostent->h_addr).s_addr;//in_addr 用来表示一个32位的IPv4地址.
+    sockaddr_storage targetHostIPAddress; // 用于存储目标地址
 
-            // 更新状态
-            cout << "Tracing route to " << hostCharString
-                 << " [" << inet_ntoa(*(in_addr *) (&ulDestIP)) << "] "
-                 << "with maximun hops " << DEF_MAX_HOP
-                 << endl;
-
-            emit setMessage(
-                QString("开始追踪路由 %1 [%2] ，最大跃点数为 %3 。")
-                   .arg(hostCharString, inet_ntoa(*(in_addr *) (&ulDestIP)))
-                   .arg(DEF_MAX_HOP)
-            );
-
-        } else { // 主机名解析失败
+    if (parseIPAddress(hostCharStr, targetHostIPAddress)) {
+        // 解析成功，更新状态
+        cout << "Tracing route to " << hostCharStr
+             << " with maximun hops " << DEF_MAX_HOP
+             << endl;
+        emit setMessage(
+            QString("开始追踪路由 %1 ，最大跃点数为 %2 。")
+               .arg(hostCharStr)
+               .arg(DEF_MAX_HOP)
+        );
+    } else {
+        // 按照域名解析
+        hostent * pHostent = gethostbyname(hostCharStr);
+        if (pHostent != NULL) {
+            switch (pHostent->h_addrtype) {
+            case AF_INET:
+                // 是 IPv4
+                targetHostIPAddress.ss_family = AF_INET;
+                (*(sockaddr_in*)&targetHostIPAddress).sin_addr.s_addr = *(u_long *)pHostent->h_addr_list[0];
+                break;
+            case AF_INET6:
+                // 是 IPv6
+                targetHostIPAddress.ss_family = AF_INET6;
+                memcpy((*(sockaddr_in6*)&targetHostIPAddress).sin6_addr.s6_addr, pHostent->h_addr_list[0], pHostent->h_length);
+                break;
+            default:
+                // 不是 IPv4 也不是 IPv6
+                cerr << "Resolved with invalid reason: " << pHostent->h_addrtype << endl;
+                emit setMessage(QString("主机名解析结果异常，结果类型为： %1 。").arg(pHostent->h_addrtype));
+                WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+                return; // 结束
+                // break;
+            }
+        } else {
+            // 解析失败
             cerr << "Failed to resolve host with error: " << WSAGetLastError() << endl;
             emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(WSAGetLastError()));
             WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
             return; // 结束
         }
-    } else {
-        // 更新状态
-        cout << "Tracing route to " << hostCharString
-             << " with maximun hops " << DEF_MAX_HOP
-             << endl;
-        emit setMessage(
-            QString("开始追踪路由 %1 ，最大跃点数为 %2 。")
-               .arg(hostCharString)
-               .arg(DEF_MAX_HOP)
-        );
     }
 
-    cout << "Target IP: " << inet_ntoa(*(in_addr *) (&ulDestIP)) << endl;
+    char * printIPAddress = NULL;
+    if (targetHostIPAddress.ss_family == AF_INET) {
+        // 是 IPv4
+        printIPAddress = new char(INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &(*(sockaddr_in*)&targetHostIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
+    } else {
+        // 是 IPv6
+        printIPAddress = new char(INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetHostIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
+    }
+
+    // 更新状态
+    cout << "Tracing route to " << hostCharStr
+         << " [" << printIPAddress << "] "
+         << "with maximun hops " << DEF_MAX_HOP
+         << endl;
+
+    emit setMessage(
+        QString("开始追踪路由 %1 [%2] ，最大跃点数为 %3 。")
+           .arg(hostCharStr, printIPAddress)
+           .arg(DEF_MAX_HOP)
+    );
+
+    // 回收内存
+    delete printIPAddress;
 
     // 初始化最大跳数据
     maxHop    = DEF_MAX_HOP;
@@ -138,11 +179,12 @@ void TRThread::run() {
         workers[i] = new TRTWorker;
 
         workers[i]->iTTL = i + 1;
-        workers[i]->ulDestIP = ulDestIP;
+        workers[i]->targetHostIPAddress = &targetHostIPAddress;
         workers[i]->hIcmp = hIcmp;
+        workers[i]->hIcmp6 = hIcmp6;
         workers[i]->ipdb = ipdb;
 
-        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress, const bool isValid) {
+        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int ttl, const unsigned long timeConsumption, const sockaddr_storage * ipAddress, const bool isValid) {
 
             if (ttl > maxHop) {
                 // 超过目标主机，丢弃
@@ -150,7 +192,7 @@ void TRThread::run() {
             }
 
             // 检查是否为目标主机
-            if (ipAddress == ulDestIP && ttl <= maxHop) {
+            if (memcmp(&ipAddress, &targetHostIPAddress, sizeof(sockaddr_storage)) == 0 && ttl <= maxHop) {
                 // 是目标主机，并且比最大跳还要靠前
 
                 // 设定为新的最大跳
@@ -175,10 +217,22 @@ void TRThread::run() {
             QString timeConsumptionStr;
 
             if (isValid) {
-                auto targetIp = inet_ntoa(*(in_addr*)&ipAddress);
+                char * printIPAddress = NULL;
+                if (ipAddress->ss_family == AF_INET) {
+                    // 是 IPv4
+                    printIPAddress = new char(INET_ADDRSTRLEN);
+                    inet_ntop(AF_INET, &((sockaddr_in*)ipAddress)->sin_addr, printIPAddress, INET_ADDRSTRLEN);
+                } else {
+                    // 是 IPv6
+                    printIPAddress = new char(INET6_ADDRSTRLEN);
+                    inet_ntop(AF_INET6, &((sockaddr_in6*)ipAddress)->sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
+                }
 
                 // 记录当前跳数的地址
-                ipAddressStr = QString("%1").arg(targetIp);
+                ipAddressStr = QString(printIPAddress);
+
+                // 回收内存
+                delete printIPAddress;
 
                 // 记录当前跳数的耗时
                 if (timeConsumption > 0) {
@@ -186,6 +240,9 @@ void TRThread::run() {
                 } else {
                     timeConsumptionStr = QString("小于 1 毫秒");
                 }
+
+                // 回收内存
+                delete ipAddress;
             } else {
 
                 // 记录当前跳的情况：超时未响应
@@ -246,6 +303,27 @@ void TRThread::run() {
 
 }
 
+bool TRThread::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress) {
+
+    IN_ADDR  addr4; // IPv4 地址的暂存区域
+    IN6_ADDR addr6; // IPv6 地址的暂存区域
+
+    if (inet_pton(AF_INET, ipStr, &addr4) != INADDR_NONE) {
+        // 输入是 IPv4 地址
+        targetHostIPAddress.ss_family = AF_INET;
+        (*(sockaddr_in*)&targetHostIPAddress).sin_addr = addr4;
+    } else if (inet_pton(AF_INET6, ipStr, &addr6)) {
+        // 输入是 IPv6 地址
+        targetHostIPAddress.ss_family = AF_INET6;
+        (*(sockaddr_in6*)&targetHostIPAddress).sin6_addr = addr6;
+    } else {
+        // 什么都不是
+        return false;
+    }
+
+    return true;
+}
+
 void TRThread::requestStop() {
     // 设置自身需要停止
     isStopping = true;
@@ -275,7 +353,14 @@ void TRTWorker::run() {
     isStopping = false;
 
     // 执行第一项任务：获得 IP
-    GetIP();
+    switch (targetHostIPAddress->ss_family) {
+    case AF_INET:
+        GetIPv4();
+        break;
+    case AF_INET6:
+        GetIPv6();
+        break;
+    }
 
     // 回报一份权重，作为进度条增长的数值
     emit incProgress(1);
@@ -301,7 +386,7 @@ void TRTWorker::run() {
 
 }
 
-void TRTWorker::GetIP() {
+void TRTWorker::GetIPv4() {
 
     // 第一步：追踪
     // ICMP 包发送缓冲区和接收缓冲区
@@ -332,7 +417,68 @@ void TRTWorker::GetIP() {
         if (
             IcmpSendEcho2(
                 hIcmp, NULL, NULL, NULL,
-                (IPAddr)ulDestIP, SendData, sizeof (SendData), &IpOption,
+                ((sockaddr_in*)targetHostIPAddress)->sin_addr.s_addr, SendData, sizeof (SendData), &IpOption,
+                ReplyBuf, sizeof(ReplyBuf),
+                DEF_ICMP_TIMEOUT
+            ) != 0
+        ) {
+            // 得到返回
+            ipAddress = pEchoReply->Address;
+            isIPValid = true;
+
+            // 任务完成，退出线程
+            break;
+        } else {
+            // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
+            timeoutCount++;
+            emit reportIPAndTimeConsumption(
+                iTTL, timeoutCount, 0, false
+            );
+        }
+    }
+
+    // 完成追踪
+    if (isIPValid && !isStopping) {
+        // 仅在没有被请求停止的时候回报
+        emit reportIPAndTimeConsumption(
+            iTTL, pEchoReply->RoundTripTime, pEchoReply->Address, true
+        );
+    }
+
+}
+
+void TRTWorker::GetIPv6() {
+
+    // 第一步：追踪
+    // ICMP 包发送缓冲区和接收缓冲区
+    IP_OPTION_INFORMATION IpOption;
+    char SendData[DEF_ICMP_DATA_SIZE];
+    char ReplyBuf[sizeof(ICMP6_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
+
+    // ICMP 回复的结果
+    PICMPV6_ECHO_REPLY pEchoReply;
+
+    // 初始化内存区间
+    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
+    ZeroMemory(SendData, sizeof(SendData));
+    pEchoReply = (PICMPV6_ECHO_REPLY)ReplyBuf;
+
+    // 设置 TTL
+    IpOption.Ttl = iTTL;
+
+    // 设置有效值
+    isIPValid = false;
+
+    // 设置超时次数
+    int timeoutCount = 0;
+
+    while (!isStopping) {
+
+        // 发送数据报并等待消息到达
+        if (
+            Icmp6SendEcho2(
+                hIcmp6, NULL, NULL, NULL,
+                NULL, (sockaddr_in6*)targetHostIPAddress, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
                 DEF_ICMP_TIMEOUT
             ) != 0

@@ -18,10 +18,11 @@ public:
 
 public: // 共享变量区
     int iTTL;        // 当前包的 TTL 值
-    u_long ulDestIP; // 目标的 IP 地址
+    sockaddr_storage * targetHostIPAddress;
 
     // 定义动态链接库句柄
     HANDLE hIcmp;
+    HANDLE hIcmp6;
 
     // 用于读取 IP 对应数据的类操作接口
     IPDB * ipdb;
@@ -33,16 +34,17 @@ private: // 私有变量区
     bool isStopping; // 是否中止
     bool isIPValid;  // IP 结果是否有效
 
-    unsigned long ipAddress;
+    sockaddr_storage currentHopIPAddress;
 
 private: // 成员函数区
-    void GetIP();        // 第一步：得到目标 IP
+    void GetIPv4();        // 第一步：得到目标 IP
+    void GetIPv6();        // 第一步：得到目标 IP
     void GetInfo();      // 第二步：得到 IP 对应的数据库信息
     void GetHostname(); // 第三步：得到主机名
 
 signals:
     // 回报信息
-    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress, const bool isValid);
+    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const sockaddr_storage * ipAddress, const bool isValid);
     void reportInformation(
         const int ttl,
         const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
@@ -80,12 +82,15 @@ private: // 私有变量区
     // 定义动态链接库
     HMODULE hIcmpDll;
 
-    // 定义 3 个 icmp.dll 的函数指针
+    // 定义 4 个 icmp.dll 的函数指针
     lpIcmpCreateFile  IcmpCreateFile;
     lpIcmpCloseHandle IcmpCloseHandle;
+    lpIcmpCreateFile  Icmp6CreateFile;
+    lpIcmpCloseHandle Icmp6CloseHandle;
 
     // 定义动态链接库句柄
     HANDLE hIcmp;
+    HANDLE hIcmp6;
 
     // 用于读取 IP 对应数据的类操作接口
     IPDB * ipdb;
@@ -101,6 +106,9 @@ private: // 私有变量区
     int oldMaxHop; // 旧的最大跳，用空间换时间（这样可以把更新操作放到最后了）
 
     bool isStopping; // 是否中止
+
+private: // 工具函数
+    bool TRThread::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress);
 
 protected:
     void run() override;
