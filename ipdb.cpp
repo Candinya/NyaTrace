@@ -2,30 +2,26 @@
 
 #include "mmdb_settings.h"
 
-#include <iostream>
 #include <direct.h>
-
-using namespace std;
+#include <QDebug>
 
 IPDB::IPDB() { // 构造函数
     // 输出当前工作目录
-    cout << "Now working in: " << _getcwd(NULL, 0) << endl;
+    qDebug() << "Now working in: " << _getcwd(NULL, 0);
 
     // 初始化 MMDB 数据库操作对象
     int openDatabaseStatus;
     openDatabaseStatus = MMDB_open(GEOIP2_CITY_MMDB, MMDB_MODE_MMAP, &CityDB);
     if (openDatabaseStatus != MMDB_SUCCESS) {
         // Open failed
-        cerr << "Failed to open GeoIP2 City database from " << GEOIP2_CITY_MMDB
-             << " with error: " << MMDB_strerror(openDatabaseStatus)
-             << endl;
+        qCritical() << "Failed to open GeoIP2 City database from " << GEOIP2_CITY_MMDB
+             << " with error: " << MMDB_strerror(openDatabaseStatus);
     }
     openDatabaseStatus = MMDB_open(GEOIP2_ISP_MMDB, MMDB_MODE_MMAP, &ISPDB);
     if (openDatabaseStatus != MMDB_SUCCESS) {
         // Open failed
-        cerr << "Failed to open GeoIP2 ISP database from " << GEOIP2_ISP_MMDB
-             << " with error: " << MMDB_strerror(openDatabaseStatus)
-             << endl;
+        qCritical() << "Failed to open GeoIP2 ISP database from " << GEOIP2_ISP_MMDB
+             << " with error: " << MMDB_strerror(openDatabaseStatus);
     }
 
 }
@@ -66,9 +62,8 @@ bool IPDB::LookUpIPCityInfo(
 
     MMDB_lookup_result_s city_result = MMDB_lookup_sockaddr(&CityDB, ip_address, &mmdbStatus);
     if (mmdbStatus != MMDB_SUCCESS) {
-        cerr << "Failed to search from database with error: "
-             << MMDB_strerror(mmdbStatus)
-             << endl;
+        qWarning() << "Failed to search from database with error: "
+             << MMDB_strerror(mmdbStatus);
         return false;
     }
 
@@ -80,9 +75,8 @@ bool IPDB::LookUpIPCityInfo(
         int getEntryDataListStatus = MMDB_get_entry_data_list(&city_result.entry, &cityEntryDataList);
         if (getEntryDataListStatus != MMDB_SUCCESS) {
             // 失败了
-            cerr << "Failed to retrieve data with error: "
-                 << MMDB_strerror(getEntryDataListStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve data with error: "
+                 << MMDB_strerror(getEntryDataListStatus);
         } else {
             // 打印所有数据
             MMDB_dump_entry_data_list(stdout, cityEntryDataList, 2);
@@ -101,42 +95,40 @@ bool IPDB::LookUpIPCityInfo(
         // 城市名
         if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_cityName, "city", "names", "zh-CN", NULL)) == MMDB_SUCCESS) {
             // 获得中文名
-            cout << "Get city zh-CN name successfully." << endl;
+            qDebug() << "Get city zh-CN name successfully.";
             auto cityNameStr = strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size);
             cityName = QString(cityNameStr);
             free(cityNameStr);
         } else if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_cityName, "city", "names", "en", NULL)) == MMDB_SUCCESS) {
             // 获得英文名
-            cout << "Get city en name successfully." << endl;
+            qDebug() << "Get city en name successfully.";
             auto cityNameStr = strndup(cityEntryData_cityName.utf8_string, cityEntryData_cityName.data_size);
             cityName = QString(cityNameStr);
             free(cityNameStr);
         } else {
             // 失败了
-            cerr << "Failed to retrieve city name data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve city name data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             cityName = QString("未知");
         }
 
         // 国名
         if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_countryName, "country", "names", "zh-CN", NULL)) == MMDB_SUCCESS) {
             // 获得中文名
-            cout << "Get country zh-CN name successfully." << endl;
+            qDebug() << "Get country zh-CN name successfully.";
             auto countryNameStr = strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size);
             countryName = QString(countryNameStr);
             free(countryNameStr);
         } else if ((getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_countryName, "country", "names", "en", NULL)) == MMDB_SUCCESS) {
             // 获得英文名
-            cout << "Get country en name successfully." << endl;
+            qDebug() << "Get country en name successfully.";
             auto countryNameStr = strndup(cityEntryData_countryName.utf8_string, cityEntryData_countryName.data_size);
             countryName = QString(countryNameStr);
             free(countryNameStr);
         } else {
             // 失败了
-            cerr << "Failed to retrieve country name data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve country name data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             countryName = QString("未知");
         }
 
@@ -147,14 +139,13 @@ bool IPDB::LookUpIPCityInfo(
         getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_latitude, "location", "latitude", NULL);
         if (getEntryDataStatus != MMDB_SUCCESS) {
             // 还是失败了
-            cerr << "Failed to retrieve latitude data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve latitude data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             latitude = 0.0;
             // 但其实是无效的
             isLocationValid = false;
         } else {
-            cout << "Get latitude successfully: " << cityEntryData_latitude.double_value << endl;
+            qDebug() << "Get latitude successfully: " << cityEntryData_latitude.double_value;
             latitude = cityEntryData_latitude.double_value;
         }
 
@@ -162,23 +153,20 @@ bool IPDB::LookUpIPCityInfo(
         getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_longitude, "location", "longitude", NULL);
         if (getEntryDataStatus != MMDB_SUCCESS) {
             // 还是失败了
-            cerr << "Failed to retrieve longitude data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve longitude data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             longitude = 0.0;
             // 但其实是无效的
             isLocationValid = false;
         } else {
-            cout << "Get longitude successfully: " << cityEntryData_longitude.double_value << endl;
+            qDebug() << "Get longitude successfully: " << cityEntryData_longitude.double_value;
             longitude = cityEntryData_longitude.double_value;
         }
 
     } else {
         // 查询失败，没找到结果，可能是本地地址
-        cerr << "No entry found for IP: "
-             << ip_address
-             << endl;
-        // return false;
+        qWarning() << "No entry found for IP: "
+             << ip_address;
         cityName    = QString("私有地址");
         countryName = QString("");
         // 其实是无效的
@@ -199,9 +187,8 @@ bool IPDB::LookUpIPISPInfo(
     int mmdbStatus;
     MMDB_lookup_result_s isp_result = MMDB_lookup_sockaddr(&ISPDB, ip_address, &mmdbStatus);
     if (mmdbStatus != MMDB_SUCCESS) {
-        cerr << "Failed to search from database with error: "
-             << MMDB_strerror(mmdbStatus)
-             << endl;
+        qWarning() << "Failed to search from database with error: "
+             << MMDB_strerror(mmdbStatus);
         return false;
     }
 
@@ -213,9 +200,8 @@ bool IPDB::LookUpIPISPInfo(
         int getEntryDataListStatus = MMDB_get_entry_data_list(&isp_result.entry, &ispEntryDataList);
         if (getEntryDataListStatus != MMDB_SUCCESS) {
             // 失败了
-            cerr << "Failed to retrieve data with error: "
-                 << MMDB_strerror(getEntryDataListStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve data with error: "
+                 << MMDB_strerror(getEntryDataListStatus);
         } else {
             // 打印所有数据
             MMDB_dump_entry_data_list(stdout, ispEntryDataList, 2);
@@ -235,12 +221,11 @@ bool IPDB::LookUpIPISPInfo(
         getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_isp, "isp", NULL);
         if (getEntryDataStatus != MMDB_SUCCESS) {
             // 还是失败了
-            cerr << "Failed to retrieve isp name data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve isp name data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             isp = QString("未知");
         } else {
-            cout << "Get isp name successfully." << endl;
+            qDebug() << "Get isp name successfully.";
             auto ispStr = strndup(ispEntryData_isp.utf8_string, ispEntryData_isp.data_size);
             isp = QString(ispStr);
             free(ispStr);
@@ -250,12 +235,11 @@ bool IPDB::LookUpIPISPInfo(
         getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_org, "organization", NULL);
         if (getEntryDataStatus != MMDB_SUCCESS) {
             // 还是失败了
-            cerr << "Failed to retrieve organization data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve organization data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             org = QString("未知");
         } else {
-            cout << "Get organization successfully." << endl;
+            qDebug() << "Get organization successfully.";
             auto orgStr = strndup(ispEntryData_org.utf8_string, ispEntryData_org.data_size);
             org = QString(orgStr);
             free(orgStr);
@@ -265,12 +249,11 @@ bool IPDB::LookUpIPISPInfo(
         getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_asn, "autonomous_system_number", NULL);
         if (getEntryDataStatus != MMDB_SUCCESS) {
             // 还是失败了
-            cerr << "Failed to retrieve autonomous system number data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve autonomous system number data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             asn = 0;
         } else {
-            cout << "Get autonomous system number successfully." << endl;
+            qDebug() << "Get autonomous system number successfully.";
             asn = ispEntryData_asn.uint32;
         }
 
@@ -278,12 +261,11 @@ bool IPDB::LookUpIPISPInfo(
         getEntryDataStatus = MMDB_get_value(&isp_result.entry, &ispEntryData_asOrg, "autonomous_system_organization", NULL);
         if (getEntryDataStatus != MMDB_SUCCESS) {
             // 还是失败了
-            cerr << "Failed to retrieve autonomous system organization data with error: "
-                 << MMDB_strerror(getEntryDataStatus)
-                 << endl;
+            qWarning() << "Failed to retrieve autonomous system organization data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
             asOrg = QString("未知");
         } else {
-            cout << "Get autonomous system organization successfully." << endl;
+            qDebug() << "Get autonomous system organization successfully.";
             auto asOrgStr = strndup(ispEntryData_asOrg.utf8_string, ispEntryData_asOrg.data_size);
             asOrg = QString(asOrgStr);
             free(asOrgStr);
@@ -291,10 +273,8 @@ bool IPDB::LookUpIPISPInfo(
 
     } else {
         // 查询失败，没找到结果，可能是本地地址
-        cerr << "No entry found for IP: "
-             << ip_address
-             << endl;
-        // return false;
+        qWarning() << "No entry found for IP: "
+             << ip_address;
         isp = QString("私有地址");
         org  = QString("");
         asOrg   = QString("");

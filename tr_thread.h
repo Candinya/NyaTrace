@@ -34,7 +34,7 @@ private: // 私有变量区
     bool isStopping; // 是否中止
     bool isIPValid;  // IP 结果是否有效
 
-    sockaddr_storage currentHopIPAddress;
+    sockaddr_storage * currentHopIPAddress; // 初始化时创建，给父进程传参使用，所以需要在父进程使用完成后才能删除
 
 private: // 成员函数区
     void GetIPv4();        // 第一步：得到目标 IP

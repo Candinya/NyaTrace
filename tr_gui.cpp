@@ -1,15 +1,13 @@
 #include "tr_gui.h"
 #include "ui_tr_gui.h"
 
-#include <iostream>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
+#include <QDebug>
 
 #include "tr_utils.h"
 #include "tr_thread.h"
-
-using namespace std;
 
 // 用于路由追踪的子线程
 TRThread * tracingThread;
@@ -105,10 +103,10 @@ void TR_GUI::on_startStopButton_clicked()
 
     if (tracingThread->isRunning()) {
         // 中止按钮
-        cout << "Tracing process is running, abort it..." << endl;
+        qDebug() << "Tracing process is running, abort it...";
         AbortTracing();
     } else {
-        cout << "Tracing process is not running, starting it..." << endl;
+        qDebug() << "Tracing process is not running, starting it...";
         // 开始按钮
         StartTracing();
     }
@@ -144,7 +142,7 @@ void TR_GUI::StartTracing() {
     ui->statusbar->showMessage("正在开始路由追踪...");
 
     // 设置主机地址
-    string hostStdString = ui->hostInput->text().toStdString();
+    std::string hostStdString = ui->hostInput->text().toStdString();
     tracingThread->hostname = hostStdString.c_str();
 
     // 记录开始时间
@@ -173,9 +171,12 @@ void TR_GUI::CleanUp() {
 
     // 记录结束时间
     clock_t endTime = clock();
+    auto consumedSeconds = (endTime - startTime) / CLOCKS_PER_SEC;
+
+    qDebug() << "Tracing finished in " << consumedSeconds << " seconds.";
 
     // 设置提示信息
-    ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg((endTime - startTime) / CLOCKS_PER_SEC));
+    ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg(consumedSeconds));
 }
 
 
