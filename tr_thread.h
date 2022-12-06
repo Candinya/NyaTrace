@@ -88,11 +88,10 @@ private: // 私有变量区
     // 定义动态链接库
     HMODULE hIcmpDll;
 
-    // 定义 4 个 icmp.dll 的函数指针
+    // 定义 3 个 icmp.dll 的函数指针
     lpIcmpCreateFile  IcmpCreateFile;
-    lpIcmpCloseHandle IcmpCloseHandle;
     lpIcmpCreateFile  Icmp6CreateFile;
-    lpIcmpCloseHandle Icmp6CloseHandle;
+    lpIcmpCloseHandle IcmpCloseHandle;
 
     // 定义动态链接库句柄
     HANDLE hIcmp;

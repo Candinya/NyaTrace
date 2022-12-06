@@ -33,10 +33,9 @@ TRThread::TRThread() {
     }
 
     // 从动态链接库中获取所需的函数入口地址
-    IcmpCreateFile   = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"IcmpCreateFile"  );
-    IcmpCloseHandle  = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"IcmpCloseHandle" );
-    Icmp6CreateFile  = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"Icmp6CreateFile" );
-    Icmp6CloseHandle = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"Icmp6CloseHandle");
+    IcmpCreateFile  = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"IcmpCreateFile" );
+    Icmp6CreateFile = (lpIcmpCreateFile )GetProcAddress(hIcmpDll,"Icmp6CreateFile");
+    IcmpCloseHandle = (lpIcmpCloseHandle)GetProcAddress(hIcmpDll,"IcmpCloseHandle");
 
     // 打开 ICMP 句柄
     if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE) {
@@ -73,7 +72,7 @@ TRThread::~TRThread() {
 
     // 回收资源
     IcmpCloseHandle(hIcmp);
-    Icmp6CloseHandle(hIcmp6);
+    IcmpCloseHandle(hIcmp6);
 
     FreeLibrary(hIcmpDll);
 
