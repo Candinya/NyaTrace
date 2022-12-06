@@ -89,6 +89,9 @@ void TRThread::run() {
 
     sockaddr_storage targetIPAddress; // 用于存储目标地址
 
+    // 清空目标地址
+    ZeroMemory(&targetIPAddress, sizeof(sockaddr_storage));
+
     if (parseIPAddress(hostCharStr, targetIPAddress)) {
         // 解析成功，更新状态
 
@@ -181,6 +184,9 @@ void TRThread::run() {
     // 用于存储当前地址
     sockaddr_storage sourceIPAddress;
 
+    // 清空当前地址
+    ZeroMemory(&sourceIPAddress, sizeof(sockaddr_storage));
+
     // 相同传输协议栈
     sourceIPAddress.ss_family = targetIPAddress.ss_family;
 
@@ -234,6 +240,9 @@ void TRThread::run() {
                 oldMaxHop = maxHop;
 
                 // 发出状态命令，删除表中的多余行（暂时好像不需要？）
+
+                // 调试输出
+                qDebug() << "Max hop found: " << ttl;
 
             }
 
@@ -516,7 +525,7 @@ void TRTWorker::GetIPv6() {
             ) != 0
         ) {
             // 得到返回
-            memcpy(((sockaddr_in6*)currentHopIPAddress)->sin6_addr.s6_addr, &pEchoReply->Address, INET6_ADDRSTRLEN);
+            memcpy(&((sockaddr_in6*)currentHopIPAddress)->sin6_addr, &pEchoReply->Address.sin6_addr, sizeof(pEchoReply->Address.sin6_addr));
             isIPValid = true;
 
             // 任务完成，退出线程
@@ -537,7 +546,7 @@ void TRTWorker::GetIPv6() {
     inet_ntop(AF_INET6, &(*(sockaddr_in6*)currentHopIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
 
     // 判断是否为末端主机（最后一跳）
-    bool isTargetHost = memcmp(&((sockaddr_in6*)currentHopIPAddress)->sin6_addr, &((sockaddr_in6*)targetIPAddress)->sin6_addr, INET6_ADDRSTRLEN);
+    bool isTargetHost = memcmp(&(*(sockaddr_in6*)currentHopIPAddress).sin6_addr, &(*(sockaddr_in6*)targetIPAddress).sin6_addr, sizeof((*(sockaddr_in6*)targetIPAddress).sin6_addr)) == 0;
 
     // 完成追踪
     if (isIPValid && !isStopping) {
