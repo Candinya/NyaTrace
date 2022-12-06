@@ -124,6 +124,7 @@ void TRThread::run() {
                 qWarning() << "Resolved with invalid reason: " << pHostent->h_addrtype;
                 emit setMessage(QString("主机名解析结果异常，结果类型为： %1 。").arg(pHostent->h_addrtype));
                 WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+                emit end(false);
                 return; // 结束
                 // break;
             }
@@ -158,9 +159,11 @@ void TRThread::run() {
             );
         } else {
             // 解析失败
-            qCritical() << "Failed to resolve host with error: " << WSAGetLastError();
-            emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(WSAGetLastError()));
+            auto err = WSAGetLastError();
+            qCritical() << "Failed to resolve host with error: " << err;
+            emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(err));
             WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+            emit end(false);
             return; // 结束
         }
     }
@@ -285,6 +288,8 @@ void TRThread::run() {
 
     // 追踪完成，更新状态
     qDebug() << "Trace Route finish.";
+
+    emit end(true);
 
 }
 

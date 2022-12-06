@@ -123,6 +123,8 @@ signals:
     );
     void setHostname(const int ttl, const QString & hostname);
 
+    void end(const bool isSucceeded);
+
     // 变更 UI 组件
     void setMessage(const QString &msg);
     void incProgress(const int progress = 1);

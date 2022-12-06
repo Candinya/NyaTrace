@@ -27,7 +27,7 @@ TR_GUI::TR_GUI(QWidget *parent)
 
     // 初始化 UI
     Initialize();
-    CleanUp();
+    CleanUp(false);
 
     // 建立路由追踪线程
     tracingThread = new TRThread;
@@ -79,9 +79,9 @@ TR_GUI::TR_GUI(QWidget *parent)
         ui->tracingProgress->setValue(ui->tracingProgress->value() + packs);
     });
 
-    connect(tracingThread, &TRThread::finished, this, [=]() {
+    connect(tracingThread, &TRThread::end, this, [=](const bool isSucceeded) {
         // 完成追踪
-        CleanUp();
+        CleanUp(isSucceeded);
     });
 }
 
@@ -162,7 +162,7 @@ void TR_GUI::AbortTracing() {
     ui->statusbar->showMessage("正在回收最后一包...");
 }
 
-void TR_GUI::CleanUp() {
+void TR_GUI::CleanUp(const bool isSucceeded) {
     // UI 相关结束
     ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
     ui->startStopButton->setDisabled(false); // 解锁按钮
@@ -175,8 +175,10 @@ void TR_GUI::CleanUp() {
 
     qDebug() << "Tracing finished in " << consumedSeconds << " seconds.";
 
-    // 设置提示信息
-    ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg(consumedSeconds));
+    if (isSucceeded) {
+        // 设置提示信息
+        ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg(consumedSeconds));
+    } // 否则失败了，不要去动失败的提示信息
 }
 
 
