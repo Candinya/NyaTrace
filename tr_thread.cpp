@@ -26,7 +26,7 @@ TRThread::TRThread() {
     hIcmpDll = LoadLibraryA("IPHLPAPI.DLL");
     if (hIcmpDll == NULL) {
         //emit setMessage(QString("icmp.dll 动态链接库加载失败"));
-        WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+        WSACleanup();
         qFatal("Failed to load ICMP module");
     }
 
@@ -38,12 +38,12 @@ TRThread::TRThread() {
     // 打开 ICMP 句柄
     if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE) {
         //emit setMessage(QString("ICMP 句柄打开失败"));
-        WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+        WSACleanup();
         qFatal("Failed to open ICMP handle");
     }
     if ((hIcmp6 = Icmp6CreateFile()) == INVALID_HANDLE_VALUE) {
         //emit setMessage(QString("ICMP 句柄打开失败"));
-        WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
+        WSACleanup();
         qFatal("Failed to open ICMP6 handle");
     }
 
@@ -70,8 +70,10 @@ TRThread::~TRThread() {
     IcmpCloseHandle(hIcmp);
     IcmpCloseHandle(hIcmp6);
 
+    // 释放动态链接库
     FreeLibrary(hIcmpDll);
 
+    // 终止 Winsock 2 DLL (ws2_32.dll) 的使用
     WSACleanup();
 
     qDebug() << "TRThread destroied.";
@@ -135,7 +137,6 @@ void TRThread::run() {
                 // 不是 IPv4 也不是 IPv6
                 qWarning() << "Resolved with invalid reason: " << pHostent->h_addrtype;
                 emit setMessage(QString("主机名解析结果异常，结果类型为： %1 。").arg(pHostent->h_addrtype));
-                WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
                 emit end(false);
                 return; // 结束
                 // break;
@@ -168,7 +169,6 @@ void TRThread::run() {
             auto err = WSAGetLastError();
             qCritical() << "Failed to resolve host with error: " << err;
             emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(err));
-            WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
             emit end(false);
             return; // 结束
         }
