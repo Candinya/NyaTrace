@@ -55,22 +55,16 @@ char * IPDB::strndup(const char *str, size_t n) {
 
 // 成员函数：在 MMDB 中查询 IP 对应的城市信息
 bool IPDB::LookUpIPCityInfo(
-    const char * ip_address,
+    const sockaddr * ip_address,
     QString & cityName,
     QString & countryName,
     double  & latitude,
     double  & longitude,
     bool    & isLocationValid
 ) {
-    int getAddressInfoStatus, mmdbStatus;
-    MMDB_lookup_result_s city_result = MMDB_lookup_string(&CityDB, ip_address, &getAddressInfoStatus, &mmdbStatus);
-    if (getAddressInfoStatus != 0) {
-        // 查询失败，地址无效
-        cerr << "Failed to get address info with error: "
-             << gai_strerror(getAddressInfoStatus)
-             << endl;
-        return false;
-    }
+    int mmdbStatus;
+
+    MMDB_lookup_result_s city_result = MMDB_lookup_sockaddr(&CityDB, ip_address, &mmdbStatus);
     if (mmdbStatus != MMDB_SUCCESS) {
         cerr << "Failed to search from database with error: "
              << MMDB_strerror(mmdbStatus)
@@ -196,21 +190,14 @@ bool IPDB::LookUpIPCityInfo(
 
 // 成员函数：在 MMDB 中查询 IP 对应的ISP信息
 bool IPDB::LookUpIPISPInfo(
-    const char * ip_address,
+    const sockaddr * ip_address,
     QString & isp,
     QString & org,
     uint    & asn,
     QString & asOrg
 ) {
-    int getAddressInfoStatus, mmdbStatus;
-    MMDB_lookup_result_s isp_result = MMDB_lookup_string(&ISPDB, ip_address, &getAddressInfoStatus, &mmdbStatus);
-    if (getAddressInfoStatus != 0) {
-        // 查询失败，地址无效
-        cerr << "Failed to get address info with error: "
-             << gai_strerror(getAddressInfoStatus)
-             << endl;
-        return false;
-    }
+    int mmdbStatus;
+    MMDB_lookup_result_s isp_result = MMDB_lookup_sockaddr(&ISPDB, ip_address, &mmdbStatus);
     if (mmdbStatus != MMDB_SUCCESS) {
         cerr << "Failed to search from database with error: "
              << MMDB_strerror(mmdbStatus)
