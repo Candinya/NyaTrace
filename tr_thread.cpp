@@ -92,9 +92,9 @@ void TRThread::run() {
 
     qDebug() << "Target host: " << hostCharStr;
 
-    sockaddr_storage targetHostIPAddress; // 用于存储目标地址
+    sockaddr_storage targetIPAddress; // 用于存储目标地址
 
-    if (parseIPAddress(hostCharStr, targetHostIPAddress)) {
+    if (parseIPAddress(hostCharStr, targetIPAddress)) {
         // 解析成功，更新状态
         qDebug() << "Tracing route to " << hostCharStr
              << " with maximun hops " << DEF_MAX_HOP;
@@ -108,16 +108,17 @@ void TRThread::run() {
         // 按照域名解析
         hostent * pHostent = gethostbyname(hostCharStr);
         if (pHostent != NULL) {
+            // 这里取的都是结果里的第一位，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
             switch (pHostent->h_addrtype) {
             case AF_INET:
                 // 是 IPv4
-                targetHostIPAddress.ss_family = AF_INET;
-                (*(sockaddr_in*)&targetHostIPAddress).sin_addr.s_addr = *(u_long *)pHostent->h_addr_list[0];
+                targetIPAddress.ss_family = AF_INET;
+                (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = *(u_long *)pHostent->h_addr_list[0];
                 break;
             case AF_INET6:
                 // 是 IPv6
-                targetHostIPAddress.ss_family = AF_INET6;
-                memcpy((*(sockaddr_in6*)&targetHostIPAddress).sin6_addr.s6_addr, pHostent->h_addr_list[0], pHostent->h_length);
+                targetIPAddress.ss_family = AF_INET6;
+                memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, pHostent->h_addr_list[0], pHostent->h_length);
                 break;
             default:
                 // 不是 IPv4 也不是 IPv6
@@ -130,14 +131,14 @@ void TRThread::run() {
             }
 
             char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
-            switch(targetHostIPAddress.ss_family) {
+            switch(targetIPAddress.ss_family) {
             case AF_INET:
                 // 是 IPv4
-                inet_ntop(AF_INET, &(*(sockaddr_in*)&targetHostIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
+                inet_ntop(AF_INET, &(*(sockaddr_in*)&targetIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
                 break;
             case AF_INET6:
                 // 是 IPv6
-                inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetHostIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
+                inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
                 break;
             default:
                 // 是无效的 IP 地址
@@ -175,6 +176,22 @@ void TRThread::run() {
     // 置线程池最大线程计数为跳数上限，让所有的线程能一起运行
     tracingPool->setMaxThreadCount(DEF_MAX_HOP);
 
+    // 初始化当前地址
+    sockaddr_storage sourceIPAddress;
+
+    // 相同传输协议栈
+    sourceIPAddress.ss_family = targetIPAddress.ss_family;
+
+    // 使用任意出站 IP ，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
+    switch(sourceIPAddress.ss_family) {
+    case AF_INET:
+        ((sockaddr_in*)&sourceIPAddress)->sin_addr = in4addr_any;
+        break;
+    case AF_INET6:
+        ((sockaddr_in6*)&sourceIPAddress)->sin6_addr = in6addr_any;
+        break;
+    }
+
     // 使用子线程开始追踪路由
     for (int i = 0; (i < DEF_MAX_HOP) && !isStopping; i++) {
         qDebug() << "TTL: " << i + 1;
@@ -182,8 +199,9 @@ void TRThread::run() {
         workers[i] = new TRTWorker;
 
         workers[i]->iTTL = i + 1;
-        workers[i]->targetHostIPAddress = &targetHostIPAddress;
-        workers[i]->hIcmp = hIcmp;
+        workers[i]->sourceIPAddress = &sourceIPAddress;
+        workers[i]->targetIPAddress = &targetIPAddress;
+        workers[i]->hIcmp  = hIcmp;
         workers[i]->hIcmp6 = hIcmp6;
         workers[i]->ipdb = ipdb;
 
@@ -332,8 +350,8 @@ TRTWorker::TRTWorker() {
 
     // 设置运行完成后自动销毁
     setAutoDelete(true);
-//    setAutoDelete(false);
 
+    // 分配当前跳地址的存储空间
     currentHopIPAddress = new sockaddr_storage;
     ZeroMemory(currentHopIPAddress, sizeof(sockaddr_storage));
 
@@ -350,10 +368,10 @@ void TRTWorker::run() {
     isStopping = false;
 
     // 标记 IP 簇
-    currentHopIPAddress->ss_family = targetHostIPAddress->ss_family;
+    currentHopIPAddress->ss_family = targetIPAddress->ss_family;
 
     // 执行第一项任务：获得 IP
-    switch (targetHostIPAddress->ss_family) {
+    switch (targetIPAddress->ss_family) {
     case AF_INET:
         GetIPv4();
         break;
@@ -417,7 +435,7 @@ void TRTWorker::GetIPv4() {
         if (
             IcmpSendEcho2(
                 hIcmp, NULL, NULL, NULL,
-                ((sockaddr_in*)targetHostIPAddress)->sin_addr.s_addr, SendData, sizeof (SendData), &IpOption,
+                ((sockaddr_in*)targetIPAddress)->sin_addr.s_addr, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
                 DEF_ICMP_TIMEOUT
             ) != 0
@@ -442,7 +460,7 @@ void TRTWorker::GetIPv4() {
     inet_ntop(AF_INET, &(*(sockaddr_in*)currentHopIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
 
     // 判断是否为末端主机（最后一跳）
-    bool isTargetHost = ((sockaddr_in*)currentHopIPAddress)->sin_addr.s_addr == ((sockaddr_in*)targetHostIPAddress)->sin_addr.s_addr;
+    bool isTargetHost = ((sockaddr_in*)currentHopIPAddress)->sin_addr.s_addr == ((sockaddr_in*)targetIPAddress)->sin_addr.s_addr;
 
     // 完成追踪
     if (isIPValid && !isStopping) {
@@ -460,7 +478,7 @@ void TRTWorker::GetIPv6() {
     // ICMP 包发送缓冲区和接收缓冲区
     IP_OPTION_INFORMATION IpOption;
     char SendData[DEF_ICMP_DATA_SIZE];
-    char ReplyBuf[sizeof(ICMP6_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
+    char ReplyBuf[sizeof(ICMPV6_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
 
     // ICMP 回复的结果
     PICMPV6_ECHO_REPLY pEchoReply;
@@ -485,7 +503,7 @@ void TRTWorker::GetIPv6() {
         if (
             Icmp6SendEcho2(
                 hIcmp6, NULL, NULL, NULL,
-                NULL, (sockaddr_in6*)targetHostIPAddress, SendData, sizeof (SendData), &IpOption,
+                (sockaddr_in6*)sourceIPAddress, (sockaddr_in6*)targetIPAddress, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
                 DEF_ICMP_TIMEOUT
             ) != 0
@@ -509,7 +527,7 @@ void TRTWorker::GetIPv6() {
     inet_ntop(AF_INET6, &(*(sockaddr_in6*)currentHopIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
 
     // 判断是否为末端主机（最后一跳）
-    bool isTargetHost = memcmp(&((sockaddr_in6*)currentHopIPAddress)->sin6_addr, &((sockaddr_in6*)targetHostIPAddress)->sin6_addr, INET6_ADDRSTRLEN);
+    bool isTargetHost = memcmp(&((sockaddr_in6*)currentHopIPAddress)->sin6_addr, &((sockaddr_in6*)targetIPAddress)->sin6_addr, INET6_ADDRSTRLEN);
 
     // 完成追踪
     if (isIPValid && !isStopping) {

@@ -17,8 +17,14 @@ public:
     ~TRTWorker();
 
 public: // 共享变量区
-    int iTTL;        // 当前包的 TTL 值
-    sockaddr_storage * targetHostIPAddress;
+    // 当前包的 TTL 值
+    int iTTL;
+
+    // （当前仅 IPv6 有效）发出请求的本机 Socket 地址
+    sockaddr_storage * sourceIPAddress;
+
+    // 目标主机地址
+    sockaddr_storage * targetIPAddress;
 
     // 定义动态链接库句柄
     HANDLE hIcmp;
