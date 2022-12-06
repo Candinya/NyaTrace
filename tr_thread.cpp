@@ -96,11 +96,24 @@ void TRThread::run() {
 
     if (parseIPAddress(hostCharStr, targetIPAddress)) {
         // 解析成功，更新状态
-        qDebug() << "Tracing route to " << hostCharStr
+
+        char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
+        switch(targetIPAddress.ss_family) {
+        case AF_INET:
+            // 是 IPv4
+            inet_ntop(AF_INET, &(*(sockaddr_in*)&targetIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
+            break;
+        case AF_INET6:
+            // 是 IPv6
+            inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
+            break;
+        }
+
+        qDebug() << "Tracing route to " << printIPAddress
              << " with maximun hops " << DEF_MAX_HOP;
         emit setMessage(
             QString("开始追踪路由 %1 ，最大跃点数为 %2 。")
-               .arg(hostCharStr)
+               .arg(printIPAddress)
                .arg(DEF_MAX_HOP)
         );
     } else {
@@ -139,12 +152,6 @@ void TRThread::run() {
             case AF_INET6:
                 // 是 IPv6
                 inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
-                break;
-            default:
-                // 是无效的 IP 地址
-                const char * errorNotice = "无效的 IP 地址";
-                strncpy_s(printIPAddress, errorNotice, strlen(errorNotice));
-                qWarning() << "Invalid IP structure";
                 break;
             }
 
