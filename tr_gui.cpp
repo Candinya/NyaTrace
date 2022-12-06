@@ -85,6 +85,9 @@ TR_GUI::TR_GUI(QWidget *parent)
         // 完成追踪
         CleanUp();
     });
+
+    // 更新状态
+    ui->statusbar->showMessage("就绪"); // 提示初始化信息
 }
 
 TR_GUI::~TR_GUI()
@@ -131,9 +134,6 @@ void TR_GUI::Initialize() {
     // 重置进度条
     ui->tracingProgress->setMaximum(DEF_MAX_HOP * 3); // 三种任务，三倍进度
     ui->tracingProgress->setValue(0);
-
-    // 更新状态
-     ui->statusbar->showMessage("就绪"); // 提示初始化信息
 }
 
 void TR_GUI::StartTracing() {
