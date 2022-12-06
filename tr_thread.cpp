@@ -176,7 +176,7 @@ void TRThread::run() {
     // 置线程池最大线程计数为跳数上限，让所有的线程能一起运行
     tracingPool->setMaxThreadCount(DEF_MAX_HOP);
 
-    // 初始化当前地址
+    // 用于存储当前地址
     sockaddr_storage sourceIPAddress;
 
     // 相同传输协议栈
@@ -185,9 +185,11 @@ void TRThread::run() {
     // 使用任意出站 IP ，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
     switch(sourceIPAddress.ss_family) {
     case AF_INET:
+        qDebug() << "Binding any outbound IPv4 address";
         ((sockaddr_in*)&sourceIPAddress)->sin_addr = in4addr_any;
         break;
     case AF_INET6:
+        qDebug() << "Binding any outbound IPv6 address";
         ((sockaddr_in6*)&sourceIPAddress)->sin6_addr = in6addr_any;
         break;
     }
@@ -447,6 +449,9 @@ void TRTWorker::GetIPv4() {
             // 任务完成，退出线程
             break;
         } else {
+            // 出现错误
+            qWarning() << "ICMP send echo failed with error: " << GetLastError();
+
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;
             emit reportIPAndTimeConsumption(
@@ -515,6 +520,9 @@ void TRTWorker::GetIPv6() {
             // 任务完成，退出线程
             break;
         } else {
+            // 出现错误
+            qWarning() << "ICMP send echo failed with error: " << GetLastError();
+
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;
             emit reportIPAndTimeConsumption(
