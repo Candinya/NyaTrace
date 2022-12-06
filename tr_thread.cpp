@@ -135,12 +135,12 @@ void TRThread::run() {
             case AF_INET:
                 // 是 IPv4
                 targetIPAddress.ss_family = AF_INET;
-                (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = (*(sockaddr_in *)resolveResult->ai_addr).sin_addr.s_addr;
+                (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = (*(sockaddr_in*)resolveResult->ai_addr).sin_addr.s_addr;
                 break;
             case AF_INET6:
                 // 是 IPv6
                 targetIPAddress.ss_family = AF_INET6;
-                memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, (*(sockaddr_in6 *)resolveResult->ai_addr).sin6_addr.s6_addr, resolveResult->ai_addrlen);
+                memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, (*(sockaddr_in6*)resolveResult->ai_addr).sin6_addr.s6_addr, resolveResult->ai_addrlen);
                 break;
             default:
                 // 不是 IPv4 也不是 IPv6
