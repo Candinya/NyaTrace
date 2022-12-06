@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TR_GUI</class>
- <widget class="QMainWindow" name="TR_GUI">
+ <class>NyaTraceGUI</class>
+ <widget class="QMainWindow" name="NyaTraceGUI">
   <property name="geometry">
    <rect>
     <x>0</x>

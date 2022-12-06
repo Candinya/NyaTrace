@@ -1,20 +1,20 @@
-#ifndef TR_GUI_H
-#define TR_GUI_H
+#ifndef NYATRACE_GUI_H
+#define NYATRACE_GUI_H
 
 #include <QMainWindow>
 #include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class TR_GUI; }
+namespace Ui { class NyaTraceGUI; }
 QT_END_NAMESPACE
 
-class TR_GUI : public QMainWindow
+class NyaTraceGUI : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    TR_GUI(QWidget *parent = nullptr);
-    ~TR_GUI();
+    NyaTraceGUI(QWidget *parent = nullptr);
+    ~NyaTraceGUI();
 
 private slots:
     void on_startStopButton_clicked();
@@ -22,7 +22,7 @@ private slots:
 
 private:
     // 界面 UI
-    Ui::TR_GUI *ui;
+    Ui::NyaTraceGUI *ui;
 
     // 用于存储结果的模型
     QStandardItemModel * hopResultsModel;
@@ -38,4 +38,4 @@ private:
 
 };
 
-#endif // TR_GUI_H
+#endif // NYATRACE_GUI_H

@@ -12,9 +12,9 @@ SOURCES += \
     data-pool.c \
     ipdb.cpp \
     maxminddb.c \
-    tr_thread.cpp \
-    tr_gui.cpp \
-    main.cpp
+    nyatrace_gui.cpp \
+    main.cpp \
+    tracing_core.cpp
 
 HEADERS += \
     data-pool.h \
@@ -23,12 +23,12 @@ HEADERS += \
     maxminddb.h \
     maxminddb_config.h \
     mmdb_settings.h \
-    tr_thread.h \
-    tr_gui.h \
-    tr_utils.h
+    nyatrace_gui.h \
+    tracing_core.h \
+    tracing_defs.h
 
 FORMS += \
-    tr_gui.ui
+    nyatrace_gui.ui
 
 LIBS += \
     -lws2_32 \

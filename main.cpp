@@ -1,11 +1,11 @@
-#include "tr_gui.h"
+#include "nyatrace_gui.h"
 
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    TR_GUI w;
+    NyaTraceGUI w;
     w.show();
     return a.exec();
 }
