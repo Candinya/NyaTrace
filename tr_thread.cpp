@@ -18,18 +18,16 @@ TRThread::TRThread() {
 
     // WinSock2 相关初始化
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { // 进行相应的socket库绑定,MAKEWORD(2,2)表示使用WINSOCK2版本
-        qCritical() << "Failed to start winsocks2 library with error: " << WSAGetLastError();
         //emit setMessage(QString("WinSock2 动态链接库初始化失败，错误代码： %1 。").arg(WSAGetLastError())); // 提示信息
-        exit(-1); // 结束
+        qFatal(QString("Failed to start winsocks2 library with error: %1").arg(WSAGetLastError()).toStdString().c_str());
     }
 
     // 载入依赖的动态链接库
     hIcmpDll = LoadLibraryA("IPHLPAPI.DLL");
     if (hIcmpDll == NULL) {
-        qCritical() << "Failed to load ICMP module";
         //emit setMessage(QString("icmp.dll 动态链接库加载失败"));
         WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
-        exit(-1); // 结束
+        qFatal("Failed to load ICMP module");
     }
 
     // 从动态链接库中获取所需的函数入口地址
@@ -39,16 +37,14 @@ TRThread::TRThread() {
 
     // 打开 ICMP 句柄
     if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE) {
-        qCritical() << "Failed to open ICMP handle";
         //emit setMessage(QString("ICMP 句柄打开失败"));
         WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
-        exit(-1); // 结束
+        qFatal("Failed to open ICMP handle");
     }
     if ((hIcmp6 = Icmp6CreateFile()) == INVALID_HANDLE_VALUE) {
-        qCritical() << "Failed to open ICMP6 handle";
         //emit setMessage(QString("ICMP 句柄打开失败"));
         WSACleanup(); // 终止 Winsock 2 DLL (Ws2_32.dll) 的使用
-        exit(-1); // 结束
+        qFatal("Failed to open ICMP6 handle");
     }
 
     // 新建一个线程池
