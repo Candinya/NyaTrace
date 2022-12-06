@@ -119,24 +119,33 @@ void TRThread::run() {
     } else {
         qDebug() << "Target host is not IP address, resolving...";
         // 按照域名解析
-        hostent * pHostent = gethostbyname(hostCharStr);
-        if (pHostent != NULL) {
+        addrinfo * resolveResult = NULL;
+        addrinfo resolveHints;
+
+        ZeroMemory(&resolveHints, sizeof(resolveHints));
+
+        resolveHints.ai_family   = AF_UNSPEC;
+        resolveHints.ai_socktype = SOCK_STREAM;
+        resolveHints.ai_protocol = IPPROTO_TCP;
+
+        if (getaddrinfo(hostCharStr, NULL, &resolveHints, &resolveResult) == 0) {
             // 这里取的都是结果里的第一位，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
-            switch (pHostent->h_addrtype) {
+            // 参考 https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getaddrinfo
+            switch (resolveResult->ai_family) {
             case AF_INET:
                 // 是 IPv4
                 targetIPAddress.ss_family = AF_INET;
-                (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = *(u_long *)pHostent->h_addr_list[0];
+                (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = (*(sockaddr_in *)resolveResult->ai_addr).sin_addr.s_addr;
                 break;
             case AF_INET6:
                 // 是 IPv6
                 targetIPAddress.ss_family = AF_INET6;
-                memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, pHostent->h_addr_list[0], pHostent->h_length);
+                memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, (*(sockaddr_in6 *)resolveResult->ai_addr).sin6_addr.s6_addr, resolveResult->ai_addrlen);
                 break;
             default:
                 // 不是 IPv4 也不是 IPv6
-                qWarning() << "Resolved with invalid reason: " << pHostent->h_addrtype;
-                emit setMessage(QString("主机名解析结果异常，结果类型为： %1 。").arg(pHostent->h_addrtype));
+                qWarning() << "Resolved with invalid reason: " << resolveResult->ai_family;
+                emit setMessage(QString("主机名解析结果异常，结果类型为： %1 。").arg(resolveResult->ai_family));
                 emit end(false);
                 return; // 结束
                 // break;
