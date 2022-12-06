@@ -34,7 +34,7 @@ private:
     void Initialize();
     void StartTracing();
     void AbortTracing();
-    void CleanUp();
+    void CleanUp(const bool isSucceeded);
 
 };
 

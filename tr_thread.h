@@ -17,11 +17,18 @@ public:
     ~TRTWorker();
 
 public: // 共享变量区
-    int iTTL;        // 当前包的 TTL 值
-    u_long ulDestIP; // 目标的 IP 地址
+    // 当前包的 TTL 值
+    int iTTL;
+
+    // （当前仅 IPv6 有效）发出请求的本机 Socket 地址
+    sockaddr_storage * sourceIPAddress;
+
+    // 目标主机地址
+    sockaddr_storage * targetIPAddress;
 
     // 定义动态链接库句柄
     HANDLE hIcmp;
+    HANDLE hIcmp6;
 
     // 用于读取 IP 对应数据的类操作接口
     IPDB * ipdb;
@@ -33,16 +40,17 @@ private: // 私有变量区
     bool isStopping; // 是否中止
     bool isIPValid;  // IP 结果是否有效
 
-    unsigned long ipAddress;
+    sockaddr_storage * currentHopIPAddress; // 初始化时创建，给父进程传参使用，所以需要在父进程使用完成后才能删除
 
 private: // 成员函数区
-    void GetIP();        // 第一步：得到目标 IP
+    void GetIPv4();        // 第一步：得到目标 IP
+    void GetIPv6();        // 第一步：得到目标 IP
     void GetInfo();      // 第二步：得到 IP 对应的数据库信息
     void GetHostname(); // 第三步：得到主机名
 
 signals:
     // 回报信息
-    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const unsigned long ipAddress, const bool isValid);
+    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost);
     void reportInformation(
         const int ttl,
         const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
@@ -82,10 +90,12 @@ private: // 私有变量区
 
     // 定义 3 个 icmp.dll 的函数指针
     lpIcmpCreateFile  IcmpCreateFile;
+    lpIcmpCreateFile  Icmp6CreateFile;
     lpIcmpCloseHandle IcmpCloseHandle;
 
     // 定义动态链接库句柄
     HANDLE hIcmp;
+    HANDLE hIcmp6;
 
     // 用于读取 IP 对应数据的类操作接口
     IPDB * ipdb;
@@ -102,6 +112,9 @@ private: // 私有变量区
 
     bool isStopping; // 是否中止
 
+private: // 工具函数
+    bool TRThread::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress);
+
 protected:
     void run() override;
 
@@ -114,6 +127,8 @@ signals:
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     );
     void setHostname(const int ttl, const QString & hostname);
+
+    void end(const bool isSucceeded);
 
     // 变更 UI 组件
     void setMessage(const QString &msg);

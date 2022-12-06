@@ -25,7 +25,7 @@ private:
 // 公共接口
 public:
     bool LookUpIPCityInfo(
-        const char * ip_address,
+        const sockaddr * ip_address,
         QString & cityName,
         QString & countryName,
         double  & latitude,
@@ -34,7 +34,7 @@ public:
     );
 
     bool LookUpIPISPInfo(
-        const char * ip_address,
+        const sockaddr * ip_address,
         QString & isp,
         QString & org,
         uint    & asn,
