@@ -127,7 +127,7 @@ void NyaTraceGUI::Initialize() {
     hopResultsModel->clear();
 
     // 构建表头
-    QStringList hopResultLables = QObject::trUtf8("时间,地址,主机名,城市,国,ISP,组织,ASN,AS组织").simplified().split(",");
+    QStringList hopResultLables = { "时间", "地址", "主机名", "城市", "国", "ISP", "组织", "ASN", "AS组织" };
     hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 重置进度条
