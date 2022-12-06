@@ -349,6 +349,9 @@ void TRTWorker::run() {
     // 标记为非停止
     isStopping = false;
 
+    // 标记 IP 簇
+    currentHopIPAddress->ss_family = targetHostIPAddress->ss_family;
+
     // 执行第一项任务：获得 IP
     switch (targetHostIPAddress->ss_family) {
     case AF_INET:
