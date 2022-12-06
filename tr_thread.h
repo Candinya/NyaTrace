@@ -50,19 +50,19 @@ private: // 成员函数区
 
 signals:
     // 回报信息
-    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost);
+    void reportIPAndTimeConsumption(const int hop, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost);
     void reportInformation(
-        const int ttl,
-        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+        const int hop,
+        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     );
-    void reportHostname(const int ttl, const QString & hostname);
+    void reportHostname(const int hop, const QString & hostname);
 
     // 增加进度
     void incProgress(const int progress);
 
     // 报告完成
-    void fin(const int ttl);
+    void fin(const int hop);
 
 public slots:
     void requestStop();
@@ -120,13 +120,13 @@ protected:
 
 signals:
     // 填充表格
-    void setIPAndTimeConsumption(const int ttl, const QString & timeComnsumption, const QString & ipAddress);
+    void setIPAndTimeConsumption(const int hop, const QString & timeComnsumption, const QString & ipAddress);
     void setInformation(
-        const int ttl,
-        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+        const int hop,
+        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     );
-    void setHostname(const int ttl, const QString & hostname);
+    void setHostname(const int hop, const QString & hostname);
 
     void end(const bool isSucceeded);
 

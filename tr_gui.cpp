@@ -33,38 +33,39 @@ TR_GUI::TR_GUI(QWidget *parent)
     tracingThread = new TRThread;
 
     // 填充表格
-    connect(tracingThread, &TRThread::setIPAndTimeConsumption, this, [=](const int ttl, const QString & timeComnsumption, const QString & ipAddress) {
-        hopResultsModel->setItem(ttl-1, 0, new QStandardItem(timeComnsumption));
-        hopResultsModel->setItem(ttl-1, 1, new QStandardItem(ipAddress));
+    connect(tracingThread, &TRThread::setIPAndTimeConsumption, this, [=](const int hop, const QString & timeComnsumption, const QString & ipAddress) {
+        hopResultsModel->setItem(hop-1, 0, new QStandardItem(timeComnsumption));
+        hopResultsModel->setItem(hop-1, 1, new QStandardItem(ipAddress));
     });
 
     connect(tracingThread, &TRThread::setInformation, this, [=](
-        const int ttl,
-        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+        const int hop,
+        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     ) {
-        hopResultsModel->setItem(ttl-1, 3, new QStandardItem(cityName));
-        hopResultsModel->setItem(ttl-1, 4, new QStandardItem(countryName));
+        hopResultsModel->setItem(hop-1, 3, new QStandardItem(cityName));
+        hopResultsModel->setItem(hop-1, 4, new QStandardItem(countryName));
 
-        if (isLocationValid) {
-            // 仅在有效的情况下设置纬度和经度数据（之后为地图服务）
-            hopResultsModel->setItem(ttl-1, 5, new QStandardItem(QString("%1").arg(latitude)));
-            hopResultsModel->setItem(ttl-1, 6, new QStandardItem(QString("%1").arg(longitude)));
-        }
+        // 根据纬度和经度在地图上画一个点和一个圆
+        qDebug() << "Hop:"             << hop
+                 << "Latitude:"        << latitude
+                 << "Longitude:"       << longitude
+                 << "Accuracy Radius:" << accuracyRadius
+        ;
 
-        hopResultsModel->setItem(ttl-1, 7, new QStandardItem(isp));
-        hopResultsModel->setItem(ttl-1, 8, new QStandardItem(org));
+        hopResultsModel->setItem(hop-1, 5, new QStandardItem(isp));
+        hopResultsModel->setItem(hop-1, 6, new QStandardItem(org));
 
         if (asn != 0) {
             // 仅在有效的情况下设置 ASN 数据
-            hopResultsModel->setItem(ttl-1, 9, new QStandardItem(QString("AS %1").arg(asn)));
+            hopResultsModel->setItem(hop-1, 7, new QStandardItem(QString("AS %1").arg(asn)));
         }
 
-        hopResultsModel->setItem(ttl-1, 10, new QStandardItem(asOrg));
+        hopResultsModel->setItem(hop-1, 8, new QStandardItem(asOrg));
     });
 
-    connect(tracingThread, &TRThread::setHostname, this, [=](const int ttl, const QString & hostName) {
-        hopResultsModel->setItem(ttl-1, 2, new QStandardItem(hostName));
+    connect(tracingThread, &TRThread::setHostname, this, [=](const int hop, const QString & hostName) {
+        hopResultsModel->setItem(hop-1, 2, new QStandardItem(hostName));
     });
 
     // 更新 UI
@@ -126,7 +127,7 @@ void TR_GUI::Initialize() {
     hopResultsModel->clear();
 
     // 构建表头
-    QStringList hopResultLables = QObject::trUtf8("时间,地址,主机名,城市,国,纬度,经度,ISP,组织,ASN,AS组织").simplified().split(",");
+    QStringList hopResultLables = QObject::trUtf8("时间,地址,主机名,城市,国,ISP,组织,ASN,AS组织").simplified().split(",");
     hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 重置进度条

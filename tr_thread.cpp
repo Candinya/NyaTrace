@@ -224,22 +224,22 @@ void TRThread::run() {
         workers[i]->hIcmp6 = hIcmp6;
         workers[i]->ipdb = ipdb;
 
-        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int ttl, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost) {
+        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int hop, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost) {
 
-            if (ttl > maxHop) {
+            if (hop > maxHop) {
                 // 超过目标主机，丢弃
                 return;
             }
 
             // 检查是否为目标主机
-            if (isTargetHost && ttl <= maxHop) {
+            if (isTargetHost && hop <= maxHop) {
                 // 是目标主机，并且比最大跳还要靠前
 
                 // 设定为新的最大跳
-                maxHop = ttl;
+                maxHop = hop;
 
                 // 终止所有更高跳数的线程（从 maxHop 到 DEF_MAX_HOP 之间的已经在上一轮被清理掉了）
-                for (int i = ttl; i < oldMaxHop; i++) {
+                for (int i = hop; i < oldMaxHop; i++) {
                     if (workers[i] != NULL) {
                         workers[i]->requestStop();
                     }
@@ -251,7 +251,7 @@ void TRThread::run() {
                 // 发出状态命令，删除表中的多余行（暂时好像不需要？）
 
                 // 调试输出
-                qDebug() << "Max hop found: " << ttl;
+                qDebug() << "Max hop found: " << hop;
 
             }
 
@@ -279,25 +279,25 @@ void TRThread::run() {
 
             }
 
-            emit setIPAndTimeConsumption(ttl, timeConsumptionStr, ipAddressStr);
+            emit setIPAndTimeConsumption(hop, timeConsumptionStr, ipAddressStr);
         });
 
         connect(workers[i], &TRTWorker::reportInformation, this, [=](
-            const int ttl,
-            const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+            const int hop,
+            const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
             const QString & isp, const QString & org, const uint & asn, const QString & asOrg
         ) {
 
-            if (ttl <= maxHop) {
-                emit setInformation(ttl, cityName, countryName, latitude, longitude, isLocationValid, isp, org, asn, asOrg);
+            if (hop <= maxHop) {
+                emit setInformation(hop, cityName, countryName, latitude, longitude, accuracyRadius, isLocationValid, isp, org, asn, asOrg);
             }
 
         });
 
-        connect(workers[i], &TRTWorker::reportHostname, this, [=](const int ttl, const QString & hostname) {
+        connect(workers[i], &TRTWorker::reportHostname, this, [=](const int hop, const QString & hostname) {
 
-            if (ttl <= maxHop) {
-                emit setHostname(ttl, hostname);
+            if (hop <= maxHop) {
+                emit setHostname(hop, hostname);
             }
 
         });
@@ -307,11 +307,11 @@ void TRThread::run() {
             emit incProgress(progress);
         });
 
-        connect(workers[i], &TRTWorker::fin, this, [=](const int ttl) {
+        connect(workers[i], &TRTWorker::fin, this, [=](const int hop) {
 
             // 子线程运行完成，标记当前 worker 为 NULL
             qDebug() << "Worker " << i << " finished.";
-            workers[ttl - 1] = NULL;
+            workers[hop - 1] = NULL;
 
         });
 
@@ -572,11 +572,12 @@ void TRTWorker::GetInfo() {
     // 查询 IP 对应的信息
 
     // 准备从 City 数据库中查询结果
-    QString cityName;
-    QString countryName;
-    double  latitude  = 0.0;
-    double  longitude = 0.0;
-    bool    isLocationValid = true;
+    QString  cityName;
+    QString  countryName;
+    double   latitude       = 0.0;
+    double   longitude      = 0.0;
+    uint16_t accuracyRadius = 0;
+    bool     isLocationValid = true;
 
     // 准备从 ISP 数据库中查询结果
     QString isp;
@@ -591,6 +592,7 @@ void TRTWorker::GetInfo() {
         countryName,
         latitude,
         longitude,
+        accuracyRadius,
         isLocationValid
     )) {
         // 查询失败，使用填充字符
@@ -616,8 +618,8 @@ void TRTWorker::GetInfo() {
     // 更新数据
     emit reportInformation(
         iTTL,
-        cityName, countryName, latitude, longitude, isLocationValid, // GeoIP2 City
-        isp, org, asn, asOrg                                         // GeoIP2 ISP
+        cityName, countryName, latitude, longitude, accuracyRadius, isLocationValid, // GeoIP2 City
+        isp, org, asn, asOrg                                                         // GeoIP2 ISP
     );
 
 }
