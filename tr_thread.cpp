@@ -142,7 +142,7 @@ void TRThread::run() {
                 // 是无效的 IP 地址
                 const char * errorNotice = "无效的 IP 地址";
                 strncpy_s(printIPAddress, errorNotice, strlen(errorNotice));
-                qWarning() << "Invalid IP structure: " << &targetHostIPAddress;
+                qWarning() << "Invalid IP structure";
                 break;
             }
 
@@ -184,7 +184,7 @@ void TRThread::run() {
         workers[i]->hIcmp6 = hIcmp6;
         workers[i]->ipdb = ipdb;
 
-        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int ttl, const unsigned long timeConsumption, const sockaddr_storage * ipAddress, const bool isValid) {
+        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int ttl, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost) {
 
             if (ttl > maxHop) {
                 // 超过目标主机，丢弃
@@ -192,7 +192,7 @@ void TRThread::run() {
             }
 
             // 检查是否为目标主机
-            if (memcmp(&ipAddress, &targetHostIPAddress, sizeof(sockaddr_storage)) == 0 && ttl <= maxHop) {
+            if (isTargetHost && ttl <= maxHop) {
                 // 是目标主机，并且比最大跳还要靠前
 
                 // 设定为新的最大跳
@@ -217,26 +217,7 @@ void TRThread::run() {
             QString timeConsumptionStr;
 
             if (isValid) {
-                char printIPAddress[INET6_ADDRSTRLEN];
-                switch(ipAddress->ss_family) {
-                case AF_INET:
-                    // 是 IPv4
-                    inet_ntop(AF_INET, &(*(sockaddr_in*)ipAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
-                    break;
-                case AF_INET6:
-                    // 是 IPv6
-                    inet_ntop(AF_INET6, &(*(sockaddr_in6*)ipAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
-                    break;
-                default:
-                    // 是无效的 IP 地址
-                    const char * errorNotice = "无效的 IP 地址";
-                    strncpy_s(printIPAddress, errorNotice, strlen(errorNotice));
-                    qWarning() << "Invalid IP structure: " << ipAddress;
-                    break;
-                }
-
-                // 记录当前跳数的地址
-                ipAddressStr = QString(printIPAddress);
+                ipAddressStr = ipAddress;
 
                 // 回收内存
                 // delete printIPAddress;
@@ -346,9 +327,10 @@ TRTWorker::TRTWorker() {
 
     // 设置运行完成后自动销毁
     setAutoDelete(true);
+//    setAutoDelete(false);
 
-    // 初始化当前跳的 IP 存储位置（分配内存地址）
     currentHopIPAddress = new sockaddr_storage;
+    ZeroMemory(currentHopIPAddress, sizeof(sockaddr_storage));
 
 }
 
@@ -442,16 +424,23 @@ void TRTWorker::GetIPv4() {
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;
             emit reportIPAndTimeConsumption(
-                iTTL, timeoutCount, 0, false
+                iTTL, timeoutCount, 0, false, false
             );
         }
     }
+
+
+    char printIPAddress[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(*(sockaddr_in*)currentHopIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
+
+    // 判断是否为末端主机（最后一跳）
+    bool isTargetHost = ((sockaddr_in*)currentHopIPAddress)->sin_addr.s_addr == ((sockaddr_in*)targetHostIPAddress)->sin_addr.s_addr;
 
     // 完成追踪
     if (isIPValid && !isStopping) {
         // 仅在没有被请求停止的时候回报
         emit reportIPAndTimeConsumption(
-            iTTL, pEchoReply->RoundTripTime, currentHopIPAddress, true
+            iTTL, pEchoReply->RoundTripTime, QString(printIPAddress), true, isTargetHost
         );
     }
 
@@ -494,7 +483,7 @@ void TRTWorker::GetIPv6() {
             ) != 0
         ) {
             // 得到返回
-            memcpy(((sockaddr_in6*)&targetHostIPAddress)->sin6_addr.s6_addr, &pEchoReply->Address, INET6_ADDRSTRLEN);
+            memcpy(((sockaddr_in6*)currentHopIPAddress)->sin6_addr.s6_addr, &pEchoReply->Address, INET6_ADDRSTRLEN);
             isIPValid = true;
 
             // 任务完成，退出线程
@@ -503,16 +492,22 @@ void TRTWorker::GetIPv6() {
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;
             emit reportIPAndTimeConsumption(
-                iTTL, timeoutCount, NULL, false
+                iTTL, timeoutCount, NULL, false, false
             );
         }
     }
+
+    char printIPAddress[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(*(sockaddr_in6*)currentHopIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
+
+    // 判断是否为末端主机（最后一跳）
+    bool isTargetHost = memcmp(&((sockaddr_in6*)currentHopIPAddress)->sin6_addr, &((sockaddr_in6*)targetHostIPAddress)->sin6_addr, INET6_ADDRSTRLEN);
 
     // 完成追踪
     if (isIPValid && !isStopping) {
         // 仅在没有被请求停止的时候回报
         emit reportIPAndTimeConsumption(
-            iTTL, pEchoReply->RoundTripTime, currentHopIPAddress, true
+            iTTL, pEchoReply->RoundTripTime, QString(printIPAddress), true, isTargetHost
         );
     }
 

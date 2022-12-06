@@ -44,7 +44,7 @@ private: // 成员函数区
 
 signals:
     // 回报信息
-    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const sockaddr_storage * ipAddress, const bool isValid);
+    void reportIPAndTimeConsumption(const int ttl, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost);
     void reportInformation(
         const int ttl,
         const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
