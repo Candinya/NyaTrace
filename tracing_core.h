@@ -1,20 +1,20 @@
-#ifndef TR_THREAD_H
-#define TR_THREAD_H
+#ifndef TRACING_CORE_H
+#define TRACING_CORE_H
 
 #include <QThread>
 #include <QThreadPool>
 #include <QRunnable>
 
-#include "tr_utils.h"
+#include "tracing_defs.h"
 #include "ipdb.h"
 
-class TRTWorker : public QObject, public QRunnable
+class TracingWorker : public QObject, public QRunnable
 {
     Q_OBJECT
 
 public:
-    explicit TRTWorker();
-    ~TRTWorker();
+    explicit TracingWorker();
+    ~TracingWorker();
 
 public: // 共享变量区
     // 当前包的 TTL 值
@@ -69,13 +69,13 @@ public slots:
 
 };
 
-class TRThread : public QThread
+class TracingCore : public QThread
 {
     Q_OBJECT
 
 public:
-    explicit TRThread();
-    ~TRThread();
+    explicit TracingCore();
+    ~TracingCore();
 
 public: // 共享变量区
     QString hostname;   // 用户输入的主机名，需要这个作为传入参数
@@ -104,7 +104,7 @@ private: // 私有变量区
     QThreadPool * tracingPool;
 
     // 追踪线程的子线程组
-    TRTWorker * workers[DEF_MAX_HOP];
+    TracingWorker * workers[DEF_MAX_HOP];
 
     // 当前的最大跳，超过这一跳的数据都应该被丢弃
     int maxHop;
@@ -113,7 +113,7 @@ private: // 私有变量区
     bool isStopping; // 是否中止
 
 private: // 工具函数
-    bool TRThread::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress);
+    bool TracingCore::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress);
 
 protected:
     void run() override;
@@ -139,4 +139,4 @@ public slots:
 
 };
 
-#endif // TR_THREAD_H
+#endif // TRACING_CORE_H

@@ -6,7 +6,7 @@
 
 # NyaTrace
 
-一个~~聊胜于无的~~可视化路由追踪工具（ Windows 平台）
+一个可视化路由追踪工具（ Windows 平台）
 
 ## 运行截图
 
@@ -39,7 +39,8 @@
 2. ~~多倍+并行发包以提升质量与追踪速度~~ 已经完成
 3. ~~支持 IPv6 追踪~~ 已经完成
 4. 集成一个地图服务（自建 OSM 部署）
-5. 跨平台兼容
+5. 读写配置项
+6. 跨平台兼容
 
 ## 非常感谢
 
@@ -51,3 +52,7 @@
 ### 应用图标
 
 改自 [Nucleo](https://nucleoapp.com/) - `world-marker`
+
+### 代码参考
+
+- [WinMTR (Redux)](https://github.com/White-Tiger/WinMTR)

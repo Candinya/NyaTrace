@@ -1,20 +1,20 @@
-#include "tr_gui.h"
-#include "ui_tr_gui.h"
+#include "nyatrace_gui.h"
+#include "ui_nyatrace_gui.h"
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
 #include <QDebug>
 
-#include "tr_utils.h"
-#include "tr_thread.h"
+#include "tracing_defs.h"
+#include "tracing_core.h"
 
 // 用于路由追踪的子线程
-TRThread * tracingThread;
+TracingCore * tracingThread;
 
-TR_GUI::TR_GUI(QWidget *parent)
+NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::TR_GUI)
+    , ui(new Ui::NyaTraceGUI)
 {
     ui->setupUi(this);
 
@@ -30,15 +30,15 @@ TR_GUI::TR_GUI(QWidget *parent)
     CleanUp(false);
 
     // 建立路由追踪线程
-    tracingThread = new TRThread;
+    tracingThread = new TracingCore;
 
     // 填充表格
-    connect(tracingThread, &TRThread::setIPAndTimeConsumption, this, [=](const int hop, const QString & timeComnsumption, const QString & ipAddress) {
+    connect(tracingThread, &TracingCore::setIPAndTimeConsumption, this, [=](const int hop, const QString & timeComnsumption, const QString & ipAddress) {
         hopResultsModel->setItem(hop-1, 0, new QStandardItem(timeComnsumption));
         hopResultsModel->setItem(hop-1, 1, new QStandardItem(ipAddress));
     });
 
-    connect(tracingThread, &TRThread::setInformation, this, [=](
+    connect(tracingThread, &TracingCore::setInformation, this, [=](
         const int hop,
         const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
@@ -64,23 +64,23 @@ TR_GUI::TR_GUI(QWidget *parent)
         hopResultsModel->setItem(hop-1, 8, new QStandardItem(asOrg));
     });
 
-    connect(tracingThread, &TRThread::setHostname, this, [=](const int hop, const QString & hostName) {
+    connect(tracingThread, &TracingCore::setHostname, this, [=](const int hop, const QString & hostName) {
         hopResultsModel->setItem(hop-1, 2, new QStandardItem(hostName));
     });
 
     // 更新 UI
-    connect(tracingThread, &TRThread::setMessage, this, [=](QString msg) {
+    connect(tracingThread, &TracingCore::setMessage, this, [=](QString msg) {
         // 更新信息
         ui->statusbar->showMessage(msg);
     });
 
 
-    connect(tracingThread, &TRThread::incProgress, this, [=](const int packs) {
+    connect(tracingThread, &TracingCore::incProgress, this, [=](const int packs) {
         // 完成一跳，进度条更新
         ui->tracingProgress->setValue(ui->tracingProgress->value() + packs);
     });
 
-    connect(tracingThread, &TRThread::end, this, [=](const bool isSucceeded) {
+    connect(tracingThread, &TracingCore::end, this, [=](const bool isSucceeded) {
         // 完成追踪
         CleanUp(isSucceeded);
     });
@@ -89,7 +89,7 @@ TR_GUI::TR_GUI(QWidget *parent)
     ui->statusbar->showMessage("就绪"); // 提示初始化信息
 }
 
-TR_GUI::~TR_GUI()
+NyaTraceGUI::~NyaTraceGUI()
 {
     // 销毁追踪主线程
     delete tracingThread;
@@ -102,7 +102,7 @@ TR_GUI::~TR_GUI()
 }
 
 
-void TR_GUI::on_startStopButton_clicked()
+void NyaTraceGUI::on_startStopButton_clicked()
 {
 
     if (tracingThread->isRunning()) {
@@ -117,7 +117,7 @@ void TR_GUI::on_startStopButton_clicked()
 
 }
 
-void TR_GUI::Initialize() {
+void NyaTraceGUI::Initialize() {
     // UI 相关初始化
     ui->startStopButton->setText("中止"); // 更新按钮功能提示
     ui->hostInput->setDisabled(true); // 锁定输入框
@@ -135,7 +135,7 @@ void TR_GUI::Initialize() {
     ui->tracingProgress->setValue(0);
 }
 
-void TR_GUI::StartTracing() {
+void NyaTraceGUI::StartTracing() {
     // 初始化
     Initialize();
 
@@ -153,7 +153,7 @@ void TR_GUI::StartTracing() {
     tracingThread->start();
 }
 
-void TR_GUI::AbortTracing() {
+void NyaTraceGUI::AbortTracing() {
     // 中止追踪进程
     //tracingThread->terminate();
     tracingThread->requestStop(); // 中止进程
@@ -163,7 +163,7 @@ void TR_GUI::AbortTracing() {
     ui->statusbar->showMessage("正在回收最后一包...");
 }
 
-void TR_GUI::CleanUp(const bool isSucceeded) {
+void NyaTraceGUI::CleanUp(const bool isSucceeded) {
     // UI 相关结束
     ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
     ui->startStopButton->setDisabled(false); // 解锁按钮
@@ -183,7 +183,7 @@ void TR_GUI::CleanUp(const bool isSucceeded) {
 }
 
 
-void TR_GUI::on_hostInput_returnPressed()
+void NyaTraceGUI::on_hostInput_returnPressed()
 {
     // 按下回车，启动追踪
     StartTracing();

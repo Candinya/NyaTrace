@@ -2,12 +2,17 @@
 #include <QThreadPool>
 #include <QDebug>
 
-#include "tr_thread.h"
+#include "tracing_core.h"
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
 
-TRThread::TRThread() {
+/**
+ * TracingCore
+ * 执行追踪程序的核心，涉及到基础数据的转化、追踪线程的管理和对 UI 状态的更新
+ */
+
+TracingCore::TracingCore() {
 
     qDebug() << "TRThread start constructing...";
 
@@ -56,7 +61,7 @@ TRThread::TRThread() {
     }
 }
 
-TRThread::~TRThread() {
+TracingCore::~TracingCore() {
     // 停止所有子线程
     requestStop();
 
@@ -79,7 +84,7 @@ TRThread::~TRThread() {
     qDebug() << "TRThread destroied.";
 }
 
-void TRThread::run() {
+void TracingCore::run() {
 
     isStopping = false;
 
@@ -215,7 +220,7 @@ void TRThread::run() {
     for (int i = 0; (i < DEF_MAX_HOP) && !isStopping; i++) {
         qDebug() << "TTL: " << i + 1;
 
-        workers[i] = new TRTWorker;
+        workers[i] = new TracingWorker;
 
         workers[i]->iTTL = i + 1;
         workers[i]->sourceIPAddress = &sourceIPAddress;
@@ -224,7 +229,7 @@ void TRThread::run() {
         workers[i]->hIcmp6 = hIcmp6;
         workers[i]->ipdb = ipdb;
 
-        connect(workers[i], &TRTWorker::reportIPAndTimeConsumption, this, [=](const int hop, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost) {
+        connect(workers[i], &TracingWorker::reportIPAndTimeConsumption, this, [=](const int hop, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost) {
 
             if (hop > maxHop) {
                 // 超过目标主机，丢弃
@@ -282,7 +287,7 @@ void TRThread::run() {
             emit setIPAndTimeConsumption(hop, timeConsumptionStr, ipAddressStr);
         });
 
-        connect(workers[i], &TRTWorker::reportInformation, this, [=](
+        connect(workers[i], &TracingWorker::reportInformation, this, [=](
             const int hop,
             const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
             const QString & isp, const QString & org, const uint & asn, const QString & asOrg
@@ -294,7 +299,7 @@ void TRThread::run() {
 
         });
 
-        connect(workers[i], &TRTWorker::reportHostname, this, [=](const int hop, const QString & hostname) {
+        connect(workers[i], &TracingWorker::reportHostname, this, [=](const int hop, const QString & hostname) {
 
             if (hop <= maxHop) {
                 emit setHostname(hop, hostname);
@@ -302,12 +307,12 @@ void TRThread::run() {
 
         });
 
-        connect(workers[i], &TRTWorker::incProgress, this, [=](const int progress) {
+        connect(workers[i], &TracingWorker::incProgress, this, [=](const int progress) {
             // 发送进度
             emit incProgress(progress);
         });
 
-        connect(workers[i], &TRTWorker::fin, this, [=](const int hop) {
+        connect(workers[i], &TracingWorker::fin, this, [=](const int hop) {
 
             // 子线程运行完成，标记当前 worker 为 NULL
             qDebug() << "Worker " << i << " finished.";
@@ -333,7 +338,7 @@ void TRThread::run() {
 
 }
 
-bool TRThread::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress) {
+bool TracingCore::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress) {
 
     IN_ADDR  addr4; // IPv4 地址的暂存区域
     IN6_ADDR addr6; // IPv6 地址的暂存区域
@@ -356,7 +361,7 @@ bool TRThread::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostI
     return true;
 }
 
-void TRThread::requestStop() {
+void TracingCore::requestStop() {
     // 设置自身需要停止
     isStopping = true;
 
@@ -368,7 +373,12 @@ void TRThread::requestStop() {
     }
 }
 
-TRTWorker::TRTWorker() {
+/**
+ * TracingWorker
+ * 具体的追踪线程，每个线程负责一跳，当得到当前跳的数据之后返回。
+ */
+
+TracingWorker::TracingWorker() {
 
     // 设置运行完成后自动销毁
     setAutoDelete(true);
@@ -379,12 +389,12 @@ TRTWorker::TRTWorker() {
 
 }
 
-TRTWorker::~TRTWorker() {
+TracingWorker::~TracingWorker() {
     // 销毁需要销毁的东西
     delete currentHopIPAddress;
 }
 
-void TRTWorker::run() {
+void TracingWorker::run() {
 
     // 标记为非停止
     isStopping = false;
@@ -426,7 +436,7 @@ void TRTWorker::run() {
 
 }
 
-void TRTWorker::GetIPv4() {
+void TracingWorker::GetIPv4() {
 
     // 第一步：追踪
     // ICMP 包发送缓冲区和接收缓冲区
@@ -497,7 +507,7 @@ void TRTWorker::GetIPv4() {
 
 }
 
-void TRTWorker::GetIPv6() {
+void TracingWorker::GetIPv6() {
 
     // 第一步：追踪
     // ICMP 包发送缓冲区和接收缓冲区
@@ -567,7 +577,7 @@ void TRTWorker::GetIPv6() {
 
 }
 
-void TRTWorker::GetInfo() {
+void TracingWorker::GetInfo() {
 
     // 查询 IP 对应的信息
 
@@ -624,7 +634,7 @@ void TRTWorker::GetInfo() {
 
 }
 
-void TRTWorker::GetHostname() {
+void TracingWorker::GetHostname() {
 
     // 这一步是最耗时的操作，它基本上请求必定会超时，所以放到这里来尽可能优化一下体验
 
@@ -648,6 +658,6 @@ void TRTWorker::GetHostname() {
 
 }
 
-void TRTWorker::requestStop() {
+void TracingWorker::requestStop() {
     isStopping = true;
 }

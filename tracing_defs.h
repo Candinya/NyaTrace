@@ -1,5 +1,5 @@
-#ifndef TR_UTILS_H
-#define TR_UTILS_H
+#ifndef TRACING_DEFS_H
+#define TRACING_DEFS_H
 
 #include <winsock2.h> // 类型定义
 #include <IPHlpApi.h>
@@ -17,4 +17,4 @@ const int DEF_MAX_HOP = 30;          // 最大跳站数
 const DWORD DEF_ICMP_TIMEOUT = 3000; // 默认超时时间，单位ms
 const unsigned long DEF_INTERVAL_PER_THREAD = 100; // 每一条线程启动距离上一条的等待时间
 
-#endif // TR_UTILS_H
+#endif // TRACING_DEFS_H
