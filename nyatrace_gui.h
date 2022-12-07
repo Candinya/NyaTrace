@@ -3,6 +3,10 @@
 
 #include <QMainWindow>
 #include <QStandardItemModel>
+#include <QQuickWidget>
+
+#include "tracing_defs.h"
+#include "tracing_core.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class NyaTraceGUI; }
@@ -23,6 +27,9 @@ private slots:
 private:
     // 界面 UI
     Ui::NyaTraceGUI *ui;
+
+    // 用于路由追踪的子线程
+    TracingCore * tracingThread;
 
     // 用于存储结果的模型
     QStandardItemModel * hopResultsModel;

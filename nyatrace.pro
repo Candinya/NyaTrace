@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui positioning location quickwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -34,12 +34,21 @@ LIBS += \
     -lws2_32 \
     -liphlpapi
 
+DEFINES += \
+    _WINSOCKAPI_
+
+RESOURCES += \
+    osm_map.qml
+
 RC_ICONS += \
     icon.ico
 
 TARGET = NyaTrace
 
 VERSION = 0.1.7.1
+
+DEFINES += \
+    APP_VERSION=\\\"$$VERSION\\\"
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

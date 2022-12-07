@@ -6,6 +6,9 @@
 
 int main(int argc, char *argv[])
 {
+    // 打印版本号
+    qDebug() << "Booting NyaTrace" << APP_VERSION << "...";
+
     QApplication app(argc, argv);
     NyaTraceGUI w;
 

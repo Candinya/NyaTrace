@@ -5,18 +5,25 @@
 #include <ws2tcpip.h>
 #include <stdio.h>
 #include <QDebug>
-
-#include "tracing_defs.h"
-#include "tracing_core.h"
-
-// 用于路由追踪的子线程
-TracingCore * tracingThread;
+#include <QMetaObject>
 
 NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::NyaTraceGUI)
 {
+    // 初始化界面 UI
     ui->setupUi(this);
+
+    // 初始化追踪地图 （OSM）
+    ui->tracingMap->setSource(QUrl("qrc:/osm_map.qml"));
+    ui->tracingMap->show();
+
+    QMetaObject::invokeMethod(
+        (QObject*)ui->tracingMap->rootObject(),
+        "ping",
+        Qt::DirectConnection,
+        Q_ARG(QVariant, "ping")
+    );
 
     // 初始化结果数据模型
     hopResultsModel = new QStandardItemModel();
@@ -49,12 +56,25 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
         hopResultsModel->setItem(hop-1, 3, new QStandardItem(cityName));
         hopResultsModel->setItem(hop-1, 4, new QStandardItem(countryName));
 
-        // 根据纬度和经度在地图上画一个点和一个圆
-        qDebug() << "Hop:"             << hop
-                 << "Latitude:"        << latitude
-                 << "Longitude:"       << longitude
-                 << "Accuracy Radius:" << accuracyRadius
-        ;
+        if (isLocationValid) {
+            // 根据纬度和经度在地图上画一个点和一个圆
+            qDebug() << "Hop:"             << hop
+                     << "Latitude:"        << latitude
+                     << "Longitude:"       << longitude
+                     << "Accuracy Radius:" << accuracyRadius
+            ;
+
+            QMetaObject::invokeMethod(
+                (QObject*)ui->tracingMap->rootObject(),
+                "drawHopData",
+                Qt::DirectConnection,
+                Q_ARG(QVariant, latitude),
+                Q_ARG(QVariant, longitude),
+                Q_ARG(QVariant, accuracyRadius),
+                Q_ARG(QVariant, hop),
+                Q_ARG(QVariant, QString("第 %1 跳").arg(hop))
+            );
+        }
 
         hopResultsModel->setItem(hop-1, 5, new QStandardItem(isp));
         hopResultsModel->setItem(hop-1, 6, new QStandardItem(org));
@@ -191,4 +211,3 @@ void NyaTraceGUI::on_hostInput_returnPressed()
     // 按下回车，启动追踪
     StartTracing();
 }
-
