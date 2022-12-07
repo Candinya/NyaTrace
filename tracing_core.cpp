@@ -14,7 +14,7 @@
 
 TracingCore::TracingCore() {
 
-    qDebug() << "TRThread start constructing...";
+    qDebug() << "Tracing Core start constructing...";
 
     // 初始化 IPDB 实例
     ipdb = new IPDB;
@@ -81,7 +81,7 @@ TracingCore::~TracingCore() {
     // 终止 Winsock 2 DLL (ws2_32.dll) 的使用
     WSACleanup();
 
-    qDebug() << "TRThread destroied.";
+    qDebug() << "Tracing Core destroied.";
 }
 
 void TracingCore::run() {
@@ -122,39 +122,10 @@ void TracingCore::run() {
                .arg(DEF_MAX_HOP)
         );
     } else {
+        // 按照主机名解析
         qDebug() << "Target host is not IP address, resolving...";
-        // 按照域名解析
-        addrinfo * resolveResult = NULL;
-        addrinfo resolveHints;
 
-        ZeroMemory(&resolveHints, sizeof(resolveHints));
-
-        resolveHints.ai_family   = AF_UNSPEC;
-        resolveHints.ai_socktype = SOCK_STREAM;
-        resolveHints.ai_protocol = IPPROTO_TCP;
-
-        if (getaddrinfo(hostCharStr, NULL, &resolveHints, &resolveResult) == 0) {
-            // 这里取的都是结果里的第一位，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
-            // 参考 https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getaddrinfo
-            switch (resolveResult->ai_family) {
-            case AF_INET:
-                // 是 IPv4
-                targetIPAddress.ss_family = AF_INET;
-                (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = (*(sockaddr_in*)resolveResult->ai_addr).sin_addr.s_addr;
-                break;
-            case AF_INET6:
-                // 是 IPv6
-                targetIPAddress.ss_family = AF_INET6;
-                memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, (*(sockaddr_in6*)resolveResult->ai_addr).sin6_addr.s6_addr, resolveResult->ai_addrlen);
-                break;
-            default:
-                // 不是 IPv4 也不是 IPv6
-                qWarning() << "Resolved with invalid reason: " << resolveResult->ai_family;
-                emit setMessage(QString("主机名解析结果异常，结果类型为： %1 。").arg(resolveResult->ai_family));
-                emit end(false);
-                return; // 结束
-                // break;
-            }
+        if (resolveHostname(hostCharStr, targetIPAddress)) {
 
             char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
             switch(targetIPAddress.ss_family) {
@@ -338,7 +309,7 @@ void TracingCore::run() {
 
 }
 
-bool TracingCore::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress) {
+bool TracingCore::parseIPAddress(const char * ipStr, sockaddr_storage & targetIPAddress) {
 
     IN_ADDR  addr4; // IPv4 地址的暂存区域
     IN6_ADDR addr6; // IPv6 地址的暂存区域
@@ -346,19 +317,58 @@ bool TracingCore::parseIPAddress(const char * ipStr, sockaddr_storage & targetHo
     if (inet_pton(AF_INET, ipStr, &addr4) != 0) {
         // 输入是 IPv4 地址
         qDebug() << "It's IPv4";
-        targetHostIPAddress.ss_family = AF_INET;
-        (*(sockaddr_in*)&targetHostIPAddress).sin_addr = addr4;
+        targetIPAddress.ss_family = AF_INET;
+        (*(sockaddr_in*)&targetIPAddress).sin_addr = addr4;
     } else if (inet_pton(AF_INET6, ipStr, &addr6) != 0) {
         // 输入是 IPv6 地址
         qDebug() << "It's IPv6";
-        targetHostIPAddress.ss_family = AF_INET6;
-        (*(sockaddr_in6*)&targetHostIPAddress).sin6_addr = addr6;
+        targetIPAddress.ss_family = AF_INET6;
+        (*(sockaddr_in6*)&targetIPAddress).sin6_addr = addr6;
     } else {
         // 什么都不是
         return false;
     }
 
     return true;
+}
+
+bool TracingCore::resolveHostname(const char * hostname, sockaddr_storage & targetIPAddress) {
+
+    addrinfo * resolveResult = NULL;
+    addrinfo   resolveHints;
+
+    ZeroMemory(&resolveHints, sizeof(resolveHints));
+
+    resolveHints.ai_family   = AF_UNSPEC;
+    resolveHints.ai_socktype = SOCK_STREAM;
+    resolveHints.ai_protocol = IPPROTO_TCP;
+
+    if (getaddrinfo(hostname, NULL, &resolveHints, &resolveResult) == 0) {
+        // 这里取的都是结果里的第一位，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
+        // 参考 https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getaddrinfo
+        switch (resolveResult->ai_family) {
+        case AF_INET:
+            // 是 IPv4
+            targetIPAddress.ss_family = AF_INET;
+            (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = (*(sockaddr_in*)resolveResult->ai_addr).sin_addr.s_addr;
+            break;
+        case AF_INET6:
+            // 是 IPv6
+            targetIPAddress.ss_family = AF_INET6;
+            memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, (*(sockaddr_in6*)resolveResult->ai_addr).sin6_addr.s6_addr, resolveResult->ai_addrlen);
+            break;
+        default:
+            // 不是 IPv4 也不是 IPv6
+            qWarning() << "Resolved with invalid sock family: " << resolveResult->ai_family;
+            return false;
+        }
+
+        return true;
+    } else {
+        // 解析失败
+        return false;
+    }
+
 }
 
 void TracingCore::requestStop() {
