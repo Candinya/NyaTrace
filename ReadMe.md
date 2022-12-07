@@ -12,7 +12,7 @@
 
 > 出于安全因素考虑，抹掉了敏感的 IP 。
 
-![运行截图](https://file.nya.one/misskey/2d144605-150c-4039-98c1-7af713690cd0.png)
+![运行截图](https://nyatrace.app/images/screenshot.png)
 
 ## 声明
 
