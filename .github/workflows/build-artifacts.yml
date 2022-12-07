@@ -64,6 +64,11 @@ jobs:
         chdir /d %GITHUB_WORKSPACE%
         windeployqt --qmldir . "workspace\%ARCHIVE_NAME%\NyaTrace.exe"
 
+    - name: Prepare theme files
+      shell: pwsh
+      run: |
+        Copy-Item -Recurse theme workspace\${env:ARCHIVE_NAME}\
+
     - name: Prepare MMDB notices
       shell: pwsh
       run: |
