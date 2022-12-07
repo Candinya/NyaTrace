@@ -25,6 +25,9 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     ui->hopsTable->setModel(hopResultsModel);
     ui->hopsTable->show();
 
+    // 设置结果表自动伸展
+    ui->hopsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
     // 初始化 UI
     Initialize();
     CleanUp(false);
