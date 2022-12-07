@@ -32,6 +32,7 @@
 ## 提示
 
 1. 如果您没有购买 GeoIP2 数据库，您也可以使用 GeoLite2 （即免费版的）数据库作为替代（ GeoIP2-ISP 请用 GeoLite2-ASN 代替），将其重命名为上文指定的格式即可，需要注意相关的结果和数据可能并不如完整版丰富准确。
+2. 如果觉得现在这个主题不好看，您可以参照 [qt-material#25](https://github.com/UN-GCPDS/qt-material/issues/25#issuecomment-835368713) 中给出的主题生成步骤配置您喜欢的主题，并替换掉 theme 目录下的 qss 样式文件。如果您喜欢 Qt 默认的主题，可以直接删除整个 theme 目录。
 
 ## 后续的开发方向
 
@@ -40,7 +41,7 @@
 3. ~~支持 IPv6 追踪~~ 已经完成
 4. 集成一个地图服务（自建 OSM 部署）
 5. 读写配置项
-6. 主题与美化
+6. ~~主题与美化~~ 已经完成
 7. 跨平台兼容
 
 ## 非常感谢
@@ -48,6 +49,7 @@
 ### 开源依赖
 
 - [libmaxminddb](https://github.com/maxmind/libmaxminddb)
+- [qt-material](https://github.com/UN-GCPDS/qt-material)
 - [Qt for Open Source Development](https://www.qt.io/download-open-source)
 
 ### 应用图标
