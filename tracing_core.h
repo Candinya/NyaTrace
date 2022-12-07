@@ -43,8 +43,8 @@ private: // 私有变量区
     sockaddr_storage * currentHopIPAddress; // 初始化时创建，给父进程传参使用，所以需要在父进程使用完成后才能删除
 
 private: // 成员函数区
-    void GetIPv4();        // 第一步：得到目标 IP
-    void GetIPv6();        // 第一步：得到目标 IP
+    void GetIPv4();      // 第一步：得到目标 IP
+    void GetIPv6();      // 第一步：得到目标 IP
     void GetInfo();      // 第二步：得到 IP 对应的数据库信息
     void GetHostname(); // 第三步：得到主机名
 
@@ -113,7 +113,8 @@ private: // 私有变量区
     bool isStopping; // 是否中止
 
 private: // 工具函数
-    bool TracingCore::parseIPAddress(const char * ipStr, sockaddr_storage & targetHostIPAddress);
+    bool parseIPAddress(const char * ipStr, sockaddr_storage & targetIPAddress);
+    bool resolveHostname(const char * hostname, sockaddr_storage & targetIPAddress);
 
 protected:
     void run() override;
