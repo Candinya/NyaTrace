@@ -39,7 +39,7 @@ RC_ICONS += \
 
 TARGET = NyaTrace
 
-VERSION = 0.1.7.0
+VERSION = 0.1.7.1
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
