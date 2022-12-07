@@ -14,7 +14,7 @@
 
 TracingCore::TracingCore() {
 
-    qDebug() << "TRThread start constructing...";
+    qDebug() << "Tracing Core start constructing...";
 
     // 初始化 IPDB 实例
     ipdb = new IPDB;
@@ -81,7 +81,7 @@ TracingCore::~TracingCore() {
     // 终止 Winsock 2 DLL (ws2_32.dll) 的使用
     WSACleanup();
 
-    qDebug() << "TRThread destroied.";
+    qDebug() << "Tracing Core destroied.";
 }
 
 void TracingCore::run() {
