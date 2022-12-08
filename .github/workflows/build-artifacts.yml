@@ -104,5 +104,5 @@ jobs:
     - name: Upload built file as artifact
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ env.ARCHIVE_NAME }}.zip
+        name: ${{ env.ARCHIVE_NAME }}
         path: workspace/
