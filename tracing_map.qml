@@ -29,13 +29,9 @@ Rectangle {
         // 连接各个追踪点的线
         MapPolyline {
             id: tracingLine
-            line.width: 30000000000
-//            line.color: "#ff7163"
-            path: [
-                { latitude: 29.8797, longitude: 121.5513 },
-                { latitude: 30.2994, longitude: 120.1612 },
-                { latitude: 34.7732, longitude: 113.722 }
-            ]
+            line.width: 3
+            line.color: "#ff7163"
+            path: []
         }
 
     }
