@@ -113,6 +113,9 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
 
     // 更新状态
     ui->statusbar->showMessage("就绪"); // 提示初始化信息
+
+    // 把焦点放到输入框上
+    ui->hostInput->QWidget::setFocus();
 }
 
 NyaTraceGUI::~NyaTraceGUI()
