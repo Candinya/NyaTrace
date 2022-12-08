@@ -61,8 +61,8 @@ jobs:
       shell: cmd
       run: |
         call "%Qt5_DIR%\bin\qtenv2.bat"
-        chdir /d %GITHUB_WORKSPACE%
-        windeployqt --qmldir . "workspace\%ARCHIVE_NAME%\NyaTrace.exe"
+        chdir /d %GITHUB_WORKSPACE%\workspace\%ARCHIVE_NAME%
+        windeployqt --qmldir %GITHUB_WORKSPACE% --release NyaTrace.exe
 
     - name: Prepare theme files
       shell: pwsh
