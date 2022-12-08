@@ -23,7 +23,7 @@ jobs:
         arch: 'win64_msvc2019_64'
         install-deps: 'true'
         modules: 'all'
-        cache: 'false'
+        cache: 'true'
         
     - name: Checkout codes
       uses: actions/checkout@v3
