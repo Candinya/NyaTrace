@@ -53,7 +53,20 @@ Rectangle {
     }
 
     // 画一个追踪点
+
+    property var drewPoints: [];
     function drawHopPoint(latitude, longitude, accuracyRadius) {
+        if (drewPoints.findIndex((point) => point.latitude === latitude && point.longitude === longitude) !== -1) {
+            // 已经画过了
+            return;
+        } else {
+            // 没画过，可以画，标记一下
+            drewPoints.push({
+                latitude,
+                longitude
+            });
+        }
+
         // 画组
         const hopPoint = Qt.createQmlObject(`
             import QtQuick 2.15
@@ -130,7 +143,9 @@ Rectangle {
         map.clearMapItems();
 
         // 清空追踪线
-        tracingLine.path = [];
+        for (const c of tracingLine.path) {
+            tracingLine.removeCoordinate(c);
+        }
 
         // 把线加回地图
         map.addMapItem(tracingLine);
@@ -140,5 +155,8 @@ Rectangle {
 
         // 把提示信息加回地图
         map.addMapItem(mapTooltip);
+
+        // 清空已经画过的记录列表
+        drewPoints.splice(0, drewPoints.length);
     }
 }
