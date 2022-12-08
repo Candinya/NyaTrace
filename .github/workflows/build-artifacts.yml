@@ -24,6 +24,7 @@ jobs:
         install-deps: 'true'
         modules: 'all'
         cache: 'true'
+        tools: 'tools_openssl_x64 tools_openssl_src'
         
     - name: Checkout codes
       uses: actions/checkout@v3
