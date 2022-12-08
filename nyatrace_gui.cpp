@@ -215,9 +215,10 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
     clock_t endTime = clock();
     auto consumedSeconds = (endTime - startTime) / CLOCKS_PER_SEC;
 
-    qDebug() << "Tracing finished in " << consumedSeconds << " seconds.";
-
     if (isSucceeded) {
+
+        qDebug() << "Tracing finished successfully in" << consumedSeconds << "seconds.";
+
         // 设置提示信息
         ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg(consumedSeconds));
 

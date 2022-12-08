@@ -5,35 +5,45 @@
 #include <QFile>
 #include <QDateTime>
 
-void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
-{
-   Q_UNUSED(context);
+void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
 
-   QString dt = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
-   QString txt = QString("[%1] ").arg(dt);
+    // 标记上下文这个变量没有被使用到
+    Q_UNUSED(context);
 
-   switch (type)
-   {
-      case QtDebugMsg:
-         txt += QString("{Debug} \t\t %1").arg(msg);
-         break;
-      case QtWarningMsg:
-         txt += QString("{Warning} \t %1").arg(msg);
-         break;
-      case QtCriticalMsg:
-         txt += QString("{Critical} \t %1").arg(msg);
-         break;
-      case QtFatalMsg:
-         txt += QString("{Fatal} \t\t %1").arg(msg);
-         abort();
-         break;
-   }
+    QString level;
 
-   QFile outFile("NyaTrace.log");
-   outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+    switch (type) {
+    case QtDebugMsg:
+        level = QString("[Debug]");
+        break;
+    case QtInfoMsg:
+        level = QString("[Info]");
+        break;
+    case QtWarningMsg:
+        level = QString("[Warning]");
+        break;
+    case QtCriticalMsg:
+        level = QString("[Critical]");
+        break;
+    case QtFatalMsg:
+        level = QString("[Fatal]");
+        break;
+    }
 
-   QTextStream textStream(&outFile);
-   textStream << txt << endl;
+    QFile outFile("NyaTrace.log");
+    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+
+    QTextStream textStream(&outFile);
+    textStream 
+        << QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss]") << "\t" 
+        << level << "\t" 
+        << msg << Qt::endl
+    ;
+
+    if (type == QtFatalMsg) {
+        // 现在才可以退出
+        abort();
+    }
 }
 
 int main(int argc, char *argv[])
