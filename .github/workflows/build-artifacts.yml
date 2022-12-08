@@ -80,9 +80,7 @@ jobs:
     - name: Prepare OpenSSL DLLs
       shell: pwsh
       run: |
-        Push-Location -Path "${env:Qt5_DIR}\Tools\OpenSSL\Win_x64\bin"
-        Copy-Item lib*-x64.dll workspace\${env:ARCHIVE_NAME}\
-        Pop-Location
+        Copy-Item ${env:Qt5_DIR}'\Tools\OpenSSL\Win_x64\bin\lib*-x64.dll' workspace\${env:ARCHIVE_NAME}\
 
     - name: Package artifacts
       shell: pwsh
