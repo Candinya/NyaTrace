@@ -77,6 +77,11 @@ jobs:
         $mmdbNotice = '请将 MMDB 文件放置在这里，具体操作请参见 https://github.com/Candinya/NyaTrace 相关的说明。'
         $mmdbNotice | Out-File workspace\${env:ARCHIVE_NAME}\mmdb\'请将 MMDB 文件放置在这里.txt'
 
+    - name: Prepare OpenSSL DLLs
+      shell: pwsh
+      run: |
+        Copy-Item '${env:Qt5_DIR}\Tools\OpenSSL\Win_x64\bin\lib*.dll' workspace\${env:ARCHIVE_NAME}\
+
     - name: Package artifacts
       shell: pwsh
       run: |
