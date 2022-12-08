@@ -22,9 +22,8 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
         install-deps: 'true'
-        modules: 'all'
         cache: 'true'
-        tools: 'tools_openssl_x64 tools_openssl_src'
+        tools: 'tools_openssl_x64'
         
     - name: Checkout codes
       uses: actions/checkout@v3
