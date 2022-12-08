@@ -29,7 +29,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
          break;
    }
 
-   QFile outFile("LogFile.log");
+   QFile outFile("NyaTrace.log");
    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
 
    QTextStream textStream(&outFile);
