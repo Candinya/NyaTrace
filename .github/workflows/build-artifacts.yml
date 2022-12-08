@@ -32,7 +32,7 @@ jobs:
       shell: cmd
       run: |
         for /f "delims=" %%d in ( 'vswhere.exe -latest -property installationPath' ) do @( call "%%d\VC\Auxiliary\Build\vcvars64.bat" )
-        qmake CONFIG+=release
+        qmake "CONFIG+=qtquickcompiler" CONFIG+=release
         nmake
 
     - name: Set short SHA as package name
