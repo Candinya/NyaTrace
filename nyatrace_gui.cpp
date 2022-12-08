@@ -49,10 +49,12 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
         hopResultsModel->setItem(hop-1, 3, new QStandardItem(cityName));
         hopResultsModel->setItem(hop-1, 4, new QStandardItem(countryName));
 
-        hopResultsModel->setItem(hop-1, 5, new QStandardItem(isp));
-        hopResultsModel->setItem(hop-1, 6, new QStandardItem(org));
-
         if (isLocationValid) {
+            // 记录到表格数据中
+            hopResultsModel->setItem(hop-1, 5, new QStandardItem(QString("%1").arg(latitude)));
+            hopResultsModel->setItem(hop-1, 6, new QStandardItem(QString("%1").arg(longitude)));
+            hopResultsModel->setItem(hop-1, 7, new QStandardItem(QString("%1").arg(accuracyRadius)));
+
             // 根据纬度和经度在地图上画一个点和一个圆
             qDebug() << "Hop:"             << hop
                      << "Latitude:"        << latitude
@@ -76,13 +78,16 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
             hopGeoInfo[hop-1].accuracyRadius = accuracyRadius;
         }
 
+        hopResultsModel->setItem(hop-1, 8, new QStandardItem(isp));
+        hopResultsModel->setItem(hop-1, 9, new QStandardItem(org));
+
 
         if (asn != 0) {
             // 仅在有效的情况下设置 ASN 数据
-            hopResultsModel->setItem(hop-1, 7, new QStandardItem(QString("AS %1").arg(asn)));
+            hopResultsModel->setItem(hop-1, 10, new QStandardItem(QString("AS %1").arg(asn)));
         }
 
-        hopResultsModel->setItem(hop-1, 8, new QStandardItem(asOrg));
+        hopResultsModel->setItem(hop-1, 11, new QStandardItem(asOrg));
     });
 
     connect(tracingThread, &TracingCore::setHostname, this, [=](const int hop, const QString & hostName) {
@@ -148,7 +153,7 @@ void NyaTraceGUI::Initialize() {
     hopResultsModel->clear();
 
     // 构建表头
-    QStringList hopResultLables = { "时间", "地址", "主机名", "城市", "国", "ISP", "组织", "ASN", "AS组织" };
+    QStringList hopResultLables = { "时间", "地址", "主机名", "城市", "国", "纬度", "经度", "误差半径", "ISP", "组织", "ASN", "AS组织" };
     hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 重置进度条
