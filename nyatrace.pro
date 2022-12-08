@@ -1,4 +1,9 @@
-QT       += core gui positioning location quickwidgets
+QT += \
+    core \
+    gui \
+    positioning \
+    location \
+    quickwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
