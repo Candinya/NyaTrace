@@ -23,7 +23,6 @@ jobs:
         arch: 'win64_msvc2019_64'
         install-deps: 'true'
         modules: 'all'
-        archives: 'qtlocation'
         cache: 'false'
         
     - name: Checkout codes
