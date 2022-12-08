@@ -24,6 +24,8 @@ private slots:
     void on_startStopButton_clicked();
     void on_hostInput_returnPressed();
 
+    void on_hopsTable_clicked(const QModelIndex &index);
+
 private:
     // 界面 UI
     Ui::NyaTraceGUI *ui;

@@ -21,23 +21,39 @@ Rectangle {
         id: map
         plugin: osmPlugin
         anchors.fill: parent
-        center: QtPositioning.coordinate(34.7732, 113.722)
+        center: QtPositioning.coordinate(36, 120)
+        smooth: true
         zoomLevel: 2
         layer.enabled: true
         layer.samples: 8
 
-        // 连接各个追踪点的线
-        MapPolyline {
-            id: tracingLine
-            line.width: 3
-            line.color: "#ff7163"
-            path: []
-        }
+    }
 
+    // 连接各个追踪点的线
+    MapPolyline {
+        id: tracingLine
+        line.width: 3
+        line.color: "#ff7163"
+        path: []
+    }
+
+    MapQuickItem {
+        id: mapTooltip
+        visible: false
+        z: 1 // 放在最前面
+        anchorPoint: Qt.point(-8, 8)
+        sourceItem: Text {
+            text: ""
+            color:"#242424"
+            font.bold: true
+            styleColor: "#ECECEC"
+            style: Text.Outline
+            font.pointSize: 12
+        }
     }
 
     // 画一个追踪点
-    function drawHopPoint(latitude, longitude, accuracyRadius, hop, message) {
+    function drawHopPoint(latitude, longitude, accuracyRadius) {
         // 画组
         const hopPoint = Qt.createQmlObject(`
             import QtQuick 2.15
@@ -49,7 +65,6 @@ Rectangle {
                 property real latitude: 34.7732
                 property real longitude: 113.722
                 property real accuracyRadius: 1000
-                property string message: ""
 
                 property string themeColor: "#ff7163"
 
@@ -68,19 +83,6 @@ Rectangle {
                     anchorPoint: Qt.point(sourceItem.width/2, sourceItem.height/2)
                 }
 
-                MapQuickItem {
-                    sourceItem: Text {
-                        text: hopGroup.message
-                        color:"#242424"
-                        font.bold: true
-                        styleColor: "#ECECEC"
-                        style: Text.Outline
-                        font.pointSize: 15
-                    }
-                    coordinate: QtPositioning.coordinate(hopGroup.latitude, hopGroup.longitude)
-                    anchorPoint: Qt.point(-8, 24)
-                }
-
                 MapCircle {
                     color: hopGroup.themeColor
                     opacity: 0.18
@@ -96,7 +98,6 @@ Rectangle {
         hopPoint.latitude = latitude
         hopPoint.longitude = longitude
         hopPoint.accuracyRadius = accuracyRadius
-        hopPoint.message = message
 
         // 添加到地图
         map.addMapItemGroup(hopPoint);
@@ -104,8 +105,18 @@ Rectangle {
 
     // 给线添加一个点
     function connectLine(latitude, longitude) {
-        console.log("Drawing pont into line: ", latitude, longitude);
+        console.log("Drawing pont into line:", latitude, longitude);
         tracingLine.addCoordinate(QtPositioning.coordinate(latitude, longitude));
+    }
+
+    // 前往某个区域，并显示提示信息
+    function gotoCoordinate(latitude, longitude, zoomLevel, message) {
+        const newPosition = QtPositioning.coordinate(latitude, longitude);
+        map.center = newPosition;
+        map.zoomLevel = zoomLevel;
+        mapTooltip.sourceItem.text = message;
+        mapTooltip.coordinate = newPosition;
+        mapTooltip.visible = true;
     }
 
     // 自动调整地图大小
@@ -115,7 +126,19 @@ Rectangle {
 
     // 清空地图
     function clearMap() {
-        tracingLine.path = []; // 直接清空
+        // 清空地图上的物品
         map.clearMapItems();
+
+        // 清空追踪线
+        tracingLine.path = [];
+
+        // 把线加回地图
+        map.addMapItem(tracingLine);
+
+        // 隐藏提示信息
+        mapTooltip.visible = false;
+
+        // 把提示信息加回地图
+        map.addMapItem(mapTooltip);
     }
 }

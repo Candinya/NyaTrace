@@ -66,9 +66,7 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
                 Qt::DirectConnection,
                 Q_ARG(QVariant, latitude),
                 Q_ARG(QVariant, longitude),
-                Q_ARG(QVariant, accuracyRadius),
-                Q_ARG(QVariant, hop),
-                Q_ARG(QVariant, QString("第 %1 跳").arg(hop))
+                Q_ARG(QVariant, accuracyRadius)
             );
 
             // 存进数组
@@ -245,3 +243,26 @@ void NyaTraceGUI::on_hostInput_returnPressed()
     // 按下回车，启动追踪
     StartTracing();
 }
+
+void NyaTraceGUI::on_hopsTable_clicked(const QModelIndex &index)
+{
+    qDebug() << "Table index clicked:" << index;
+
+    // 如果地址有效，就前往地址
+    if (hopGeoInfo[index.row()].isValid) {
+        QMetaObject::invokeMethod(
+            (QObject*)ui->tracingMap->rootObject(),
+            "gotoCoordinate",
+            Qt::DirectConnection,
+            Q_ARG(QVariant, hopGeoInfo[index.row()].latitude),
+            Q_ARG(QVariant, hopGeoInfo[index.row()].longitude),
+            Q_ARG(QVariant, 14), // 缩放等级
+            Q_ARG(QVariant,
+                QString("第 %1 跳 - %2\n%3 - %4")
+                    .arg(index.row() + 1).arg(hopResultsModel->item(index.row(), 1)->text())
+                    .arg(hopResultsModel->item(index.row(), 3)->text(), hopResultsModel->item(index.row(), 4)->text())
+                )
+        );
+    }
+}
+
