@@ -50,11 +50,12 @@ char * IPDB::strndup(const char *str, size_t n) {
 // 成员函数：在 MMDB 中查询 IP 对应的城市信息
 bool IPDB::LookUpIPCityInfo(
     const sockaddr * ip_address,
-    QString & cityName,
-    QString & countryName,
-    double  & latitude,
-    double  & longitude,
-    bool    & isLocationValid
+    QString  & cityName,
+    QString  & countryName,
+    double   & latitude,
+    double   & longitude,
+    uint16_t & accuracyRadius,
+    bool     & isLocationValid
 ) {
     int mmdbStatus;
 
@@ -86,7 +87,8 @@ bool IPDB::LookUpIPCityInfo(
             cityEntryData_cityName,
             cityEntryData_countryName,
             cityEntryData_latitude,
-            cityEntryData_longitude
+            cityEntryData_longitude,
+            cityEntryData_accuracyRadius
         ;
         int getEntryDataStatus;
 
@@ -159,6 +161,20 @@ bool IPDB::LookUpIPCityInfo(
         } else {
             qDebug() << "Get longitude successfully: " << cityEntryData_longitude.double_value;
             longitude = cityEntryData_longitude.double_value;
+        }
+
+        // 准确半径
+        getEntryDataStatus = MMDB_get_value(&city_result.entry, &cityEntryData_accuracyRadius, "location", "accuracy_radius", NULL);
+        if (getEntryDataStatus != MMDB_SUCCESS) {
+            // 还是失败了
+            qWarning() << "Failed to retrieve accuracy_radius data with error: "
+                 << MMDB_strerror(getEntryDataStatus);
+            accuracyRadius = 0.0;
+            // 但其实是无效的
+            isLocationValid = false;
+        } else {
+            qDebug() << "Get accuracy_radius successfully: " << cityEntryData_accuracyRadius.uint16;
+            accuracyRadius = cityEntryData_accuracyRadius.uint16;
         }
 
     } else {

@@ -3,9 +3,62 @@
 #include <QApplication>
 #include <QDir>
 #include <QFile>
+#include <QDateTime>
+
+void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+
+    // 标记上下文这个变量没有被使用到
+    Q_UNUSED(context);
+
+    QString level;
+
+    switch (type) {
+    case QtDebugMsg:
+        level = QString("[Debug]");
+        break;
+    case QtInfoMsg:
+        level = QString("[Info]");
+        break;
+    case QtWarningMsg:
+        level = QString("[Warning]");
+        break;
+    case QtCriticalMsg:
+        level = QString("[Critical]");
+        break;
+    case QtFatalMsg:
+        level = QString("[Fatal]");
+        break;
+    }
+
+    QFile outFile("NyaTrace.log");
+    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+
+    QTextStream textStream(&outFile);
+    textStream 
+        << QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss]") << "\t" 
+        << level << "\t" 
+        << msg << Qt::endl
+    ;
+
+    if (type == QtFatalMsg) {
+        // 现在才可以退出
+        abort();
+    }
+}
 
 int main(int argc, char *argv[])
 {
+#ifndef QT_DEBUG
+    // 控制日志输出
+    qInstallMessageHandler(customMessageHandler);
+#endif
+
+    // 定义版本号
+    auto version = QString("NyaTrace %1").arg(APP_VERSION);
+
+    // 打印版本号
+    qDebug() << "Booting" << version << "...";
+
     QApplication app(argc, argv);
     NyaTraceGUI w;
 
@@ -28,6 +81,9 @@ int main(int argc, char *argv[])
         // 应用样式表
         app.setStyleSheet(styleSheet);
     }
+
+    // 修改窗口标题
+    w.setWindowTitle(version);
 
     w.show();
     return app.exec();

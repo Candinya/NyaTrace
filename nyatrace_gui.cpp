@@ -5,18 +5,18 @@
 #include <ws2tcpip.h>
 #include <stdio.h>
 #include <QDebug>
-
-#include "tracing_defs.h"
-#include "tracing_core.h"
-
-// 用于路由追踪的子线程
-TracingCore * tracingThread;
+#include <QMetaObject>
 
 NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::NyaTraceGUI)
 {
+    // 初始化界面 UI
     ui->setupUi(this);
+
+    // 初始化追踪地图 （OSM）
+    ui->tracingMap->setSource(QUrl("qrc:/tracing_map.qml"));
+    ui->tracingMap->show();
 
     // 初始化结果数据模型
     hopResultsModel = new QStandardItemModel();
@@ -36,38 +36,62 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     tracingThread = new TracingCore;
 
     // 填充表格
-    connect(tracingThread, &TracingCore::setIPAndTimeConsumption, this, [=](const int ttl, const QString & timeComnsumption, const QString & ipAddress) {
-        hopResultsModel->setItem(ttl-1, 0, new QStandardItem(timeComnsumption));
-        hopResultsModel->setItem(ttl-1, 1, new QStandardItem(ipAddress));
+    connect(tracingThread, &TracingCore::setIPAndTimeConsumption, this, [=](const int hop, const QString & timeComnsumption, const QString & ipAddress) {
+        hopResultsModel->setItem(hop-1, 0, new QStandardItem(timeComnsumption));
+        hopResultsModel->setItem(hop-1, 1, new QStandardItem(ipAddress));
     });
 
     connect(tracingThread, &TracingCore::setInformation, this, [=](
-        const int ttl,
-        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const bool & isLocationValid,
+        const int hop,
+        const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     ) {
-        hopResultsModel->setItem(ttl-1, 3, new QStandardItem(cityName));
-        hopResultsModel->setItem(ttl-1, 4, new QStandardItem(countryName));
+        hopResultsModel->setItem(hop-1, 3, new QStandardItem(cityName));
+        hopResultsModel->setItem(hop-1, 4, new QStandardItem(countryName));
 
         if (isLocationValid) {
-            // 仅在有效的情况下设置纬度和经度数据（之后为地图服务）
-            hopResultsModel->setItem(ttl-1, 5, new QStandardItem(QString("%1").arg(latitude)));
-            hopResultsModel->setItem(ttl-1, 6, new QStandardItem(QString("%1").arg(longitude)));
+            // 记录到表格数据中
+            hopResultsModel->setItem(hop-1, 5, new QStandardItem(QString("%1").arg(latitude)));
+            hopResultsModel->setItem(hop-1, 6, new QStandardItem(QString("%1").arg(longitude)));
+            hopResultsModel->setItem(hop-1, 7, new QStandardItem(QString("%1").arg(accuracyRadius)));
+
+            // 根据纬度和经度在地图上画一个点和一个圆
+            qDebug() << "Hop:"             << hop
+                     << "Latitude:"        << latitude
+                     << "Longitude:"       << longitude
+                     << "Accuracy Radius:" << accuracyRadius
+            ;
+
+            QMetaObject::invokeMethod(
+                (QObject*)ui->tracingMap->rootObject(),
+                "drawHopPoint",
+                Qt::DirectConnection,
+                Q_ARG(QVariant, latitude),
+                Q_ARG(QVariant, longitude),
+                Q_ARG(QVariant, accuracyRadius)
+            );
+
+            // 存进数组
+            hopGeoInfo[hop-1].isValid = true;
+            hopGeoInfo[hop-1].latitude = latitude;
+            hopGeoInfo[hop-1].longitude = longitude;
+            hopGeoInfo[hop-1].accuracyRadius = accuracyRadius;
         }
 
-        hopResultsModel->setItem(ttl-1, 7, new QStandardItem(isp));
-        hopResultsModel->setItem(ttl-1, 8, new QStandardItem(org));
+        hopResultsModel->setItem(hop-1, 8, new QStandardItem(isp));
+        hopResultsModel->setItem(hop-1, 9, new QStandardItem(org));
+
 
         if (asn != 0) {
             // 仅在有效的情况下设置 ASN 数据
-            hopResultsModel->setItem(ttl-1, 9, new QStandardItem(QString("AS %1").arg(asn)));
+            hopResultsModel->setItem(hop-1, 10, new QStandardItem(QString("AS %1").arg(asn)));
         }
 
-        hopResultsModel->setItem(ttl-1, 10, new QStandardItem(asOrg));
+        hopResultsModel->setItem(hop-1, 11, new QStandardItem(asOrg));
     });
 
-    connect(tracingThread, &TracingCore::setHostname, this, [=](const int ttl, const QString & hostName) {
-        hopResultsModel->setItem(ttl-1, 2, new QStandardItem(hostName));
+    connect(tracingThread, &TracingCore::setHostname, this, [=](const int hop, const QString & hostName) {
+        hopResultsModel->setItem(hop-1, 2, new QStandardItem(hostName));
     });
 
     // 更新 UI
@@ -89,6 +113,9 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
 
     // 更新状态
     ui->statusbar->showMessage("就绪"); // 提示初始化信息
+
+    // 把焦点放到输入框上
+    ui->hostInput->QWidget::setFocus();
 }
 
 NyaTraceGUI::~NyaTraceGUI()
@@ -129,12 +156,24 @@ void NyaTraceGUI::Initialize() {
     hopResultsModel->clear();
 
     // 构建表头
-    QStringList hopResultLables = QObject::trUtf8("时间,地址,主机名,城市,国,纬度,经度,ISP,组织,ASN,AS组织").simplified().split(",");
+    QStringList hopResultLables = { "时间", "地址", "主机名", "城市", "国", "纬度", "经度", "误差半径", "ISP", "组织", "ASN", "AS组织" };
     hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 重置进度条
     ui->tracingProgress->setMaximum(DEF_MAX_HOP * 3); // 三种任务，三倍进度
     ui->tracingProgress->setValue(0);
+
+    // 清空地图
+    QMetaObject::invokeMethod(
+        (QObject*)ui->tracingMap->rootObject(),
+        "clearMap",
+        Qt::DirectConnection
+    );
+
+    // 清空结果数组
+    for (int i = 0; i < DEF_MAX_HOP; i++) {
+        hopGeoInfo[i].isValid = false;
+    }
 }
 
 void NyaTraceGUI::StartTracing() {
@@ -176,11 +215,34 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
     clock_t endTime = clock();
     auto consumedSeconds = (endTime - startTime) / CLOCKS_PER_SEC;
 
-    qDebug() << "Tracing finished in " << consumedSeconds << " seconds.";
-
     if (isSucceeded) {
+
+        qDebug() << "Tracing finished successfully in" << consumedSeconds << "seconds.";
+
         // 设置提示信息
         ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg(consumedSeconds));
+
+        // 连线
+        for (int i = 0; i < DEF_MAX_HOP; i++) {
+            if (hopGeoInfo[i].isValid) {
+                qDebug() << "Map: Connecting hop" << i+1;
+                QMetaObject::invokeMethod(
+                    (QObject*)ui->tracingMap->rootObject(),
+                    "connectLine",
+                    Qt::DirectConnection,
+                    Q_ARG(QVariant, hopGeoInfo[i].latitude),
+                    Q_ARG(QVariant, hopGeoInfo[i].longitude)
+                );
+            }
+        }
+
+
+        // 调整地图
+        QMetaObject::invokeMethod(
+            (QObject*)ui->tracingMap->rootObject(),
+            "fitMap",
+            Qt::DirectConnection
+        );
     } // 否则失败了，不要去动失败的提示信息
 }
 
@@ -189,5 +251,27 @@ void NyaTraceGUI::on_hostInput_returnPressed()
 {
     // 按下回车，启动追踪
     StartTracing();
+}
+
+void NyaTraceGUI::on_hopsTable_clicked(const QModelIndex &index)
+{
+    qDebug() << "Table index clicked:" << index;
+
+    // 如果地址有效，就前往地址
+    if (hopGeoInfo[index.row()].isValid) {
+        QMetaObject::invokeMethod(
+            (QObject*)ui->tracingMap->rootObject(),
+            "gotoCoordinate",
+            Qt::DirectConnection,
+            Q_ARG(QVariant, hopGeoInfo[index.row()].latitude),
+            Q_ARG(QVariant, hopGeoInfo[index.row()].longitude),
+            Q_ARG(QVariant, 14), // 缩放等级
+            Q_ARG(QVariant,
+                QString("第 %1 跳 - %2\n%3 - %4")
+                    .arg(index.row() + 1).arg(hopResultsModel->item(index.row(), 1)->text())
+                    .arg(hopResultsModel->item(index.row(), 3)->text(), hopResultsModel->item(index.row(), 4)->text())
+                )
+        );
+    }
 }
 

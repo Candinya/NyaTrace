@@ -25,16 +25,17 @@ private:
 // 公共接口
 public:
     bool LookUpIPCityInfo(
-        const sockaddr * ip_address,
-        QString & cityName,
-        QString & countryName,
-        double  & latitude,
-        double  & longitude,
-        bool    & isLocationValid
+        const sockaddr * ipAddress,
+        QString  & cityName,
+        QString  & countryName,
+        double   & latitude,
+        double   & longitude,
+        uint16_t & accuracyRadius,
+        bool     & isLocationValid
     );
 
     bool LookUpIPISPInfo(
-        const sockaddr * ip_address,
+        const sockaddr * ipAddress,
         QString & isp,
         QString & org,
         uint    & asn,
