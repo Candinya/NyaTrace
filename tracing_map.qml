@@ -16,6 +16,7 @@ Rectangle {
         }
     }
 
+    // 地图
     Map {
         id: map
         plugin: osmPlugin
@@ -25,14 +26,22 @@ Rectangle {
         layer.enabled: true
         layer.samples: 8
 
+        // 连接各个追踪点的线
+        MapPolyline {
+            id: tracingLine
+            line.width: 30000000000
+//            line.color: "#ff7163"
+            path: [
+                { latitude: 29.8797, longitude: 121.5513 },
+                { latitude: 30.2994, longitude: 120.1612 },
+                { latitude: 34.7732, longitude: 113.722 }
+            ]
+        }
+
     }
 
-    function ping(pingMsg) {
-        console.log(pingMsg);
-        return "pong";
-    }
-
-    function drawHopData(latitude, longitude, accuracyRadius, hop, message) {
+    // 画一个追踪点
+    function drawHopPoint(latitude, longitude, accuracyRadius, hop, message) {
         // 画组
         const hopPoint = Qt.createQmlObject(`
             import QtQuick 2.15
@@ -46,7 +55,7 @@ Rectangle {
                 property real accuracyRadius: 1000
                 property string message: ""
 
-                property string themeColor: "#e41e25"
+                property string themeColor: "#ff7163"
 
                 MapQuickItem {
                     sourceItem: Rectangle {
@@ -70,6 +79,7 @@ Rectangle {
                         font.bold: true
                         styleColor: "#ECECEC"
                         style: Text.Outline
+                        font.pointSize: 15
                     }
                     coordinate: QtPositioning.coordinate(hopGroup.latitude, hopGroup.longitude)
                     anchorPoint: Qt.point(-8, 24)
@@ -96,11 +106,20 @@ Rectangle {
         map.addMapItemGroup(hopPoint);
     }
 
+    // 给线添加一个点
+    function connectLine(latitude, longitude) {
+        console.log("Drawing pont into line: ", latitude, longitude);
+        tracingLine.addCoordinate(QtPositioning.coordinate(latitude, longitude));
+    }
+
+    // 自动调整地图大小
     function fitMap() {
         map.fitViewportToVisibleMapItems();
     }
 
+    // 清空地图
     function clearMap() {
+        tracingLine.path = []; // 直接清空
         map.clearMapItems();
     }
 }

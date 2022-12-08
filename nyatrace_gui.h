@@ -34,6 +34,17 @@ private:
     // 用于存储结果的模型
     QStandardItemModel * hopResultsModel;
 
+    // 用于存储数据的数组
+    struct HopGeoInfo
+    {
+        bool isValid;
+        double latitude;
+        double longitude;
+        unsigned short accuracyRadius;
+
+    };
+    HopGeoInfo hopGeoInfo[DEF_MAX_HOP];
+
     // 开始时间计时器
     clock_t startTime;
 
