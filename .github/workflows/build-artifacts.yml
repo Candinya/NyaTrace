@@ -22,7 +22,7 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2019_64'
         install-deps: 'true'
-        modules: 'qtcharts qtwebengine'
+        modules: 'qtpositioning qtlocation'
         cache: 'true'
         
     - name: Checkout codes
