@@ -38,7 +38,7 @@ DEFINES += \
     _WINSOCKAPI_
 
 RESOURCES += \
-    osm_map.qml
+    tracing_map.qml
 
 RC_ICONS += \
     icon.ico
