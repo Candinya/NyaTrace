@@ -6,8 +6,11 @@
 
 int main(int argc, char *argv[])
 {
+    // 定义版本号
+    auto version = QString("NyaTrace %1").arg(APP_VERSION);
+
     // 打印版本号
-    qDebug() << "Booting NyaTrace" << APP_VERSION << "...";
+    qDebug() << "Booting" << version << "...";
 
     QApplication app(argc, argv);
     NyaTraceGUI w;
@@ -31,6 +34,9 @@ int main(int argc, char *argv[])
         // 应用样式表
         app.setStyleSheet(styleSheet);
     }
+
+    // 修改窗口标题
+    w.setWindowTitle(version);
 
     w.show();
     return app.exec();
