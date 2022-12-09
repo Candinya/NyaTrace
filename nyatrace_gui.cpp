@@ -222,6 +222,7 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
         // 设置提示信息
         ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 秒。").arg(consumedSeconds));
 
+        bool hasValidPoint = false;
         // 连线
         for (int i = 0; i < DEF_MAX_HOP; i++) {
             if (hopGeoInfo[i].isValid) {
@@ -233,16 +234,18 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
                     Q_ARG(QVariant, hopGeoInfo[i].latitude),
                     Q_ARG(QVariant, hopGeoInfo[i].longitude)
                 );
+                hasValidPoint = true;
             }
         }
 
-
-        // 调整地图
-        QMetaObject::invokeMethod(
-            (QObject*)ui->tracingMap->rootObject(),
-            "fitMap",
-            Qt::DirectConnection
-        );
+        // 仅在存在有效点的情况下调整地图，不然就飞了
+        if (hasValidPoint) {
+            QMetaObject::invokeMethod(
+                (QObject*)ui->tracingMap->rootObject(),
+                "fitMap",
+                Qt::DirectConnection
+            );
+        }
     } // 否则失败了，不要去动失败的提示信息
 }
 
