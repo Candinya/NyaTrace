@@ -14,10 +14,12 @@ Rectangle {
             name: "osm.useragent"
             value: "NyaTrace"
         }
-        PluginParameter {
-            name: "osm.mapping.highdpi_tiles"
-            value: true
-        }
+
+        // 是否使用高分辨率地图（感觉没什么用，还徒增网络请求，所以注释掉了）
+        // PluginParameter {
+        //     name: "osm.mapping.highdpi_tiles"
+        //     value: true
+        // }
     }
 
     // 地图
