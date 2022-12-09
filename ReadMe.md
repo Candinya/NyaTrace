@@ -10,8 +10,6 @@
 
 ## 运行截图
 
-> 出于安全因素考虑，抹掉了敏感的 IP 。
-
 ![运行截图](https://nyatrace.app/images/screenshot.png)
 
 ## 声明
