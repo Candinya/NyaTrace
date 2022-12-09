@@ -14,6 +14,10 @@ Rectangle {
             name: "osm.useragent"
             value: "NyaTrace"
         }
+        PluginParameter {
+            name: "osm.mapping.highdpi_tiles"
+            value: true
+        }
     }
 
     // 地图
