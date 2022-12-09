@@ -80,8 +80,6 @@ TracingCore::~TracingCore() {
 
     // 终止 Winsock 2 DLL (ws2_32.dll) 的使用
     WSACleanup();
-
-    qDebug() << "Tracing Core destroied.";
 }
 
 void TracingCore::run() {
