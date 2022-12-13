@@ -3,7 +3,7 @@
 
 #include <QString>
 
-#include "maxminddb.h"
+#include "libmaxminddb\maxminddb.h"
 
 // IPDB 类：操作基于 MMDB 的数据读取工作，
 //         以后可能会改成基于 web 请求的格式以优化封装体积

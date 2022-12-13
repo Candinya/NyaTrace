@@ -14,9 +14,9 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    data-pool.c \
     ipdb.cpp \
-    maxminddb.c \
+    libmaxminddb\data-pool.c \
+    libmaxminddb\maxminddb.c \
     nyatrace_gui.cpp \
     main.cpp \
     tracing_core.cpp
@@ -24,10 +24,10 @@ SOURCES += \
 HEADERS += \
     data-pool.h \
     ipdb.h \
-    maxminddb-compat-util.h \
-    maxminddb.h \
-    maxminddb_config.h \
-    mmdb_settings.h \
+    ipdb_settings.h \
+    libmaxminddb\maxminddb-compat-util.h \
+    libmaxminddb\maxminddb.h \
+    libmaxminddb\maxminddb_config.h \
     nyatrace_gui.h \
     tracing_core.h \
     tracing_defs.h

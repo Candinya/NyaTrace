@@ -1,6 +1,6 @@
 #include "ipdb.h"
 
-#include "mmdb_settings.h"
+#include "ipdb_settings.h"
 
 #include <direct.h>
 #include <QDebug>
