@@ -38,8 +38,10 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     ipdb = new IPDB;
 
     // 初始化 UI
-    Initialize();
-    CleanUp(false);
+    InitializeResolving();
+    InitializeTracing();
+    CleanUpResolving(false);
+    CleanUpTracing(false);
 
     // WinSock2 相关初始化
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { // 进行相应的socket库绑定,MAKEWORD(2,2)表示使用WINSOCK2版本
@@ -59,11 +61,11 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     ConnectTracingResults();
     ConnectResolveResults();
 
+    // 禁用开始追踪按钮
+    ui->startStopTracingButton->setDisabled(true);
+
     // 更新状态
     ui->statusbar->showMessage("就绪"); // 提示初始化信息
-
-    // 初始化默认工作模式
-    workMode = ui->modeTab->currentIndex();
 
     // 把焦点放到输入框上
     ui->hostInput->QWidget::setFocus();
@@ -166,7 +168,7 @@ void NyaTraceGUI::ConnectTracingResults() {
 
     connect(tracingThread, &TracingCore::end, this, [=](const bool isSucceeded) {
         // 完成追踪
-        CleanUp(isSucceeded);
+        CleanUpTracing(isSucceeded);
     });
 }
 
@@ -231,59 +233,40 @@ void NyaTraceGUI::ConnectResolveResults() {
     });
 
     connect(resolveThread, &ResolveCore::end, this, [=](const bool isSucceeded) {
-        // 完成追踪
-        CleanUp(isSucceeded);
+        // 完成解析
+        CleanUpResolving(isSucceeded);
+
+        if (isSucceeded) {
+            // 解锁追踪功能
+            ui->startStopTracingButton->setDisabled(false);
+
+            if (ui->autoStartTrace->isChecked()) {
+                // 开始追踪
+                currentSelectedIPNo = 0;
+                ui->resolveTable->selectRow(currentSelectedIPNo);
+                StartTracing();
+            }
+        }
     });
 }
 
-
-void NyaTraceGUI::on_startStopButton_clicked()
-{
-
-    qDebug() << "Start button clicked, current mode:" << workMode;
-
-    switch (workMode) {
-    case MODE_ROUTE_TRACING:
-        if (tracingThread->isRunning()) {
-            // 中止按钮
-            qDebug() << "Tracing process is running, abort it...";
-            AbortTracing();
-        } else {
-            qDebug() << "Tracing process is not running, starting it...";
-            // 开始按钮
-            StartTracing();
-        }
-        break;
-    case MODE_RESOLVE:
-        StartTracing();
-        break;
-    }
-
-}
-
-void NyaTraceGUI::Initialize() {
+void NyaTraceGUI::InitializeResolving() {
     // UI 相关初始化
-    if (workMode == MODE_ROUTE_TRACING) {
-        ui->startStopButton->setText("中止"); // 更新按钮功能提示
-    }
     ui->hostInput->setDisabled(true); // 锁定输入框
     ui->statusbar->showMessage("正在初始化..."); // 提示初始化信息
 
-    // 清理表格数据
-    hopResultsModel->clear();
-    resolveResultsModel->clear();
+    // 禁用解析按钮
+    ui->resolveButton->setDisabled(true);
 
-    // 构建追踪表头
-    QStringList hopResultLables = { "时间", "地址", "主机名", "城市", "国", "纬度", "经度", "误差半径", "ISP", "组织", "ASN", "AS组织" };
-    hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
+    // 禁用开始追踪按钮
+    ui->startStopTracingButton->setDisabled(true);
+
+    // 清理表格数据
+    resolveResultsModel->clear();
 
     // 构建解析表头
     QStringList resolveResultLabels = { "地址", "城市", "国", "纬度", "经度", "误差半径", "ISP", "组织", "ASN", "AS组织" };
     resolveResultsModel->setHorizontalHeaderLabels(resolveResultLabels);
-
-    // 重置进度条
-    ui->tracingProgress->setMaximum(DEF_MAX_HOP * 3); // 三种任务，三倍进度
-    ui->tracingProgress->setValue(0);
 
     // 清空地图
     QMetaObject::invokeMethod(
@@ -297,15 +280,50 @@ void NyaTraceGUI::Initialize() {
         geoInfo[i].isValid = false;
     }
 
-    qDebug () << "Initialize complete.";
+    qDebug () << "Resolve mode initialize complete.";
 }
 
-void NyaTraceGUI::StartTracing() {
+void NyaTraceGUI::InitializeTracing() {
+    // UI 相关初始化
+    ui->hostInput->setDisabled(true); // 锁定输入框
+    ui->statusbar->showMessage("正在初始化..."); // 提示初始化信息
 
-    qDebug() << "Start work...";
+    // 禁用解析按钮
+    ui->resolveButton->setDisabled(true);
+
+    // 禁用解析结果表
+    ui->resolveTable->setDisabled(true);
+
+    // 清理表格数据
+    hopResultsModel->clear();
+
+    // 构建追踪表头
+    QStringList hopResultLables = { "时间", "地址", "主机名", "城市", "国", "纬度", "经度", "误差半径", "ISP", "组织", "ASN", "AS组织" };
+    hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
+
+    // 清空地图
+    QMetaObject::invokeMethod(
+        (QObject*)ui->tracingMap->rootObject(),
+        "clearMap",
+        Qt::DirectConnection
+    );
+
+    // 清空结果数组
+    for (int i = 0; i < DEF_MAX_HOP; i++) {
+        geoInfo[i].isValid = false;
+    }
+
+    // 重置进度条
+    ui->tracingProgress->setMaximum(DEF_MAX_HOP * 3); // 三种任务，三倍进度
+    ui->tracingProgress->setValue(0);
+
+    qDebug () << "Trace mode initialize complete.";
+}
+
+void NyaTraceGUI::StartResolving() {
 
     // 初始化
-    Initialize();
+    InitializeResolving();
 
     // 设置主机地址
     std::string hostStdString = ui->hostInput->text().toStdString();
@@ -313,32 +331,44 @@ void NyaTraceGUI::StartTracing() {
     // 记录开始时间
     startTime = clock();
 
-    switch (workMode) {
-    case MODE_ROUTE_TRACING:
-        // 路由追踪
-        ui->statusbar->showMessage("正在开始路由追踪...");
-        tracingThread->hostname = hostStdString.c_str();
-        tracingThread->start();
-        break;
-    case MODE_RESOLVE:
-        ui->statusbar->showMessage("正在解析...");
-        resolveThread->hostname = hostStdString.c_str();
-        resolveThread->start();
-        break;
-    default:
-        // 这是啥
-        ui->statusbar->showMessage("未定义的操作");
-        break;
-    }
+    // 解析
+    ui->statusbar->showMessage("正在解析...");
+    resolveThread->hostname = hostStdString.c_str();
+    resolveThread->start();
 
-    qDebug () << "Work started.";
+    qDebug () << "Resolving started.";
+
+}
+
+void NyaTraceGUI::StartTracing() {
+
+    qDebug() << "Start route tracing...";
+
+    // 初始化
+    InitializeTracing();
+
+    // 设置主机地址
+    std::string hostStdString = resolveResultsModel->item(currentSelectedIPNo, 0)->text().toStdString();
+
+    // 记录开始时间
+    startTime = clock();
+
+    // 路由追踪
+    ui->statusbar->showMessage("正在开始路由追踪...");
+    tracingThread->hostname = hostStdString.c_str();
+    tracingThread->start();
+
+    // 设置按钮功能
+    ui->startStopTracingButton->setText("中止"); // 更新按钮功能提示
+
+    qDebug () << "Tracing started.";
 
 }
 
 void NyaTraceGUI::AbortTracing() {
     // 中止追踪进程
     tracingThread->requestStop(); // 中止进程
-    ui->startStopButton->setDisabled(true); // 禁用按钮以防止多次触发
+    ui->startStopTracingButton->setDisabled(true); // 禁用按钮以防止多次触发
 
     // 设置提示信息
     ui->statusbar->showMessage("正在回收最后一包...");
@@ -346,13 +376,9 @@ void NyaTraceGUI::AbortTracing() {
     qDebug() << "Abort tracing...";
 }
 
-void NyaTraceGUI::CleanUp(const bool isSucceeded) {
+void NyaTraceGUI::CleanUpResolving(const bool isSucceeded) {
     // UI 相关结束
-    ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
-    ui->startStopButton->setDisabled(false); // 解锁按钮
-    if (workMode == MODE_ROUTE_TRACING) {
-        ui->startStopButton->setText("开始"); // 设置功能提示
-    }
+    ui->resolveButton->setDisabled(false); // 解锁按钮
     ui->hostInput->setDisabled(false); // 解锁输入框
 
     // 记录结束时间
@@ -373,7 +399,43 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
         qDebug() << "Work finished successfully in" << consumedTime << (isTimeMilliseconds ? "milliseconds" : "seconds") << ".";
 
         // 设置提示信息
-        ui->statusbar->showMessage(QString("执行完成，耗时 %1 %2。").arg(consumedTime).arg(isTimeMilliseconds ? "毫秒" : "秒"));
+        ui->statusbar->showMessage(QString("解析完成，耗时 %1 %2。").arg(consumedTime).arg(isTimeMilliseconds ? "毫秒" : "秒"));
+    } // 否则失败了，不要去动失败的提示信息
+
+    qDebug() << "CleanUp finished";
+
+}
+
+void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
+    // UI 相关结束
+    ui->tracingProgress->setValue(ui->tracingProgress->maximum()); // 完成进度条
+    ui->resolveButton->setDisabled(false); // 解锁按钮
+    ui->startStopTracingButton->setDisabled(false); // 解锁按钮
+    ui->startStopTracingButton->setText("追踪"); // 设置功能提示
+    ui->hostInput->setDisabled(false); // 解锁输入框
+
+    // 释放解析结果表
+    ui->resolveTable->setDisabled(false);
+
+    // 记录结束时间
+    clock_t endTime = clock();
+    auto consumedClocks = endTime - startTime;
+    bool isTimeMilliseconds = true;
+    long consumedTime = 0;
+    if (consumedClocks > CLOCKS_PER_SEC) {
+        isTimeMilliseconds = false;
+        consumedTime = consumedClocks / CLOCKS_PER_SEC;
+    } else {
+        isTimeMilliseconds = true;
+        consumedTime = consumedClocks * 1000 / CLOCKS_PER_SEC;
+    }
+
+    if (isSucceeded) {
+
+        qDebug() << "Work finished successfully in" << consumedTime << (isTimeMilliseconds ? "milliseconds" : "seconds") << ".";
+
+        // 设置提示信息
+        ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 %2。").arg(consumedTime).arg(isTimeMilliseconds ? "毫秒" : "秒"));
 
         bool hasValidPoint = false;
         // 连线
@@ -381,33 +443,25 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
             if (geoInfo[i].isValid) {
                 qDebug() << "Map: Connecting hop" << i+1;
 
-                switch(workMode) {
-                case MODE_ROUTE_TRACING:
-                    // 连一条线
-                    QMetaObject::invokeMethod(
-                        (QObject*)ui->tracingMap->rootObject(),
-                        "connectLine",
-                        Qt::DirectConnection,
-                        Q_ARG(QVariant, geoInfo[i].latitude),
-                        Q_ARG(QVariant, geoInfo[i].longitude)
-                    );
-                    break;
-                }
+                // 连一条线
+                QMetaObject::invokeMethod(
+                    (QObject*)ui->tracingMap->rootObject(),
+                    "connectLine",
+                    Qt::DirectConnection,
+                    Q_ARG(QVariant, geoInfo[i].latitude),
+                    Q_ARG(QVariant, geoInfo[i].longitude)
+                );
                 hasValidPoint = true;
             }
         }
 
         // 仅在存在有效点的情况下调整地图，不然就飞了
         if (hasValidPoint) {
-            switch(workMode) {
-            case MODE_ROUTE_TRACING:
-                QMetaObject::invokeMethod(
-                    (QObject*)ui->tracingMap->rootObject(),
-                    "fitMap",
-                    Qt::DirectConnection
-                );
-                break;
-            }
+            QMetaObject::invokeMethod(
+                (QObject*)ui->tracingMap->rootObject(),
+                "fitMap",
+                Qt::DirectConnection
+            );
         }
     } // 否则失败了，不要去动失败的提示信息
 
@@ -418,7 +472,7 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
 void NyaTraceGUI::on_hostInput_returnPressed()
 {
     // 按下回车，启动追踪
-    StartTracing();
+    StartResolving();
 }
 
 void NyaTraceGUI::on_hopsTable_clicked(const QModelIndex &index)
@@ -452,6 +506,8 @@ void NyaTraceGUI::on_resolveTable_clicked(const QModelIndex &index)
 {
     qDebug() << "Table index clicked:" << index;
 
+    currentSelectedIPNo = index.row();
+
     // 如果地址有效，就前往地址
     if (geoInfo[index.row()].isValid) {
         QMetaObject::invokeMethod(
@@ -475,10 +531,29 @@ void NyaTraceGUI::on_resolveTable_clicked(const QModelIndex &index)
 
 }
 
-
-void NyaTraceGUI::on_modeTab_currentChanged(int index)
+void NyaTraceGUI::on_resolveTable_doubleClicked(const QModelIndex &index)
 {
-    // 设置工作模式
-    workMode = index;
+    StartTracing();
+}
+
+
+void NyaTraceGUI::on_resolveButton_clicked()
+{
+    StartResolving();
+}
+
+void NyaTraceGUI::on_startStopTracingButton_clicked()
+{
+
+    if (tracingThread->isRunning()) {
+        // 中止按钮
+        qDebug() << "Tracing process is running, abort it...";
+        AbortTracing();
+    } else {
+        qDebug() << "Tracing process is not running, starting it...";
+        // 开始按钮
+        StartTracing();
+    }
+
 }
 

@@ -22,14 +22,16 @@ public:
     ~NyaTraceGUI();
 
 private slots:
-    void on_startStopButton_clicked();
     void on_hostInput_returnPressed();
+    void on_startStopTracingButton_clicked();
 
     void on_hopsTable_clicked(const QModelIndex &index);
 
     void on_resolveTable_clicked(const QModelIndex &index);
 
-    void on_modeTab_currentChanged(int index);
+    void on_resolveTable_doubleClicked(const QModelIndex &index);
+
+    void on_resolveButton_clicked();
 
 private:
     // 界面 UI
@@ -48,6 +50,9 @@ private:
     QStandardItemModel * hopResultsModel;
     QStandardItemModel * resolveResultsModel;
 
+    // 当前选中的解析结果 IP
+    int currentSelectedIPNo;
+
     // 用于读取 IP 对应数据的类操作接口
     IPDB * ipdb;
 
@@ -62,16 +67,16 @@ private:
     // 开始时间计时器
     clock_t startTime;
 
-    // 当前工作模式
-    int workMode;
-
     // 成员函数
-    void ConnectTracingResults();
     void ConnectResolveResults();
-    void Initialize();
+    void ConnectTracingResults();
+    void InitializeResolving();
+    void InitializeTracing();
+    void StartResolving();
     void StartTracing();
     void AbortTracing();
-    void CleanUp(const bool isSucceeded);
+    void CleanUpResolving(const bool isSucceeded);
+    void CleanUpTracing(const bool isSucceeded);
 
 };
 
