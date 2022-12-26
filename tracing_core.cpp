@@ -3,6 +3,7 @@
 #include <QDebug>
 
 #include "tracing_core.h"
+#include "tracing_utils.h"
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -15,17 +16,6 @@
 TracingCore::TracingCore() {
 
     qDebug() << "Tracing Core start constructing...";
-
-    // 初始化 IPDB 实例
-    ipdb = new IPDB;
-
-    // 初始化 WinSock2 与 icmp.dll
-
-    // WinSock2 相关初始化
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { // 进行相应的socket库绑定,MAKEWORD(2,2)表示使用WINSOCK2版本
-        //emit setMessage(QString("WinSock2 动态链接库初始化失败，错误代码： %1 。").arg(WSAGetLastError())); // 提示信息
-        qFatal(QString("Failed to start winsocks2 library with error: %1").arg(WSAGetLastError()).toStdString().c_str());
-    }
 
     // 载入依赖的动态链接库
     hIcmpDll = LoadLibraryA("IPHLPAPI.DLL");
@@ -68,18 +58,12 @@ TracingCore::~TracingCore() {
     // 销毁线程池
     delete tracingPool;
 
-    // 销毁 IPDB 实例
-    delete ipdb;
-
     // 回收资源
     IcmpCloseHandle(hIcmp);
     IcmpCloseHandle(hIcmp6);
 
     // 释放动态链接库
     FreeLibrary(hIcmpDll);
-
-    // 终止 Winsock 2 DLL (ws2_32.dll) 的使用
-    WSACleanup();
 }
 
 void TracingCore::run() {
@@ -97,20 +81,10 @@ void TracingCore::run() {
     // 清空目标地址
     ZeroMemory(&targetIPAddress, sizeof(sockaddr_storage));
 
-    if (parseIPAddress(hostCharStr, targetIPAddress)) {
+    if (ParseIPAddress(hostCharStr, targetIPAddress)) {
         // 解析成功，更新状态
 
-        char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
-        switch(targetIPAddress.ss_family) {
-        case AF_INET:
-            // 是 IPv4
-            inet_ntop(AF_INET, &(*(sockaddr_in*)&targetIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
-            break;
-        case AF_INET6:
-            // 是 IPv6
-            inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
-            break;
-        }
+        auto printIPAddress = PrintIPAddress(targetIPAddress);
 
         qDebug() << "Tracing route to " << printIPAddress
              << " with maximun hops " << DEF_MAX_HOP;
@@ -307,41 +281,11 @@ void TracingCore::run() {
 
 }
 
-bool TracingCore::parseIPAddress(const char * ipStr, sockaddr_storage & targetIPAddress) {
-
-    IN_ADDR  addr4; // IPv4 地址的暂存区域
-    IN6_ADDR addr6; // IPv6 地址的暂存区域
-
-    if (inet_pton(AF_INET, ipStr, &addr4) != 0) {
-        // 输入是 IPv4 地址
-        qDebug() << "It's IPv4";
-        targetIPAddress.ss_family = AF_INET;
-        (*(sockaddr_in*)&targetIPAddress).sin_addr = addr4;
-    } else if (inet_pton(AF_INET6, ipStr, &addr6) != 0) {
-        // 输入是 IPv6 地址
-        qDebug() << "It's IPv6";
-        targetIPAddress.ss_family = AF_INET6;
-        (*(sockaddr_in6*)&targetIPAddress).sin6_addr = addr6;
-    } else {
-        // 什么都不是
-        return false;
-    }
-
-    return true;
-}
-
 bool TracingCore::resolveHostname(const char * hostname, sockaddr_storage & targetIPAddress) {
 
-    addrinfo * resolveResult = NULL;
-    addrinfo   resolveHints;
+    addrinfo * resolveResult = ResolveAllAddress(hostname);
 
-    ZeroMemory(&resolveHints, sizeof(resolveHints));
-
-    resolveHints.ai_family   = AF_UNSPEC;
-    resolveHints.ai_socktype = SOCK_STREAM;
-    resolveHints.ai_protocol = IPPROTO_TCP;
-
-    if (getaddrinfo(hostname, NULL, &resolveHints, &resolveResult) == 0) {
+    if (resolveResult != NULL) {
         // 这里取的都是结果里的第一位，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
         // 参考 https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getaddrinfo
         switch (resolveResult->ai_family) {
@@ -379,293 +323,4 @@ void TracingCore::requestStop() {
             workers[i]->requestStop();
         }
     }
-}
-
-/**
- * TracingWorker
- * 具体的追踪线程，每个线程负责一跳，当得到当前跳的数据之后返回。
- */
-
-TracingWorker::TracingWorker() {
-
-    // 设置运行完成后自动销毁
-    setAutoDelete(true);
-
-    // 分配当前跳地址的存储空间
-    currentHopIPAddress = new sockaddr_storage;
-    ZeroMemory(currentHopIPAddress, sizeof(sockaddr_storage));
-
-}
-
-TracingWorker::~TracingWorker() {
-    // 销毁需要销毁的东西
-    delete currentHopIPAddress;
-}
-
-void TracingWorker::run() {
-
-    // 标记为非停止
-    isStopping = false;
-
-    // 标记 IP 簇
-    currentHopIPAddress->ss_family = targetIPAddress->ss_family;
-
-    // 执行第一项任务：获得 IP
-    switch (targetIPAddress->ss_family) {
-    case AF_INET:
-        GetIPv4();
-        break;
-    case AF_INET6:
-        GetIPv6();
-        break;
-    }
-
-    // 回报一份权重，作为进度条增长的数值
-    emit incProgress(1);
-
-    // 如果获得的结果有效，并且并非正在停止，再执行第二项任务：获得 IP 信息
-    if (isIPValid && !isStopping) {
-        GetInfo();
-    }
-
-    // 回报一份权重，作为进度条增长的数值
-    emit incProgress(1);
-
-    // 如果获得的结果有效，并且并非正在停止，再执行第三项任务：获得对应的主机名
-    if (isIPValid && !isStopping) {
-        GetHostname(); // 这一步最耗时，所以放到最后
-    }
-
-    // 回报一份权重，作为进度条增长的数值
-    emit incProgress(1);
-
-    // 全部任务完成
-    emit fin(iTTL);
-
-}
-
-void TracingWorker::GetIPv4() {
-
-    // 第一步：追踪
-    // ICMP 包发送缓冲区和接收缓冲区
-    IP_OPTION_INFORMATION IpOption;
-    char SendData[DEF_ICMP_DATA_SIZE];
-    char ReplyBuf[sizeof(ICMP_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
-
-    // ICMP 回复的结果
-    PICMP_ECHO_REPLY pEchoReply;
-
-    // 初始化内存区间
-    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
-    ZeroMemory(SendData, sizeof(SendData));
-    pEchoReply = (PICMP_ECHO_REPLY)ReplyBuf;
-
-    // 设置 TTL
-    IpOption.Ttl = iTTL;
-
-    // 设置有效值
-    isIPValid = false;
-
-    // 设置超时次数
-    int timeoutCount = 0;
-
-    while (!isStopping) {
-
-        // 发送数据报并等待消息到达
-        if (
-            IcmpSendEcho2(
-                hIcmp, NULL, NULL, NULL,
-                ((sockaddr_in*)targetIPAddress)->sin_addr.s_addr, SendData, sizeof (SendData), &IpOption,
-                ReplyBuf, sizeof(ReplyBuf),
-                DEF_ICMP_TIMEOUT
-            ) != 0
-        ) {
-            // 得到返回
-            ((sockaddr_in*)currentHopIPAddress)->sin_addr.s_addr = pEchoReply->Address;
-            isIPValid = true;
-
-            // 任务完成，退出线程
-            break;
-        } else {
-            // 出现错误
-            qWarning() << "ICMP send echo failed with error: " << GetLastError();
-
-            // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
-            timeoutCount++;
-            emit reportIPAndTimeConsumption(
-                iTTL, timeoutCount, 0, false, false
-            );
-        }
-    }
-
-
-    char printIPAddress[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(*(sockaddr_in*)currentHopIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
-
-    // 判断是否为末端主机（最后一跳）
-    bool isTargetHost = ((sockaddr_in*)currentHopIPAddress)->sin_addr.s_addr == ((sockaddr_in*)targetIPAddress)->sin_addr.s_addr;
-
-    // 完成追踪
-    if (isIPValid && !isStopping) {
-        // 仅在没有被请求停止的时候回报
-        emit reportIPAndTimeConsumption(
-            iTTL, pEchoReply->RoundTripTime, QString(printIPAddress), true, isTargetHost
-        );
-    }
-
-}
-
-void TracingWorker::GetIPv6() {
-
-    // 第一步：追踪
-    // ICMP 包发送缓冲区和接收缓冲区
-    IP_OPTION_INFORMATION IpOption;
-    char SendData[DEF_ICMP_DATA_SIZE];
-    char ReplyBuf[sizeof(ICMPV6_ECHO_REPLY) + DEF_ICMP_DATA_SIZE];
-
-    // ICMP 回复的结果
-    PICMPV6_ECHO_REPLY pEchoReply;
-
-    // 初始化内存区间
-    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
-    ZeroMemory(SendData, sizeof(SendData));
-    pEchoReply = (PICMPV6_ECHO_REPLY)ReplyBuf;
-
-    // 设置 TTL
-    IpOption.Ttl = iTTL;
-
-    // 设置有效值
-    isIPValid = false;
-
-    // 设置超时次数
-    int timeoutCount = 0;
-
-    while (!isStopping) {
-
-        // 发送数据报并等待消息到达
-        if (
-            Icmp6SendEcho2(
-                hIcmp6, NULL, NULL, NULL,
-                (sockaddr_in6*)sourceIPAddress, (sockaddr_in6*)targetIPAddress, SendData, sizeof (SendData), &IpOption,
-                ReplyBuf, sizeof(ReplyBuf),
-                DEF_ICMP_TIMEOUT
-            ) != 0
-        ) {
-            // 得到返回
-            memcpy(&((sockaddr_in6*)currentHopIPAddress)->sin6_addr, &pEchoReply->Address.sin6_addr, sizeof(pEchoReply->Address.sin6_addr));
-            isIPValid = true;
-
-            // 任务完成，退出线程
-            break;
-        } else {
-            // 出现错误
-            qWarning() << "ICMP send echo failed with error: " << GetLastError();
-
-            // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
-            timeoutCount++;
-            emit reportIPAndTimeConsumption(
-                iTTL, timeoutCount, NULL, false, false
-            );
-        }
-    }
-
-    char printIPAddress[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &(*(sockaddr_in6*)currentHopIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
-
-    // 判断是否为末端主机（最后一跳）
-    bool isTargetHost = memcmp(&(*(sockaddr_in6*)currentHopIPAddress).sin6_addr, &(*(sockaddr_in6*)targetIPAddress).sin6_addr, sizeof((*(sockaddr_in6*)targetIPAddress).sin6_addr)) == 0;
-
-    // 完成追踪
-    if (isIPValid && !isStopping) {
-        // 仅在没有被请求停止的时候回报
-        emit reportIPAndTimeConsumption(
-            iTTL, pEchoReply->RoundTripTime, QString(printIPAddress), true, isTargetHost
-        );
-    }
-
-}
-
-void TracingWorker::GetInfo() {
-
-    // 查询 IP 对应的信息
-
-    // 准备从 City 数据库中查询结果
-    QString  cityName;
-    QString  countryName;
-    double   latitude       = 0.0;
-    double   longitude      = 0.0;
-    uint16_t accuracyRadius = 0;
-    bool     isLocationValid = true;
-
-    // 准备从 ISP 数据库中查询结果
-    QString isp;
-    QString org;
-    uint    asn = 0;
-    QString asOrg;
-
-    // 在 City 数据库中查询当前 IP 对应信息
-    if (!ipdb->LookUpIPCityInfo(
-        (sockaddr *)currentHopIPAddress,
-        cityName,
-        countryName,
-        latitude,
-        longitude,
-        accuracyRadius,
-        isLocationValid
-    )) {
-        // 查询失败，使用填充字符
-        cityName    = QString("未知");
-        countryName = QString("");
-        isLocationValid = false;
-    }
-
-    // 在 ISP 数据库中查询当前 IP 对应信息
-    if (!ipdb->LookUpIPISPInfo(
-        (sockaddr *)currentHopIPAddress,
-        isp,
-        org,
-        asn,
-        asOrg
-    )) {
-        // 查询失败，使用填充字符
-        isp  = QString("未知");
-        org   = QString("");
-        asOrg = QString("未知");
-    }
-
-    // 更新数据
-    emit reportInformation(
-        iTTL,
-        cityName, countryName, latitude, longitude, accuracyRadius, isLocationValid, // GeoIP2 City
-        isp, org, asn, asOrg                                                         // GeoIP2 ISP
-    );
-
-}
-
-void TracingWorker::GetHostname() {
-
-    // 这一步是最耗时的操作，它基本上请求必定会超时，所以放到这里来尽可能优化一下体验
-
-    // 参考 https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getnameinfo
-    char hostnameBuf[NI_MAXHOST];
-
-    if (
-        getnameinfo(
-            (sockaddr *)currentHopIPAddress,
-            sizeof (sockaddr),
-            hostnameBuf, NI_MAXHOST,
-            NULL, 0,
-            NI_NAMEREQD
-        ) == 0
-    ) {
-        // 查询到了主机名
-        emit reportHostname(iTTL, QString(hostnameBuf));
-    }
-
-    // 否则就是打咩
-
-}
-
-void TracingWorker::requestStop() {
-    isStopping = true;
 }
