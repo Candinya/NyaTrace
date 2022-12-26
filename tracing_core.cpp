@@ -177,9 +177,6 @@ void TracingCore::run() {
             if (isValid) {
                 ipAddressStr = ipAddress;
 
-                // 回收内存
-                // delete printIPAddress;
-
                 // 记录当前跳数的耗时
                 if (timeConsumption > 0) {
                     timeConsumptionStr = QString("%1 毫秒").arg(timeConsumption);

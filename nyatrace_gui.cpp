@@ -20,18 +20,18 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     ui->tracingMap->show();
 
     // 初始化结果数据模型
-    hopResultsModel = new QStandardItemModel();
+    traceResultsModel = new QStandardItemModel();
     resolveResultsModel = new QStandardItemModel();
 
     // 结果表调用模型
-    ui->hopsTable->setModel(hopResultsModel);
-    ui->hopsTable->show();
+    ui->traceTable->setModel(traceResultsModel);
+    ui->traceTable->show();
 
     ui->resolveTable->setModel(resolveResultsModel);
     ui->resolveTable->show();
 
     // 设置结果表自动伸展
-    ui->hopsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->traceTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->resolveTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     // 初始化 IPDB 实例
@@ -84,7 +84,7 @@ NyaTraceGUI::~NyaTraceGUI()
     WSACleanup();
 
     // 销毁结果模型
-    delete hopResultsModel;
+    delete traceResultsModel;
     delete resolveResultsModel;
 
     // 销毁 IPDB 实例
@@ -97,8 +97,8 @@ NyaTraceGUI::~NyaTraceGUI()
 void NyaTraceGUI::ConnectTracingResults() {
     // 填充追踪结果表格
     connect(tracingThread, &TracingCore::setIPAndTimeConsumption, this, [=](const int hop, const QString & timeComnsumption, const QString & ipAddress) {
-        hopResultsModel->setItem(hop-1, 0, new QStandardItem(timeComnsumption));
-        hopResultsModel->setItem(hop-1, 1, new QStandardItem(ipAddress));
+        traceResultsModel->setItem(hop-1, 0, new QStandardItem(timeComnsumption));
+        traceResultsModel->setItem(hop-1, 1, new QStandardItem(ipAddress));
     });
 
     connect(tracingThread, &TracingCore::setInformation, this, [=](
@@ -106,14 +106,14 @@ void NyaTraceGUI::ConnectTracingResults() {
         const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     ) {
-        hopResultsModel->setItem(hop-1, 3, new QStandardItem(cityName));
-        hopResultsModel->setItem(hop-1, 4, new QStandardItem(countryName));
+        traceResultsModel->setItem(hop-1, 3, new QStandardItem(cityName));
+        traceResultsModel->setItem(hop-1, 4, new QStandardItem(countryName));
 
         if (isLocationValid) {
             // 记录到表格数据中
-            hopResultsModel->setItem(hop-1, 5, new QStandardItem(QString("%1").arg(latitude)));
-            hopResultsModel->setItem(hop-1, 6, new QStandardItem(QString("%1").arg(longitude)));
-            hopResultsModel->setItem(hop-1, 7, new QStandardItem(QString("%1").arg(accuracyRadius)));
+            traceResultsModel->setItem(hop-1, 5, new QStandardItem(QString("%1").arg(latitude)));
+            traceResultsModel->setItem(hop-1, 6, new QStandardItem(QString("%1").arg(longitude)));
+            traceResultsModel->setItem(hop-1, 7, new QStandardItem(QString("%1").arg(accuracyRadius)));
 
             // 根据纬度和经度在地图上画一个点和一个圆
             qDebug() << "Hop:"             << hop
@@ -138,20 +138,20 @@ void NyaTraceGUI::ConnectTracingResults() {
             traceGeoInfo[hop-1].accuracyRadius = accuracyRadius;
         }
 
-        hopResultsModel->setItem(hop-1, 8, new QStandardItem(isp));
-        hopResultsModel->setItem(hop-1, 9, new QStandardItem(org));
+        traceResultsModel->setItem(hop-1, 8, new QStandardItem(isp));
+        traceResultsModel->setItem(hop-1, 9, new QStandardItem(org));
 
 
         if (asn != 0) {
             // 仅在有效的情况下设置 ASN 数据
-            hopResultsModel->setItem(hop-1, 10, new QStandardItem(QString("AS %1").arg(asn)));
+            traceResultsModel->setItem(hop-1, 10, new QStandardItem(QString("AS %1").arg(asn)));
         }
 
-        hopResultsModel->setItem(hop-1, 11, new QStandardItem(asOrg));
+        traceResultsModel->setItem(hop-1, 11, new QStandardItem(asOrg));
     });
 
     connect(tracingThread, &TracingCore::setHostname, this, [=](const int hop, const QString & hostName) {
-        hopResultsModel->setItem(hop-1, 2, new QStandardItem(hostName));
+        traceResultsModel->setItem(hop-1, 2, new QStandardItem(hostName));
     });
 
     // 更新 UI
@@ -295,11 +295,11 @@ void NyaTraceGUI::InitializeTracing() {
     ui->resolveTable->setDisabled(true);
 
     // 清理表格数据
-    hopResultsModel->clear();
+    traceResultsModel->clear();
 
     // 构建追踪表头
     QStringList hopResultLables = { "时间", "地址", "主机名", "城市", "国", "纬度", "经度", "误差半径", "ISP", "组织", "ASN", "AS组织" };
-    hopResultsModel->setHorizontalHeaderLabels(hopResultLables);
+    traceResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 清空地图
     QMetaObject::invokeMethod(
@@ -475,7 +475,7 @@ void NyaTraceGUI::on_hostInput_returnPressed()
     StartResolving();
 }
 
-void NyaTraceGUI::on_hopsTable_clicked(const QModelIndex &index)
+void NyaTraceGUI::on_traceTable_clicked(const QModelIndex &index)
 {
     qDebug() << "Table index clicked:" << index;
 
@@ -492,9 +492,9 @@ void NyaTraceGUI::on_hopsTable_clicked(const QModelIndex &index)
                 QString("第 %1 跳 - %2\n%3 - %4")
                     .arg(index.row() + 1)
                     .arg(
-                        hopResultsModel->item(index.row(), 1)->text(),
-                        hopResultsModel->item(index.row(), 3)->text(),
-                        hopResultsModel->item(index.row(), 4)->text()
+                        traceResultsModel->item(index.row(), 1)->text(),
+                        traceResultsModel->item(index.row(), 3)->text(),
+                        traceResultsModel->item(index.row(), 4)->text()
                     )
                 )
         );

@@ -23,15 +23,14 @@ public:
 
 private slots:
     void on_hostInput_returnPressed();
-    void on_startStopTracingButton_clicked();
-
-    void on_hopsTable_clicked(const QModelIndex &index);
-
-    void on_resolveTable_clicked(const QModelIndex &index);
-
-    void on_resolveTable_doubleClicked(const QModelIndex &index);
 
     void on_resolveButton_clicked();
+    void on_startStopTracingButton_clicked();
+
+    void on_resolveTable_clicked(const QModelIndex &index);
+    void on_resolveTable_doubleClicked(const QModelIndex &index);
+    void on_traceTable_clicked(const QModelIndex &index);
+
 
 private:
     // 界面 UI
@@ -47,7 +46,7 @@ private:
     ResolveCore * resolveThread;
 
     // 用于存储结果的模型
-    QStandardItemModel * hopResultsModel;
+    QStandardItemModel * traceResultsModel;
     QStandardItemModel * resolveResultsModel;
 
     // 当前选中的解析结果 IP
