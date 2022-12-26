@@ -57,12 +57,15 @@ private:
     IPDB * ipdb;
 
     // 用于存储数据的数组
-    struct {
+    struct GeoInfo {
         bool isValid;
         double latitude;
         double longitude;
         unsigned short accuracyRadius;
-    } geoInfo[DEF_MAX_HOP];
+    };
+
+    GeoInfo resolveGeoInfo[DEF_MAX_IPs];
+    GeoInfo traceGeoInfo[DEF_MAX_HOP];
 
     // 开始时间计时器
     clock_t startTime;

@@ -96,31 +96,6 @@ void TracingCore::run() {
                .arg(printIPAddress)
                .arg(DEF_MAX_HOP)
         );
-    } else {
-        // 按照主机名解析
-        qDebug() << "Target host is not IP address, resolving...";
-
-        if (resolveHostname(hostCharStr, targetIPAddress)) {
-            PrintIPAddress(&targetIPAddress, printIPAddress);
-
-            // 更新状态
-            qDebug() << "Tracing route to " << hostCharStr
-                 << " [" << printIPAddress << "] "
-                 << "with maximun hops " << DEF_MAX_HOP;
-
-            emit setMessage(
-                QString("开始追踪路由 %1 [%2] ，最大跃点数为 %3 。")
-                   .arg(hostCharStr, printIPAddress)
-                   .arg(DEF_MAX_HOP)
-            );
-        } else {
-            // 解析失败
-            auto err = WSAGetLastError();
-            qCritical() << "Failed to resolve host with error: " << err;
-            emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(err));
-            emit end(false);
-            return; // 结束
-        }
     }
 
     // 初始化最大跳数据
@@ -270,38 +245,6 @@ void TracingCore::run() {
     qDebug() << "Trace Route finish.";
 
     emit end(true);
-
-}
-
-bool TracingCore::resolveHostname(const char * hostname, sockaddr_storage & targetIPAddress) {
-
-    addrinfo * resolveResult = ResolveAllAddress(hostname);
-
-    if (resolveResult != NULL) {
-        // 这里取的都是结果里的第一位，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
-        // 参考 https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getaddrinfo
-        switch (resolveResult->ai_family) {
-        case AF_INET:
-            // 是 IPv4
-            targetIPAddress.ss_family = AF_INET;
-            (*(sockaddr_in*)&targetIPAddress).sin_addr.s_addr = (*(sockaddr_in*)resolveResult->ai_addr).sin_addr.s_addr;
-            break;
-        case AF_INET6:
-            // 是 IPv6
-            targetIPAddress.ss_family = AF_INET6;
-            memcpy((*(sockaddr_in6*)&targetIPAddress).sin6_addr.s6_addr, (*(sockaddr_in6*)resolveResult->ai_addr).sin6_addr.s6_addr, resolveResult->ai_addrlen);
-            break;
-        default:
-            // 不是 IPv4 也不是 IPv6
-            qWarning() << "Resolved with invalid sock family: " << resolveResult->ai_family;
-            return false;
-        }
-
-        return true;
-    } else {
-        // 解析失败
-        return false;
-    }
 
 }
 

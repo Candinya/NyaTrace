@@ -44,9 +44,6 @@ private: // 私有变量区
 
     bool isStopping; // 是否中止
 
-private: // 工具函数
-    bool resolveHostname(const char * hostname, sockaddr_storage & targetIPAddress);
-
 protected:
     void run() override;
 

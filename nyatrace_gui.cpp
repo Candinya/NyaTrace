@@ -132,10 +132,10 @@ void NyaTraceGUI::ConnectTracingResults() {
             );
 
             // 存进数组
-            geoInfo[hop-1].isValid = true;
-            geoInfo[hop-1].latitude = latitude;
-            geoInfo[hop-1].longitude = longitude;
-            geoInfo[hop-1].accuracyRadius = accuracyRadius;
+            traceGeoInfo[hop-1].isValid = true;
+            traceGeoInfo[hop-1].latitude = latitude;
+            traceGeoInfo[hop-1].longitude = longitude;
+            traceGeoInfo[hop-1].accuracyRadius = accuracyRadius;
         }
 
         hopResultsModel->setItem(hop-1, 8, new QStandardItem(isp));
@@ -198,10 +198,10 @@ void NyaTraceGUI::ConnectResolveResults() {
             ;
 
             // 存进数组
-            geoInfo[id-1].isValid = true;
-            geoInfo[id-1].latitude = latitude;
-            geoInfo[id-1].longitude = longitude;
-            geoInfo[id-1].accuracyRadius = accuracyRadius;
+            resolveGeoInfo[id-1].isValid = true;
+            resolveGeoInfo[id-1].latitude = latitude;
+            resolveGeoInfo[id-1].longitude = longitude;
+            resolveGeoInfo[id-1].accuracyRadius = accuracyRadius;
 
             QMetaObject::invokeMethod(
                 (QObject*)ui->tracingMap->rootObject(),
@@ -276,8 +276,8 @@ void NyaTraceGUI::InitializeResolving() {
     );
 
     // 清空结果数组
-    for (int i = 0; i < DEF_MAX_HOP; i++) {
-        geoInfo[i].isValid = false;
+    for (int i = 0; i < DEF_MAX_IPs; i++) {
+        resolveGeoInfo[i].isValid = false;
     }
 
     qDebug () << "Resolve mode initialize complete.";
@@ -310,7 +310,7 @@ void NyaTraceGUI::InitializeTracing() {
 
     // 清空结果数组
     for (int i = 0; i < DEF_MAX_HOP; i++) {
-        geoInfo[i].isValid = false;
+        traceGeoInfo[i].isValid = false;
     }
 
     // 重置进度条
@@ -440,7 +440,7 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
         bool hasValidPoint = false;
         // 连线
         for (int i = 0; i < DEF_MAX_HOP; i++) {
-            if (geoInfo[i].isValid) {
+            if (traceGeoInfo[i].isValid) {
                 qDebug() << "Map: Connecting hop" << i+1;
 
                 // 连一条线
@@ -448,8 +448,8 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
                     (QObject*)ui->tracingMap->rootObject(),
                     "connectLine",
                     Qt::DirectConnection,
-                    Q_ARG(QVariant, geoInfo[i].latitude),
-                    Q_ARG(QVariant, geoInfo[i].longitude)
+                    Q_ARG(QVariant, traceGeoInfo[i].latitude),
+                    Q_ARG(QVariant, traceGeoInfo[i].longitude)
                 );
                 hasValidPoint = true;
             }
@@ -480,13 +480,13 @@ void NyaTraceGUI::on_hopsTable_clicked(const QModelIndex &index)
     qDebug() << "Table index clicked:" << index;
 
     // 如果地址有效，就前往地址
-    if (geoInfo[index.row()].isValid) {
+    if (traceGeoInfo[index.row()].isValid) {
         QMetaObject::invokeMethod(
             (QObject*)ui->tracingMap->rootObject(),
             "gotoCoordinate",
             Qt::DirectConnection,
-            Q_ARG(QVariant, geoInfo[index.row()].latitude),
-            Q_ARG(QVariant, geoInfo[index.row()].longitude),
+            Q_ARG(QVariant, traceGeoInfo[index.row()].latitude),
+            Q_ARG(QVariant, traceGeoInfo[index.row()].longitude),
             Q_ARG(QVariant, 14), // 缩放等级
             Q_ARG(QVariant,
                 QString("第 %1 跳 - %2\n%3 - %4")
@@ -509,13 +509,13 @@ void NyaTraceGUI::on_resolveTable_clicked(const QModelIndex &index)
     currentSelectedIPNo = index.row();
 
     // 如果地址有效，就前往地址
-    if (geoInfo[index.row()].isValid) {
+    if (resolveGeoInfo[index.row()].isValid) {
         QMetaObject::invokeMethod(
             (QObject*)ui->tracingMap->rootObject(),
             "gotoCoordinate",
             Qt::DirectConnection,
-            Q_ARG(QVariant, geoInfo[index.row()].latitude),
-            Q_ARG(QVariant, geoInfo[index.row()].longitude),
+            Q_ARG(QVariant, resolveGeoInfo[index.row()].latitude),
+            Q_ARG(QVariant, resolveGeoInfo[index.row()].longitude),
             Q_ARG(QVariant, 14), // 缩放等级
             Q_ARG(QVariant,
                 QString("第 %1 个 IP - %2\n%3 - %4")
