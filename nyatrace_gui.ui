@@ -130,14 +130,10 @@
             <widget class="QTableView" name="traceTable">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-               <horstretch>1</horstretch>
-               <verstretch>1</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>0</width>
-               <height>0</height>
               </size>
              </property>
              <property name="font">
@@ -162,14 +158,10 @@
             <widget class="QQuickWidget" name="tracingMap">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-               <horstretch>1</horstretch>
-               <verstretch>1</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
-               <width>0</width>
-               <height>0</height>
               </size>
              </property>
              <property name="resizeMode">
