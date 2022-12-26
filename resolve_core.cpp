@@ -76,7 +76,10 @@ void ResolveCore::run() {
 void ResolveCore::GetInfo(int id, sockaddr_storage * targetIPAddress) {
 
     // 查询 IP 对应的信息
-    auto printIPAddress = PrintIPAddress(*targetIPAddress);
+
+    char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
+    ZeroMemory(printIPAddress, sizeof(printIPAddress));
+    PrintIPAddress(targetIPAddress, printIPAddress);
 
     // 准备从 City 数据库中查询结果
     QString  cityName;

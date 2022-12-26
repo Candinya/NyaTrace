@@ -6,6 +6,6 @@
 
 addrinfo * ResolveAllAddress(const char * hostname);
 bool ParseIPAddress(const char * ipStr, sockaddr_storage & targetIPAddress);
-char * PrintIPAddress(sockaddr_storage & targetIPAddress);
+bool PrintIPAddress(sockaddr_storage * targetIPAddress, char * printIPAddress);
 
 #endif // TRACING_UTILS_H

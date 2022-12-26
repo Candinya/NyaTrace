@@ -29,6 +29,8 @@ private slots:
 
     void on_resolveTable_clicked(const QModelIndex &index);
 
+    void on_modeTab_currentChanged(int index);
+
 private:
     // 界面 UI
     Ui::NyaTraceGUI *ui;

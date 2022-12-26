@@ -42,23 +42,21 @@ bool ParseIPAddress(const char * ipStr, sockaddr_storage & targetIPAddress) {
     return true;
 }
 
-char * PrintIPAddress(sockaddr_storage & targetIPAddress) {
 
-    char * printIPAddress = NULL;
-    switch(targetIPAddress.ss_family) {
+bool PrintIPAddress(sockaddr_storage * targetIPAddress, char * printIPAddress) {
+
+    switch(targetIPAddress->ss_family) {
     case AF_INET:
         // 是 IPv4
-        printIPAddress = new char(INET_ADDRSTRLEN);
-        ZeroMemory(printIPAddress, INET_ADDRSTRLEN);
-        inet_ntop(AF_INET, &(*(sockaddr_in*)&targetIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &(*(sockaddr_in*)targetIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
         break;
     case AF_INET6:
         // 是 IPv6
-        printIPAddress = new char(INET6_ADDRSTRLEN);
-        ZeroMemory(printIPAddress, INET6_ADDRSTRLEN);
-        inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, &(*(sockaddr_in6*)targetIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
         break;
+    default:
+        return false;
     }
 
-    return printIPAddress;
+    return true;
 }

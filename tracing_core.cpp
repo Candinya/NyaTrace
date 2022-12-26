@@ -81,10 +81,13 @@ void TracingCore::run() {
     // 清空目标地址
     ZeroMemory(&targetIPAddress, sizeof(sockaddr_storage));
 
+    char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
+    ZeroMemory(printIPAddress, sizeof(printIPAddress));
+
     if (ParseIPAddress(hostCharStr, targetIPAddress)) {
         // 解析成功，更新状态
 
-        auto printIPAddress = PrintIPAddress(targetIPAddress);
+        PrintIPAddress(&targetIPAddress, printIPAddress);
 
         qDebug() << "Tracing route to " << printIPAddress
              << " with maximun hops " << DEF_MAX_HOP;
@@ -98,18 +101,7 @@ void TracingCore::run() {
         qDebug() << "Target host is not IP address, resolving...";
 
         if (resolveHostname(hostCharStr, targetIPAddress)) {
-
-            char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
-            switch(targetIPAddress.ss_family) {
-            case AF_INET:
-                // 是 IPv4
-                inet_ntop(AF_INET, &(*(sockaddr_in*)&targetIPAddress).sin_addr, printIPAddress, INET_ADDRSTRLEN);
-                break;
-            case AF_INET6:
-                // 是 IPv6
-                inet_ntop(AF_INET6, &(*(sockaddr_in6*)&targetIPAddress).sin6_addr, printIPAddress, INET6_ADDRSTRLEN);
-                break;
-            }
+            PrintIPAddress(&targetIPAddress, printIPAddress);
 
             // 更新状态
             qDebug() << "Tracing route to " << hostCharStr

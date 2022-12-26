@@ -62,6 +62,9 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     // 更新状态
     ui->statusbar->showMessage("就绪"); // 提示初始化信息
 
+    // 初始化默认工作模式
+    workMode = ui->modeTab->currentIndex();
+
     // 把焦点放到输入框上
     ui->hostInput->QWidget::setFocus();
 }
@@ -174,6 +177,7 @@ void NyaTraceGUI::ConnectResolveResults() {
         const QString & cityName, const QString & countryName, const double & latitude, const double & longitude, const unsigned short & accuracyRadius, const bool & isLocationValid,
         const QString & isp, const QString & org, const uint & asn, const QString & asOrg
     ) {
+
         resolveResultsModel->setItem(id-1, 0, new QStandardItem(ipAddress));
         resolveResultsModel->setItem(id-1, 1, new QStandardItem(cityName));
         resolveResultsModel->setItem(id-1, 2, new QStandardItem(countryName));
@@ -210,13 +214,14 @@ void NyaTraceGUI::ConnectResolveResults() {
         resolveResultsModel->setItem(id-1, 6, new QStandardItem(isp));
         resolveResultsModel->setItem(id-1, 7, new QStandardItem(org));
 
-
         if (asn != 0) {
             // 仅在有效的情况下设置 ASN 数据
             resolveResultsModel->setItem(id-1, 8, new QStandardItem(QString("AS %1").arg(asn)));
         }
 
         resolveResultsModel->setItem(id-1, 9, new QStandardItem(asOrg));
+
+        qDebug() << "ID:" << id << "'s data proceeded.";
     });
 
     // 更新 UI
@@ -235,14 +240,23 @@ void NyaTraceGUI::ConnectResolveResults() {
 void NyaTraceGUI::on_startStopButton_clicked()
 {
 
-    if (tracingThread->isRunning()) {
-        // 中止按钮
-        qDebug() << "Tracing process is running, abort it...";
-        AbortTracing();
-    } else {
-        qDebug() << "Tracing process is not running, starting it...";
-        // 开始按钮
+    qDebug() << "Start button clicked, current mode:" << workMode;
+
+    switch (workMode) {
+    case MODE_ROUTE_TRACING:
+        if (tracingThread->isRunning()) {
+            // 中止按钮
+            qDebug() << "Tracing process is running, abort it...";
+            AbortTracing();
+        } else {
+            qDebug() << "Tracing process is not running, starting it...";
+            // 开始按钮
+            StartTracing();
+        }
+        break;
+    case MODE_RESOLVE:
         StartTracing();
+        break;
     }
 
 }
@@ -282,12 +296,13 @@ void NyaTraceGUI::Initialize() {
     for (int i = 0; i < DEF_MAX_HOP; i++) {
         geoInfo[i].isValid = false;
     }
+
+    qDebug () << "Initialize complete.";
 }
 
 void NyaTraceGUI::StartTracing() {
 
-    // 设置工作模式
-    workMode = ui->modeTab->currentIndex();
+    qDebug() << "Start work...";
 
     // 初始化
     Initialize();
@@ -316,6 +331,8 @@ void NyaTraceGUI::StartTracing() {
         break;
     }
 
+    qDebug () << "Work started.";
+
 }
 
 void NyaTraceGUI::AbortTracing() {
@@ -325,6 +342,8 @@ void NyaTraceGUI::AbortTracing() {
 
     // 设置提示信息
     ui->statusbar->showMessage("正在回收最后一包...");
+
+    qDebug() << "Abort tracing...";
 }
 
 void NyaTraceGUI::CleanUp(const bool isSucceeded) {
@@ -380,13 +399,19 @@ void NyaTraceGUI::CleanUp(const bool isSucceeded) {
 
         // 仅在存在有效点的情况下调整地图，不然就飞了
         if (hasValidPoint) {
-            QMetaObject::invokeMethod(
-                (QObject*)ui->tracingMap->rootObject(),
-                "fitMap",
-                Qt::DirectConnection
-            );
+            switch(workMode) {
+            case MODE_ROUTE_TRACING:
+                QMetaObject::invokeMethod(
+                    (QObject*)ui->tracingMap->rootObject(),
+                    "fitMap",
+                    Qt::DirectConnection
+                );
+                break;
+            }
         }
     } // 否则失败了，不要去动失败的提示信息
+
+    qDebug() << "CleanUp finished";
 }
 
 
@@ -448,5 +473,12 @@ void NyaTraceGUI::on_resolveTable_clicked(const QModelIndex &index)
         );
     }
 
+}
+
+
+void NyaTraceGUI::on_modeTab_currentChanged(int index)
+{
+    // 设置工作模式
+    workMode = index;
 }
 
