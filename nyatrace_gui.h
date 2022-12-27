@@ -7,6 +7,7 @@
 
 #include "tracing_defs.h"
 #include "tracing_core.h"
+#include "resolve_core.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class NyaTraceGUI; }
@@ -21,40 +22,63 @@ public:
     ~NyaTraceGUI();
 
 private slots:
-    void on_startStopButton_clicked();
     void on_hostInput_returnPressed();
 
-    void on_hopsTable_clicked(const QModelIndex &index);
+    void on_resolveButton_clicked();
+    void on_startStopTracingButton_clicked();
+
+    void on_resolveTable_clicked(const QModelIndex &index);
+    void on_resolveTable_doubleClicked(const QModelIndex &index);
+    void on_traceTable_clicked(const QModelIndex &index);
+
 
 private:
     // 界面 UI
     Ui::NyaTraceGUI *ui;
 
+    // 一种数据结构。这个结构被用来存储被 WSAStartup 函数调用后返回的 Windows Sockets 数据
+    WSADATA wsa;
+
     // 用于路由追踪的子线程
     TracingCore * tracingThread;
 
+    // 用于解析的子线程
+    ResolveCore * resolveThread;
+
     // 用于存储结果的模型
-    QStandardItemModel * hopResultsModel;
+    QStandardItemModel * traceResultsModel;
+    QStandardItemModel * resolveResultsModel;
+
+    // 当前选中的解析结果 IP
+    int currentSelectedIPNo;
+
+    // 用于读取 IP 对应数据的类操作接口
+    IPDB * ipdb;
 
     // 用于存储数据的数组
-    struct HopGeoInfo
-    {
+    struct GeoInfo {
         bool isValid;
         double latitude;
         double longitude;
         unsigned short accuracyRadius;
-
     };
-    HopGeoInfo hopGeoInfo[DEF_MAX_HOP];
+
+    GeoInfo resolveGeoInfo[DEF_MAX_IPs];
+    GeoInfo traceGeoInfo[DEF_MAX_HOP];
 
     // 开始时间计时器
     clock_t startTime;
 
     // 成员函数
-    void Initialize();
+    void ConnectResolveResults();
+    void ConnectTracingResults();
+    void InitializeResolving();
+    void InitializeTracing();
+    void StartResolving();
     void StartTracing();
     void AbortTracing();
-    void CleanUp(const bool isSucceeded);
+    void CleanUpResolving(const bool isSucceeded);
+    void CleanUpTracing(const bool isSucceeded);
 
 };
 

@@ -1,6 +1,7 @@
 #include "ipdb.h"
 
 #include "ipdb_settings.h"
+#include "tracing_utils.h"
 
 #include <direct.h>
 #include <QDebug>
@@ -179,8 +180,9 @@ bool IPDB::LookUpIPCityInfo(
 
     } else {
         // 查询失败，没找到结果，可能是本地地址
-        qWarning() << "No entry found for IP: "
-             << ip_address;
+        char ipAddressPrintBuf[INET6_ADDRSTRLEN];
+        PrintIPAddress((sockaddr_storage *)ip_address, ipAddressPrintBuf);
+        qWarning() << "No entry found for IP:" << ipAddressPrintBuf;
         cityName    = QString("私有地址");
         countryName = QString("");
         // 其实是无效的
@@ -287,8 +289,9 @@ bool IPDB::LookUpIPISPInfo(
 
     } else {
         // 查询失败，没找到结果，可能是本地地址
-        qWarning() << "No entry found for IP: "
-             << ip_address;
+        char ipAddressPrintBuf[INET6_ADDRSTRLEN];
+        PrintIPAddress((sockaddr_storage *)ip_address, ipAddressPrintBuf);
+        qWarning() << "No entry found for IP:" << ipAddressPrintBuf;
         isp = QString("私有地址");
         org  = QString("");
         asOrg   = QString("");

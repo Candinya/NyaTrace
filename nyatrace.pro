@@ -19,7 +19,10 @@ SOURCES += \
     libmaxminddb\maxminddb.c \
     nyatrace_gui.cpp \
     main.cpp \
-    tracing_core.cpp
+    resolve_core.cpp \
+    tracing_core.cpp \
+    tracing_utils.cpp \
+    tracing_worker.cpp
 
 HEADERS += \
     data-pool.h \
@@ -28,9 +31,13 @@ HEADERS += \
     libmaxminddb\maxminddb-compat-util.h \
     libmaxminddb\maxminddb.h \
     libmaxminddb\maxminddb_config.h \
+    mode.h \
     nyatrace_gui.h \
+    resolve_core.h \
     tracing_core.h \
-    tracing_defs.h
+    tracing_defs.h \
+    tracing_utils.h \
+    tracing_worker.h
 
 FORMS += \
     nyatrace_gui.ui
