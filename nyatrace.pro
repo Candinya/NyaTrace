@@ -57,7 +57,7 @@ RC_ICONS += \
 
 TARGET = NyaTrace
 
-VERSION = 0.1.8.1
+VERSION = 0.1.9.0
 
 DEFINES += \
     APP_VERSION=\\\"$$VERSION\\\"
