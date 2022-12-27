@@ -9,8 +9,8 @@
 
 TracingWorker::TracingWorker() {
 
-    // 设置运行完成后自动销毁
-    setAutoDelete(true);
+    // 不能自动销毁，要等派发进程回收（避免脏写）
+    setAutoDelete(false);
 
     // 分配当前跳地址的存储空间
     currentHopIPAddress = new sockaddr_storage;

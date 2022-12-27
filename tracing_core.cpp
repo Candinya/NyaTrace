@@ -127,7 +127,7 @@ void TracingCore::run() {
     }
 
     // 使用子线程开始追踪路由
-    for (int i = 0; (i < DEF_MAX_HOP) && !isStopping; i++) {
+    for (int i = 0; (i < maxHop) && !isStopping; i++) {
         qDebug() << "TTL: " << i + 1;
 
         workers[i] = new TracingWorker;
@@ -154,9 +154,9 @@ void TracingCore::run() {
                 maxHop = hop;
 
                 // 终止所有更高跳数的线程（从 maxHop 到 DEF_MAX_HOP 之间的已经在上一轮被清理掉了）
-                for (int i = hop; i < oldMaxHop; i++) {
-                    if (workers[i] != NULL) {
-                        workers[i]->requestStop();
+                for (int j = hop; j < oldMaxHop; j++) {
+                    if (workers[j] != NULL) {
+                        workers[j]->requestStop();
                     }
                 }
 
@@ -166,7 +166,7 @@ void TracingCore::run() {
                 // 发出状态命令，删除表中的多余行（暂时好像不需要？）
 
                 // 调试输出
-                qDebug() << "Max hop found: " << hop;
+                qDebug() << "Max hop found:" << hop;
 
             }
 
@@ -222,7 +222,12 @@ void TracingCore::run() {
         connect(workers[i], &TracingWorker::fin, this, [=](const int hop) {
 
             // 子线程运行完成，标记当前 worker 为 NULL
-            qDebug() << "Worker " << i << " finished.";
+            qDebug() << "Hop " << hop << " finished.";
+
+            // 回收子线程
+            workers[hop - 1]->deleteLater();
+
+            // 标记为运行完成
             workers[hop - 1] = NULL;
 
         });
