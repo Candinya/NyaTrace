@@ -15,6 +15,10 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     // 初始化界面 UI
     ui->setupUi(this);
 
+    // 调整分割线两边的大小
+    ui->displaySplitter->setSizes(QList<int>{ 60, 240 });
+    ui->traceSplitter->setSizes(QList<int>{ 60, 40 });
+
     // 初始化追踪地图 （OSM）
     ui->tracingMap->setSource(QUrl("qrc:/tracing_map.qml"));
     ui->tracingMap->show();

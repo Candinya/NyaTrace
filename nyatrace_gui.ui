@@ -112,12 +112,12 @@
          </layout>
         </widget>
         <widget class="QWidget" name="horizontalLayoutWidget_2">
-         <layout class="QHBoxLayout" name="resultPart" stretch="0">
+         <layout class="QHBoxLayout" name="tracePart" stretch="0">
           <property name="spacing">
            <number>6</number>
           </property>
           <item>
-           <widget class="QSplitter" name="resultSplitter">
+           <widget class="QSplitter" name="traceSplitter">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -130,10 +130,14 @@
             <widget class="QTableView" name="traceTable">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
+               <width>0</width>
+               <height>0</height>
               </size>
              </property>
              <property name="font">
@@ -158,10 +162,14 @@
             <widget class="QQuickWidget" name="tracingMap">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="minimumSize">
               <size>
+               <width>0</width>
+               <height>0</height>
               </size>
              </property>
              <property name="resizeMode">
