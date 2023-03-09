@@ -95,7 +95,7 @@ jobs:
     - name: Create installer
       shell: pwsh
       run: |
-      New-Item -ItemType Directory installer\packages\app.nyatrace\data
+        New-Item -ItemType Directory installer\packages\app.nyatrace\data
         Copy-Item -Recurse workspace\${env:ARCHIVE_NAME}\* installer\packages\app.nyatrace\data\
         binarycreator -c installer\config\config.xml -p installer\packages ${{ env.ARCHIVE_NAME }}-Installer.exe -v
 
