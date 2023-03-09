@@ -61,6 +61,7 @@ jobs:
       shell: cmd
       run: |
         call "%Qt5_DIR%\bin\qtenv2.bat"
+        for /f "delims=" %%d in ( 'vswhere.exe -latest -property installationPath' ) do @( call "%%d\VC\Auxiliary\Build\vcvars64.bat" )
         chdir /d %GITHUB_WORKSPACE%\workspace\%ARCHIVE_NAME%
         windeployqt --qmldir %GITHUB_WORKSPACE% --release NyaTrace.exe
 
