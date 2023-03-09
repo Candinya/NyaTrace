@@ -23,7 +23,7 @@ jobs:
         arch: 'win64_msvc2019_64'
         install-deps: 'true'
         cache: 'true'
-        tools: 'tools_openssl_x64 tools_ifw,4.5.1,qt.tools.ifw.45'
+        tools: 'tools_openssl_x64 tools_ifw'
         
     - name: Checkout codes
       uses: actions/checkout@v3
