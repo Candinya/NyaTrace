@@ -23,7 +23,7 @@ jobs:
         arch: 'win64_msvc2019_64'
         install-deps: 'true'
         cache: 'true'
-        tools: 'tools_openssl_x64 tools_ifw'
+        tools: 'tools_openssl_x64 tools_ifw,4.5.1,qt.tools.ifw.45'
         
     - name: Checkout codes
       uses: actions/checkout@v3
@@ -97,7 +97,7 @@ jobs:
       run: |
         New-Item -ItemType Directory installer\packages\app.nyatrace\data
         Copy-Item -Recurse workspace\${env:ARCHIVE_NAME}\* installer\packages\app.nyatrace\data\
-        binarycreator -c installer\config\config.xml -p installer\packages ${{ env.ARCHIVE_NAME }}-Installer.exe -v
+        ${env:IQTA_TOOLS}'QtInstallerFramework\4.5\binbinarycreator.exe' -c installer\config\config.xml -p installer\packages ${{ env.ARCHIVE_NAME }}-Installer.exe -v
 
     - name: Create release draft
       if: startsWith(github.event.ref, 'refs/tags/')
