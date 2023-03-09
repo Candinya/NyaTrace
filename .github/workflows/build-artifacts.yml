@@ -69,6 +69,12 @@ jobs:
       shell: pwsh
       run: |
         Move-Item workspace\${env:ARCHIVE_NAME}\vc_redist.x64.exe workspace\
+    
+    - name: Upload vc_redist
+      uses: actions/upload-artifact@v3
+      with:
+        name: vc_redist.x64.exe
+        path: workspace\vc_redist.x64.exe
 
     - name: Prepare theme files
       shell: pwsh
@@ -91,6 +97,12 @@ jobs:
       shell: pwsh
       run: |
         Compress-Archive -Path workspace\${env:ARCHIVE_NAME}, LICENSE, workspace\vc_redist.x64.exe -DestinationPath ${env:ARCHIVE_NAME}'.zip'
+    
+    - name: Upload built zip
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ARCHIVE_NAME }}.zip
+        path: ${{ env.ARCHIVE_NAME }}.zip
 
     - name: Create installer
       shell: pwsh
@@ -114,20 +126,8 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
     
-    - name: Upload built zip
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ env.ARCHIVE_NAME }}.zip
-        path: ${{ env.ARCHIVE_NAME }}.zip
-    
     - name: Upload built installer
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.ARCHIVE_NAME }}-Installer.exe
         path: ${{ env.ARCHIVE_NAME }}-Installer.exe
-    
-    - name: Upload vc_redist
-      uses: actions/upload-artifact@v3
-      with:
-        name: vc_redist.x64.exe
-        path: workspace\vc_redist.x64.exe
