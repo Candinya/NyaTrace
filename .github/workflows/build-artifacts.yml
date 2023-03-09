@@ -111,7 +111,13 @@ jobs:
         Copy-Item -Recurse workspace\${env:ARCHIVE_NAME}\* installer\packages\app.nyatrace\data\
         & "${env:IQTA_TOOLS}\QtInstallerFramework\4.5\bin\binarycreator.exe" -c installer\config\config.xml -p installer\packages ${{ env.ARCHIVE_NAME }}-Installer.exe -v
 
-    - name: Create release draft
+    - name: Upload built installer
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ARCHIVE_NAME }}-Installer.exe
+        path: ${{ env.ARCHIVE_NAME }}-Installer.exe
+
+    - name: Create release (draft)
       if: startsWith(github.event.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
@@ -125,9 +131,3 @@ jobs:
           workspace\vc_redist.x64.exe
       env:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
-    
-    - name: Upload built installer
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ env.ARCHIVE_NAME }}-Installer.exe
-        path: ${{ env.ARCHIVE_NAME }}-Installer.exe
