@@ -72,3 +72,6 @@ Thumbs.db
 *.exe
 
 *.mmdb
+
+# Built data for installer creation
+installer/packages/app.nyatrace/data/

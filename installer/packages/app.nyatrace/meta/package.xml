@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>NyaTrace</DisplayName>
+    <Description>A visual route tracing tool (Windows platform)</Description>
+    <Description xml:lang="zh_cn">一个可视化路由追踪工具（ Windows 平台）</Description>
+    <Version>0.1.9.0</Version>
+    <ReleaseDate>2022-12-27</ReleaseDate>
+    <Licenses>
+        <License name="GPL V3" file="gplv3.txt" priority="2" />
+        <License name="FOSS" file="foss.txt" priority="1" />
+    </Licenses>
+    <Default>script</Default>
+    <Script>installscript.qs</Script>
+    <UserInterfaces>
+        <UserInterface>ipdb.ui</UserInterface>
+    </UserInterfaces>
+</Package>
