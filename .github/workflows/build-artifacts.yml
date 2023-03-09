@@ -23,7 +23,7 @@ jobs:
         arch: 'win64_msvc2019_64'
         install-deps: 'true'
         cache: 'true'
-        tools: 'tools_openssl_x64'
+        tools: 'tools_openssl_x64 tools_ifw'
         
     - name: Checkout codes
       uses: actions/checkout@v3
@@ -65,6 +65,11 @@ jobs:
         chdir /d %GITHUB_WORKSPACE%\workspace\%ARCHIVE_NAME%
         windeployqt --qmldir %GITHUB_WORKSPACE% --release NyaTrace.exe
 
+    - name: Move VC Redist installer out (no need to pack into installer)
+      shell: pwsh
+      run: |
+        Move-Item workspace\${env:ARCHIVE_NAME}\vc_redist.x64.exe workspace\
+
     - name: Prepare theme files
       shell: pwsh
       run: |
@@ -85,8 +90,14 @@ jobs:
     - name: Package artifacts
       shell: pwsh
       run: |
-        Copy-Item LICENSE workspace\
-        Compress-Archive -Path workspace\* ${env:ARCHIVE_NAME}'.zip'
+        Compress-Archive -Path workspace\${env:ARCHIVE_NAME}, LICENSE, workspace\vc_redist.x64.exe -DestinationPath ${env:ARCHIVE_NAME}'.zip'
+
+    - name: Create installer
+      shell: pwsh
+      run: |
+      New-Item -ItemType Directory installer\packages\app.nyatrace\data
+        Copy-Item -Recurse workspace\${env:ARCHIVE_NAME}\* installer\packages\app.nyatrace\data\
+        binarycreator -c installer\config\config.xml -p installer\packages ${{ env.ARCHIVE_NAME }}-Installer.exe -v
 
     - name: Create release draft
       if: startsWith(github.event.ref, 'refs/tags/')
@@ -98,11 +109,25 @@ jobs:
         draft: true
         files: |
           ${{ env.ARCHIVE_NAME }}.zip
+          ${{ env.ARCHIVE_NAME }}-Installer.exe
+          workspace\vc_redist.x64.exe
       env:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
     
-    - name: Upload built file as artifact
+    - name: Upload built zip
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ env.ARCHIVE_NAME }}
-        path: workspace/
+        name: ${{ env.ARCHIVE_NAME }}.zip
+        path: ${{ env.ARCHIVE_NAME }}.zip
+    
+    - name: Upload built installer
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ARCHIVE_NAME }}-Installer.exe
+        path: ${{ env.ARCHIVE_NAME }}-Installer.exe
+    
+    - name: Upload vc_redist
+      uses: actions/upload-artifact@v3
+      with:
+        name: vc_redist.x64.exe
+        path: workspace\vc_redist.x64.exe

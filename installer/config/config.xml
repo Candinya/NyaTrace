@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>NyaTrace</Name>
+    <Version>0.1.0</Version>
+    <Title>NyaTrace Installer</Title>
+    <Publisher>Nya Candy</Publisher>
+    <ProductUrl>https://nyatrace.app</ProductUrl>
+    <StartMenuDir>NyaTrace</StartMenuDir>
+    <TargetDir>@HomeDir@/NyaTrace</TargetDir>
+    <InstallerApplicationIcon>../../icon</InstallerApplicationIcon>
+    <Logo>NyaTrace.png</Logo>
+    <WizardDefaultWidth>800</WizardDefaultWidth>
+    <WizardDefaultHeight>600</WizardDefaultHeight>
+    <Translations>
+        <Translation>zh_cn</Translation>
+    </Translations>
+</Installer>
