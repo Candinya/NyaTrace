@@ -330,7 +330,7 @@ void NyaTraceGUI::StartResolving() {
     InitializeResolving();
 
     // 设置主机地址
-    std::string hostStdString = ui->hostInput->text().toStdString();
+    std::string hostStdString = ui->hostInput->text().trimmed().toStdString();
 
     // 记录开始时间
     startTime = clock();
