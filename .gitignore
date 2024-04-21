@@ -74,4 +74,4 @@ Thumbs.db
 *.mmdb
 
 # Built data for installer creation
-installer/packages/app.nyatrace/data/
+installer/packages/net.candymade.nyatrace/data/

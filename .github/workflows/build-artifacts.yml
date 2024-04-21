@@ -107,8 +107,8 @@ jobs:
     - name: Create installer
       shell: pwsh
       run: |
-        New-Item -ItemType Directory installer\packages\app.nyatrace\data
-        Copy-Item -Recurse workspace\${env:ARCHIVE_NAME}\* installer\packages\app.nyatrace\data\
+        New-Item -ItemType Directory installer\packages\net.candymade.nyatrace\data
+        Copy-Item -Recurse workspace\${env:ARCHIVE_NAME}\* installer\packages\net.candymade.nyatrace\data\
         & "${env:IQTA_TOOLS}\QtInstallerFramework\4.5\bin\binarycreator.exe" -c installer\config\config.xml -p installer\packages ${{ env.ARCHIVE_NAME }}-Installer.exe -v
 
     - name: Upload built installer

@@ -4,7 +4,7 @@
     <Version>0.1.0</Version>
     <Title>NyaTrace Installer</Title>
     <Publisher>Nya Candy</Publisher>
-    <ProductUrl>https://nyatrace.com</ProductUrl>
+    <ProductUrl>https://candymade.net/nyatrace</ProductUrl>
     <StartMenuDir>NyaTrace</StartMenuDir>
     <TargetDir>@HomeDir@/NyaTrace</TargetDir>
     <InstallerApplicationIcon>../../icon</InstallerApplicationIcon>

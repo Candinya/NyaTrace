@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://nyatrace.com/images/NyaTrace.svg" width="120" height="120" alt="NyaTrace Logo"/>
+<img src="./installer/config/NyaTrace.png" width="120" height="120" alt="NyaTrace Logo"/>
 
 </div>
 
@@ -17,7 +17,6 @@
 1. 我们预先构建的可执行程序并不能保证在您的设备上也能功能完整地正常执行，如果您有任何问题，您可以提出一个 issue 。
 2. 目前程序仅支持 Windows 平台。
 3. 严禁商用。
-4. 项目**唯一**的官网是 [nyatrace.com](https://nyatrace.com) ，其他都是假的，我们不对从假网站上的链接下载得到的任何一个二进制位的安全性负责。
 
 ## 使用
 
