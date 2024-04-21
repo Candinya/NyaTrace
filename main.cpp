@@ -30,10 +30,8 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
         break;
     }
 
-    QFile outFile("NyaTrace.log");
-    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
 
-    QTextStream textStream(&outFile);
+    QTextStream textStream(type == QtDebugMsg || type == QtInfoMsg ? stdout : stderr);
     textStream 
         << QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss]") << "\t" 
         << level << "\t" 
