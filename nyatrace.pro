@@ -28,6 +28,7 @@ HEADERS += \
     data-pool.h \
     ipdb.h \
     ipdb_settings.h \
+    libmaxminddb\data-pool.h \
     libmaxminddb\maxminddb-compat-util.h \
     libmaxminddb\maxminddb.h \
     libmaxminddb\maxminddb_config.h \
