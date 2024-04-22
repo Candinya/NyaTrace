@@ -10,7 +10,7 @@
 
 ## 运行截图
 
-![运行截图](https://nyatrace.com/images/screenshot.png)
+![运行截图](https://candymade.net/assets/screenshots/nyatrace/main.png)
 
 ## 声明
 
