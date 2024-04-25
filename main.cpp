@@ -1,5 +1,7 @@
 #include "nyatrace_gui.h"
 
+#include "nyatrace_window.h"
+
 #include <QApplication>
 #include <QDir>
 #include <QFile>
@@ -7,49 +9,57 @@
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
 
-    // 标记上下文这个变量没有被使用到
+    // 标记 context 这个变量没有被使用到
     Q_UNUSED(context);
 
     QString level;
 
     switch (type) {
     case QtDebugMsg:
-        level = QString("[Debug]");
+        level = QString("Debug");
         break;
     case QtInfoMsg:
-        level = QString("[Info]");
+        level = QString("Info");
         break;
     case QtWarningMsg:
-        level = QString("[Warning]");
+        level = QString("Warning");
         break;
     case QtCriticalMsg:
-        level = QString("[Critical]");
+        level = QString("Critical");
         break;
     case QtFatalMsg:
-        level = QString("[Fatal]");
+        level = QString("Fatal");
         break;
     }
 
+    QString ts = QDateTime::currentDateTime().toString("hh:mm:ss");
 
-    QTextStream textStream(type == QtDebugMsg || type == QtInfoMsg ? stdout : stderr);
-    textStream 
-        << QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss]") << "\t" 
-        << level << "\t" 
-        << msg << Qt::endl
-    ;
+    // 输出调试日志
+    qDebug() << "新的日志到来" << level << msg;
+
+    // 检查日志窗口是否开启
+    if (ntlw != nullptr) {
+        if (!ntlw->isActiveWindow()) {
+            // 没有开启
+            if (type == QtFatalMsg) {
+                // 因为是 fatal 日志，所以必须让用户感知到
+                qDebug() << "显示日志窗口以让用户看到日志";
+                ntlw->show();
+            }
+        }
+
+        qDebug() << "向日志窗口输出日志";
+        ntlw->AppendLog(ts, level, msg);
+    }
 
     if (type == QtFatalMsg) {
-        // 现在才可以退出
-        abort();
+        // 销毁主窗口，仅保留日志窗口
+        delete ntgw;
     }
 }
 
 int main(int argc, char *argv[])
 {
-#ifndef QT_DEBUG
-    // 控制日志输出
-    qInstallMessageHandler(customMessageHandler);
-#endif
 
     // 定义版本号
     auto version = QString("NyaTrace %1").arg(APP_VERSION);
@@ -57,8 +67,14 @@ int main(int argc, char *argv[])
     // 打印版本号
     qDebug() << "Booting" << version << "...";
 
+    // 初始化主程序
     QApplication app(argc, argv);
-    NyaTraceGUI w;
+
+    // 初始化日志窗口
+    ntlw = new NyaTraceLogs();
+
+    // 切换日志输出
+    qInstallMessageHandler(customMessageHandler);
 
     // 样式表文件
     QFile styleFile("theme/nyatrace.qss");
@@ -80,9 +96,14 @@ int main(int argc, char *argv[])
         app.setStyleSheet(styleSheet);
     }
 
-    // 修改窗口标题
-    w.setWindowTitle(version);
+    // 初始化主窗口
+    ntgw = new NyaTraceGUI();
 
-    w.show();
+    // 修改窗口标题
+    ntgw->setWindowTitle(version);
+
+    // 显示主窗口
+    ntgw->show();
+
     return app.exec();
 }

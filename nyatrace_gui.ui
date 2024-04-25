@@ -202,6 +202,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QToolButton" name="openLogs">
+        <property name="text">
+         <string>日志</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>

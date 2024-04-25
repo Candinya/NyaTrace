@@ -32,6 +32,8 @@ private slots:
     void on_traceTable_clicked(const QModelIndex &index);
 
 
+    void on_openLogs_clicked();
+
 private:
     // 界面 UI
     Ui::NyaTraceGUI *ui;

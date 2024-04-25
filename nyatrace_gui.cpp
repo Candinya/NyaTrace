@@ -2,6 +2,8 @@
 #include "ui_nyatrace_gui.h"
 #include "mode.h"
 
+#include "nyatrace_window.h"
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
@@ -563,5 +565,14 @@ void NyaTraceGUI::on_startStopTracingButton_clicked()
         StartTracing();
     }
 
+}
+
+
+void NyaTraceGUI::on_openLogs_clicked()
+{
+    // 显示日志窗口
+    if (ntlw != nullptr) {
+        ntlw->show();
+    } // 否则会 panic
 }
 
