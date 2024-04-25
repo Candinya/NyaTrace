@@ -6,6 +6,10 @@
 #include <QDir>
 #include <QFile>
 #include <QDateTime>
+#include <QMutex>
+
+// 使用互斥锁以避免多线程异步写入日志导致冲突
+QMutex logMutex;
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
 
@@ -49,7 +53,15 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
         }
 
         qDebug() << "向日志窗口输出日志";
+
+        // 启用互斥锁
+        logMutex.lock();
+
+        // 输出日志
         ntlw->AppendLog(ts, level, msg);
+
+        // 释放互斥锁
+        logMutex.unlock();
     }
 
     if (type == QtFatalMsg) {
