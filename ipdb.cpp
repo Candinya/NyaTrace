@@ -15,12 +15,12 @@ IPDB::IPDB() { // 构造函数
     openDatabaseStatus = MMDB_open(GEOIP2_CITY_MMDB, MMDB_MODE_MMAP, &CityDB);
     if (openDatabaseStatus != MMDB_SUCCESS) {
         // Open failed
-        qFatal(QString("Failed to open GeoIP2 City database from %1 with error: %2").arg(GEOIP2_CITY_MMDB, MMDB_strerror(openDatabaseStatus)).toStdString().c_str());
+        qCritical() << QString("Failed to open GeoIP2 City database from %1 with error: %2").arg(GEOIP2_CITY_MMDB, MMDB_strerror(openDatabaseStatus));
     }
     openDatabaseStatus = MMDB_open(GEOIP2_ISP_MMDB, MMDB_MODE_MMAP, &ISPDB);
     if (openDatabaseStatus != MMDB_SUCCESS) {
         // Open failed
-        qFatal(QString("Failed to open GeoIP2 ISP database from %1 with error: %2").arg(GEOIP2_ISP_MMDB, MMDB_strerror(openDatabaseStatus)).toStdString().c_str());
+        qCritical() << QString("Failed to open GeoIP2 ISP database from %1 with error: %2").arg(GEOIP2_ISP_MMDB, MMDB_strerror(openDatabaseStatus));
     }
 
 }

@@ -52,7 +52,7 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     // WinSock2 相关初始化
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { // 进行相应的socket库绑定,MAKEWORD(2,2)表示使用WINSOCK2版本
         //emit setMessage(QString("WinSock2 动态链接库初始化失败，错误代码： %1 。").arg(WSAGetLastError())); // 提示信息
-        qFatal(QString("Failed to start winsocks2 library with error: %1").arg(WSAGetLastError()).toStdString().c_str());
+        qCritical() << QString("Failed to start winsocks2 library with error: %1").arg(WSAGetLastError());
     }
 
     // 建立路由追踪线程
