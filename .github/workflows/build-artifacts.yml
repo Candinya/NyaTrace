@@ -26,7 +26,7 @@ jobs:
         tools: 'tools_opensslv3_x64 tools_ifw'
         
     - name: Checkout codes
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Build exectuable
       shell: cmd
@@ -71,7 +71,7 @@ jobs:
         Move-Item workspace\${env:ARCHIVE_NAME}\vc_redist.x64.exe workspace\
     
     - name: Upload vc_redist
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: vc_redist.x64.exe
         path: workspace\vc_redist.x64.exe
@@ -99,7 +99,7 @@ jobs:
         Compress-Archive -Path workspace\${env:ARCHIVE_NAME}, LICENSE, workspace\vc_redist.x64.exe -DestinationPath ${env:ARCHIVE_NAME}'.zip'
     
     - name: Upload built zip
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARCHIVE_NAME }}.zip
         path: ${{ env.ARCHIVE_NAME }}.zip
@@ -112,7 +112,7 @@ jobs:
         & "${env:IQTA_TOOLS}\QtInstallerFramework\4.7\bin\binarycreator.exe" -c installer\config\config.xml -p installer\packages ${{ env.ARCHIVE_NAME }}-Installer.exe -v
 
     - name: Upload built installer
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARCHIVE_NAME }}-Installer.exe
         path: ${{ env.ARCHIVE_NAME }}-Installer.exe
@@ -125,7 +125,7 @@ jobs:
 
     - name: Create release (draft)
       if: startsWith(github.event.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: NyaTrace - ${{ env.TAG_NAME }}
         tag_name: ${{ env.TAG_NAME }}
