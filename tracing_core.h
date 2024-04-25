@@ -5,6 +5,7 @@
 #include <QThreadPool>
 
 #include "tracing_worker.h"
+#include "configs.h"
 
 class TracingCore : public QThread
 {
@@ -36,7 +37,7 @@ private: // 私有变量区
     QThreadPool * tracingPool;
 
     // 追踪线程的子线程组
-    TracingWorker * workers[DEF_MAX_HOP];
+    TracingWorker * workers[DEF_TRACE_MAX_HOPs];
 
     // 当前的最大跳，超过这一跳的数据都应该被丢弃
     int maxHop;

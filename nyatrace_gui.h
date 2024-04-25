@@ -8,6 +8,7 @@
 #include "tracing_defs.h"
 #include "tracing_core.h"
 #include "resolve_core.h"
+#include "configs.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class NyaTraceGUI; }
@@ -65,8 +66,8 @@ private:
         unsigned short accuracyRadius;
     };
 
-    GeoInfo resolveGeoInfo[DEF_MAX_IPs];
-    GeoInfo traceGeoInfo[DEF_MAX_HOP];
+    GeoInfo resolveGeoInfo[DEF_RESOLVE_MAX_IPs];
+    GeoInfo traceGeoInfo[DEF_TRACE_MAX_HOPs];
 
     // 开始时间计时器
     clock_t startTime;

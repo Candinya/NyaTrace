@@ -46,7 +46,7 @@ TracingCore::TracingCore() {
     tracingPool = new QThreadPool;
 
     // 清空子线程数组
-    for (int i = 0; i < DEF_MAX_HOP; i++) {
+    for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
         workers[i] = NULL;
     }
 }
@@ -90,20 +90,20 @@ void TracingCore::run() {
         PrintIPAddress(&targetIPAddress, printIPAddress);
 
         qDebug() << "Tracing route to " << printIPAddress
-             << " with maximun hops " << DEF_MAX_HOP;
+             << " with maximun hops " << gCfg->GetTraceMaxHops();
         emit setMessage(
             QString("开始追踪路由 %1 ，最大跃点数为 %2 。")
                .arg(printIPAddress)
-               .arg(DEF_MAX_HOP)
+               .arg(gCfg->GetTraceMaxHops())
         );
     }
 
     // 初始化最大跳数据
-    maxHop    = DEF_MAX_HOP;
-    oldMaxHop = DEF_MAX_HOP;
+    maxHop    = gCfg->GetTraceMaxHops();
+    oldMaxHop = gCfg->GetTraceMaxHops();
 
     // 置线程池最大线程计数为跳数上限，让所有的线程能一起运行
-    tracingPool->setMaxThreadCount(DEF_MAX_HOP);
+    tracingPool->setMaxThreadCount(gCfg->GetTraceMaxHops());
 
     // 用于存储当前地址
     sockaddr_storage sourceIPAddress;
@@ -236,7 +236,7 @@ void TracingCore::run() {
         tracingPool->start(workers[i]);
 
         // 休息一会，来尽可能创造到达目标主机的首包时间差
-        usleep(DEF_INTERVAL_PER_THREAD);
+        usleep(gCfg->GetTraceIntervalPerThread());
 
     }
 
@@ -255,7 +255,7 @@ void TracingCore::requestStop() {
     isStopping = true;
 
     // 对每一个子线程发出停止信号
-    for (int i = 0; i < DEF_MAX_HOP; i++) {
+    for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
         if (workers[i] != NULL) {
             workers[i]->requestStop();
         }

@@ -1,6 +1,7 @@
 #include <QDebug>
 
 #include "tracing_worker.h"
+#include "configs.h"
 
 /**
  * TracingWorker
@@ -98,7 +99,7 @@ void TracingWorker::GetIPv4() {
                 hIcmp, NULL, NULL, NULL,
                 ((sockaddr_in*)targetIPAddress)->sin_addr.s_addr, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
-                DEF_ICMP_TIMEOUT
+                gCfg->GetTraceICMPTimeout()
             ) != 0
         ) {
             // 得到返回
@@ -169,7 +170,7 @@ void TracingWorker::GetIPv6() {
                 hIcmp6, NULL, NULL, NULL,
                 (sockaddr_in6*)sourceIPAddress, (sockaddr_in6*)targetIPAddress, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
-                DEF_ICMP_TIMEOUT
+                gCfg->GetTraceICMPTimeout()
             ) != 0
         ) {
             // 得到返回

@@ -282,7 +282,7 @@ void NyaTraceGUI::InitializeResolving() {
     );
 
     // 清空结果数组
-    for (int i = 0; i < DEF_MAX_IPs; i++) {
+    for (int i = 0; i < DEF_RESOLVE_MAX_IPs; i++) {
         resolveGeoInfo[i].isValid = false;
     }
 
@@ -315,12 +315,12 @@ void NyaTraceGUI::InitializeTracing() {
     );
 
     // 清空结果数组
-    for (int i = 0; i < DEF_MAX_HOP; i++) {
+    for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
         traceGeoInfo[i].isValid = false;
     }
 
     // 重置进度条
-    ui->tracingProgress->setMaximum(DEF_MAX_HOP * 3); // 三种任务，三倍进度
+    ui->tracingProgress->setMaximum(gCfg->GetTraceMaxHops() * 3); // 三种任务，三倍进度
     ui->tracingProgress->setValue(0);
 
     qDebug () << "Trace mode initialize complete.";
@@ -445,7 +445,7 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
 
         bool hasValidPoint = false;
         // 连线
-        for (int i = 0; i < DEF_MAX_HOP; i++) {
+        for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
             if (traceGeoInfo[i].isValid) {
                 qDebug() << "Map: Connecting hop" << i+1;
 
