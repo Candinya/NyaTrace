@@ -1,12 +1,12 @@
-import QtQuick 2.15
-import QtLocation 5.15
-import QtPositioning 5.15
+import QtQuick
+import QtLocation
+import QtPositioning
 
 Rectangle {
     id: container
     anchors.fill: parent
 
-    // 参考 https://doc.qt.io/qt-5/location-plugin-osm.html
+    // 参考 https://doc.qt.io/qt-6/location-plugin-osm.html
     Plugin {
         id: osmPlugin
         name: "osm"
@@ -75,9 +75,9 @@ Rectangle {
 
         // 画组
         const hopPoint = Qt.createQmlObject(`
-            import QtQuick 2.15
-            import QtLocation 5.15
-            import QtPositioning 5.15
+            import QtQuick
+            import QtLocation
+            import QtPositioning
 
             MapItemGroup {
                 id: hopGroup
