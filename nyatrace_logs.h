@@ -16,7 +16,7 @@ public:
     explicit NyaTraceLogs(QWidget *parent = nullptr);
     ~NyaTraceLogs();
     void AppendLog(const QString &timestamp, const QString &level, const QString &message);
-    void NyaTraceLogs::Initialize();
+    void Initialize();
 
 private slots:
     void on_clearAll_clicked();
