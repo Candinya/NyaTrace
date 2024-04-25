@@ -13,8 +13,19 @@
   <property name="windowTitle">
    <string>日志</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="clearAll">
+       <property name="text">
+        <string>清空</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QTableView" name="logsTable">
      <property name="editTriggers">
       <set>QAbstractItemView::NoEditTriggers</set>

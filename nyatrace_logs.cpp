@@ -15,9 +15,8 @@ NyaTraceLogs::NyaTraceLogs(QWidget *parent) :
     ui->logsTable->setModel(logsModel);
     ui->logsTable->show();
 
-    // 构建日志表头
-    QStringList logsLables = { "时间", "等级", "消息" };
-    logsModel->setHorizontalHeaderLabels(logsLables);
+    // 初始化 UI
+    Initialize();
 
     // 自动扩展最后一段
     ui->logsTable->horizontalHeader()->setStretchLastSection(true);
@@ -33,8 +32,27 @@ NyaTraceLogs::~NyaTraceLogs()
     delete ui;
 }
 
+void NyaTraceLogs::Initialize() {
+
+    // 清空表格数据
+    logsModel->clear();
+
+    // 构建日志表头
+    QStringList logsLables = { "时间", "等级", "消息" };
+    logsModel->setHorizontalHeaderLabels(logsLables);
+
+}
+
 void NyaTraceLogs::AppendLog(const QString &timestamp, const QString &level, const QString &message)
 {
+    // 添加新的日志
     QList<QStandardItem*> list = { new QStandardItem(timestamp), new QStandardItem(level), new QStandardItem(message) };
     logsModel->appendRow(list);
 }
+
+void NyaTraceLogs::on_clearAll_clicked()
+{
+    // 清空日志（重新初始化）
+    Initialize();
+}
+
