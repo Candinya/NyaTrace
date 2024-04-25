@@ -93,6 +93,8 @@ int main(int argc, char *argv[])
 
     // 如果文件存在则应用主题
     if (styleFile.exists()) {
+        // 应用主题
+        qInfo() << "Applying theme stylesheets...";
 
         // 添加图标目录
         QDir::addSearchPath("icon", "theme/icon");
@@ -106,6 +108,9 @@ int main(int argc, char *argv[])
 
         // 应用样式表
         app.setStyleSheet(styleSheet);
+    } else {
+        // 没有主题
+        qInfo() << "No theme found, start with default UI.";
     }
 
     // 初始化主窗口

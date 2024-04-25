@@ -408,7 +408,7 @@ void NyaTraceGUI::CleanUpResolving(const bool isSucceeded) {
         ui->statusbar->showMessage(QString("解析完成，耗时 %1 %2。").arg(consumedTime).arg(isTimeMilliseconds ? "毫秒" : "秒"));
     } // 否则失败了，不要去动失败的提示信息
 
-    qDebug() << "CleanUp finished";
+    qDebug() << "Resolve clean-up finished";
 
 }
 
@@ -471,7 +471,7 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
         }
     } // 否则失败了，不要去动失败的提示信息
 
-    qDebug() << "CleanUp finished";
+    qDebug() << "Tracing clean-up finished";
 }
 
 
