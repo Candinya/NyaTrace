@@ -22,7 +22,7 @@ TracingCore::TracingCore() {
     if (hIcmpDll == NULL) {
         //emit setMessage(QString("icmp.dll 动态链接库加载失败"));
         WSACleanup();
-        qFatal("Failed to load ICMP module");
+        qCritical() << "Failed to load ICMP module";
     }
 
     // 从动态链接库中获取所需的函数入口地址
@@ -34,12 +34,12 @@ TracingCore::TracingCore() {
     if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE) {
         //emit setMessage(QString("ICMP 句柄打开失败"));
         WSACleanup();
-        qFatal("Failed to open ICMP handle");
+        qCritical() << "Failed to open ICMP handle";
     }
     if ((hIcmp6 = Icmp6CreateFile()) == INVALID_HANDLE_VALUE) {
         //emit setMessage(QString("ICMP 句柄打开失败"));
         WSACleanup();
-        qFatal("Failed to open ICMP6 handle");
+        qCritical() << "Failed to open ICMP6 handle";
     }
 
     // 新建一个线程池

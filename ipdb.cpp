@@ -15,12 +15,12 @@ IPDB::IPDB() { // 构造函数
     openDatabaseStatus = MMDB_open(GEOIP2_CITY_MMDB, MMDB_MODE_MMAP, &CityDB);
     if (openDatabaseStatus != MMDB_SUCCESS) {
         // Open failed
-        qFatal(QString("Failed to open GeoIP2 City database from %1 with error: %2").arg(GEOIP2_CITY_MMDB, MMDB_strerror(openDatabaseStatus)).toStdString().c_str());
+        qCritical() << QString("Failed to open GeoIP2 City database from %1 with error: %2").arg(GEOIP2_CITY_MMDB, MMDB_strerror(openDatabaseStatus));
     }
     openDatabaseStatus = MMDB_open(GEOIP2_ISP_MMDB, MMDB_MODE_MMAP, &ISPDB);
     if (openDatabaseStatus != MMDB_SUCCESS) {
         // Open failed
-        qFatal(QString("Failed to open GeoIP2 ISP database from %1 with error: %2").arg(GEOIP2_ISP_MMDB, MMDB_strerror(openDatabaseStatus)).toStdString().c_str());
+        qCritical() << QString("Failed to open GeoIP2 ISP database from %1 with error: %2").arg(GEOIP2_ISP_MMDB, MMDB_strerror(openDatabaseStatus));
     }
 
 }
@@ -62,7 +62,7 @@ bool IPDB::LookUpIPCityInfo(
 
     MMDB_lookup_result_s city_result = MMDB_lookup_sockaddr(&CityDB, ip_address, &mmdbStatus);
     if (mmdbStatus != MMDB_SUCCESS) {
-        qWarning() << "Failed to search from database with error: "
+        qWarning() << "Failed to search from City database with error: "
              << MMDB_strerror(mmdbStatus);
         return false;
     }
@@ -182,7 +182,7 @@ bool IPDB::LookUpIPCityInfo(
         // 查询失败，没找到结果，可能是本地地址
         char ipAddressPrintBuf[INET6_ADDRSTRLEN];
         PrintIPAddress((sockaddr_storage *)ip_address, ipAddressPrintBuf);
-        qWarning() << "No entry found for IP:" << ipAddressPrintBuf;
+        qWarning() << "No City entry found for IP:" << ipAddressPrintBuf;
         cityName    = QString("私有地址");
         countryName = QString("");
         // 其实是无效的
@@ -203,7 +203,7 @@ bool IPDB::LookUpIPISPInfo(
     int mmdbStatus;
     MMDB_lookup_result_s isp_result = MMDB_lookup_sockaddr(&ISPDB, ip_address, &mmdbStatus);
     if (mmdbStatus != MMDB_SUCCESS) {
-        qWarning() << "Failed to search from database with error: "
+        qWarning() << "Failed to search from ISP database with error: "
              << MMDB_strerror(mmdbStatus);
         return false;
     }
@@ -291,7 +291,7 @@ bool IPDB::LookUpIPISPInfo(
         // 查询失败，没找到结果，可能是本地地址
         char ipAddressPrintBuf[INET6_ADDRSTRLEN];
         PrintIPAddress((sockaddr_storage *)ip_address, ipAddressPrintBuf);
-        qWarning() << "No entry found for IP:" << ipAddressPrintBuf;
+        qWarning() << "No ISP entry found for IP:" << ipAddressPrintBuf;
         isp = QString("私有地址");
         org  = QString("");
         asOrg   = QString("");
