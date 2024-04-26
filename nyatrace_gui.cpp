@@ -17,7 +17,7 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     ui->setupUi(this);
 
     // 调整分割线两边的大小
-    ui->displaySplitter->setSizes(QList<int>{ 60, 240 });
+    ui->displaySplitter->setSizes(QList<int>{ 60, 120 });
 
     // 初始化结果数据模型
     traceResultsModel = new QStandardItemModel();
