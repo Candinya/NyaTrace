@@ -594,6 +594,7 @@ void NyaTraceGUI::on_openLogs_clicked()
     // 显示日志窗口
     if (ntlw != nullptr) {
         ntlw->show();
+        ntlw->activateWindow();
     } else {
         qWarning() << "[GUI]"
                    << "NyaTraceLogsWindow(ntlw) is nullptr, cannot open";
@@ -606,6 +607,7 @@ void NyaTraceGUI::on_openConfigs_clicked()
     // 显示设置窗口
     if (ntcw != nullptr) {
         ntcw->show();
+        ntcw->activateWindow();
     } else {
         qWarning() << "[GUI]"
                    << "NyaTraceConfigsWindow(ntcw) is nullptr, cannot open";
@@ -616,5 +618,12 @@ void NyaTraceGUI::on_openConfigs_clicked()
 void NyaTraceGUI::on_openAbout_clicked()
 {
     // 显示关于窗口
+    if (ntaw != nullptr) {
+        ntaw->show();
+        ntaw->activateWindow();
+    } else {
+        qWarning() << "[GUI]"
+                   << "NyaTraceAboutWindow(ntaw) is nullptr, cannot open";
+    }
 }
 

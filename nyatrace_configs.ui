@@ -159,7 +159,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>保存</string>
+      <string>确认</string>
      </property>
     </widget>
    </item>

@@ -106,10 +106,11 @@ int main(int argc, char *argv[])
 {
 
     // 定义版本号
-    auto version = QString("NyaTrace %1").arg(APP_VERSION);
+    auto tagVersion = QString("v%1").arg(APP_VERSION);
+    auto fullVersion = QString("NyaTrace %1").arg(tagVersion);
 
     // 打印版本号
-    qDebug() << "Booting" << version << "...";
+    qDebug() << "Booting" << fullVersion << "...";
 
     // 初始化配置文件
     gCfg = new Configs();
@@ -154,8 +155,14 @@ int main(int argc, char *argv[])
     // 初始化配置窗口
     ntcw = new NyaTraceConfigs();
 
+    // 初始化关于窗口
+    ntaw = new NyaTraceAbout();
+
+    // 设置关于窗口的版本号
+    ntaw->SetVersion(tagVersion);
+
     // 修改主窗口标题
-    ntgw->setWindowTitle(version);
+    ntgw->setWindowTitle(fullVersion);
 
     // 显示主窗口
     ntgw->show();

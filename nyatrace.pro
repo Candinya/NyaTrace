@@ -18,6 +18,7 @@ SOURCES += \
     ipdb.cpp \
     libmaxminddb\data-pool.c \
     libmaxminddb\maxminddb.c \
+    nyatrace_about.cpp \
     nyatrace_configs.cpp \
     nyatrace_gui.cpp \
     main.cpp \
@@ -38,6 +39,7 @@ HEADERS += \
     libmaxminddb\maxminddb.h \
     libmaxminddb\maxminddb_config.h \
     mode.h \
+    nyatrace_about.h \
     nyatrace_configs.h \
     nyatrace_gui.h \
     nyatrace_logs.h \
@@ -49,6 +51,7 @@ HEADERS += \
     tracing_worker.h
 
 FORMS += \
+    nyatrace_about.ui \
     nyatrace_configs.ui \
     nyatrace_gui.ui \
     nyatrace_logs.ui

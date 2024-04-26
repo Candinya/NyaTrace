@@ -4,3 +4,4 @@
 NyaTraceGUI     *ntgw;
 NyaTraceLogs    *ntlw;
 NyaTraceConfigs *ntcw;
+NyaTraceAbout   *ntaw;
