@@ -230,7 +230,7 @@ void NyaTraceGUI::ConnectResolveResults() {
             // 解锁追踪功能
             ui->startStopTracingButton->setDisabled(false);
 
-            if (ui->autoStartTrace->isChecked()) {
+            if (gCfg->GetAutoStartTrace()) {
                 // 开始追踪
                 currentSelectedIPNo = 0;
                 ui->resolveTable->selectRow(currentSelectedIPNo);
@@ -323,7 +323,7 @@ void NyaTraceGUI::StartResolving() {
     resolveThread->start();
 
     // 打开地图
-    if (gCfg->GetMapAutoOpen()) {
+    if (gCfg->GetAutoOpenMap()) {
         OpenMap();
     }
 
@@ -355,7 +355,7 @@ void NyaTraceGUI::StartTracing() {
     ui->startStopTracingButton->setText("中止"); // 更新按钮功能提示
 
     // 打开地图
-    if (gCfg->GetMapAutoOpen()) {
+    if (gCfg->GetAutoOpenMap()) {
         OpenMap();
     }
 

@@ -57,7 +57,8 @@ void NyaTraceConfigs::initializeCurrentValue() {
     ui->spinTraceMaxHops->setValue(        gCfg->GetTraceMaxHops()       );
     ui->spinTraceTimeout->setValue(        gCfg->GetTraceTimeout()       );
     ui->spinTraceThreadInterval->setValue( gCfg->GetTraceThreadInterval());
-    ui->checkAutoOpenMap->setChecked(      gCfg->GetMapAutoOpen()   );
+    ui->checkAutoOpenMap->setChecked(      gCfg->GetAutoOpenMap()        );
+    ui->checkAutoStartTrace->setChecked(   gCfg->GetAutoStartTrace()     );
 }
 
 void NyaTraceConfigs::setLogLevelValue(int logLevel) {
@@ -102,7 +103,8 @@ void NyaTraceConfigs::on_saveButton_clicked()
     int           newTraceMaxHops         = ui->spinTraceMaxHops->value();
     unsigned long newTraceTimeout         = ui->spinTraceTimeout->value();
     unsigned long newTraceThreadInterval = ui->spinTraceThreadInterval->value();
-    bool          newTraceAutoOpenMap     = ui->checkAutoOpenMap->isChecked();
+    bool          newAutoOpenMap     = ui->checkAutoOpenMap->isChecked();
+    bool          newAutoStartTrace       = ui->checkAutoStartTrace->isChecked();
 
     // 保存设置
     qDebug() << "[GUI Configs]"
@@ -111,13 +113,16 @@ void NyaTraceConfigs::on_saveButton_clicked()
              << "trace max hops"        << newTraceMaxHops
              << "trace timeout"         << newTraceTimeout
              << "trace thread interval" << newTraceThreadInterval
+             << "auto open map"         << newAutoOpenMap
+             << "auto start trace"      << newAutoStartTrace
     ;
 
     gCfg->SetLogLevel(           newLogLevel           );
     gCfg->SetTraceMaxHops(       newTraceMaxHops       );
     gCfg->SetTraceTimeout(       newTraceTimeout       );
     gCfg->SetTraceThreadInterval(newTraceThreadInterval);
-    gCfg->SetMapAutoOpen(   newTraceAutoOpenMap   );
+    gCfg->SetAutoOpenMap(        newAutoOpenMap        );
+    gCfg->SetAutoStartTrace(     newAutoStartTrace     );
 
     // 关闭窗口
     this->hide();
