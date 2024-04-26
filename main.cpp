@@ -71,14 +71,14 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 
     // 检查日志窗口是否开启
     if (ntlw != nullptr) {
-        if (!ntlw->isActiveWindow()) {
-            // 没有开启
-            if (type == QtCriticalMsg) {
-                // 因为是 fatal 日志，所以必须让用户感知到
-                qDebug() << "Show log dialog to let users know";
-                ntlw->show();
-            }
-        }
+//        if (!ntlw->isActiveWindow()) {
+//            // 没有开启
+//            if (type == QtCriticalMsg) {
+//                // 因为是 fatal 日志，所以必须让用户感知到
+//                qDebug() << "Show log dialog to let users know";
+//                 ntlw->show();
+//            }
+//        }
 
         // 写出日志
         if (printToLogsTable) {
@@ -95,12 +95,12 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
         }
     }
 
-    if (type == QtCriticalMsg) {
-        // 尝试销毁主窗口
-        if (ntgw != nullptr) {
-            delete ntgw;
-        }
-    }
+//    if (type == QtCriticalMsg) {
+//        // 尝试销毁主窗口
+//        if (ntgw != nullptr) {
+//            delete ntgw;
+//        }
+//    }
 }
 
 int main(int argc, char *argv[])
