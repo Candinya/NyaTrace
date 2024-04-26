@@ -202,10 +202,28 @@
         </property>
        </widget>
       </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="toolsPart">
       <item>
-       <widget class="QToolButton" name="openLogs">
+       <widget class="QPushButton" name="openConfigs">
+        <property name="text">
+         <string>设置</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="openLogs">
         <property name="text">
          <string>日志</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="openAbout">
+        <property name="text">
+         <string>关于</string>
         </property>
        </widget>
       </item>

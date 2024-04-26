@@ -236,7 +236,7 @@ void TracingCore::run() {
         tracingPool->start(workers[i]);
 
         // 休息一会，来尽可能创造到达目标主机的首包时间差
-        usleep(gCfg->GetTraceIntervalPerThread());
+        usleep(gCfg->GetTraceThreadInterval());
 
     }
 

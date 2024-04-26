@@ -35,6 +35,10 @@ private slots:
 
     void on_openLogs_clicked();
 
+    void on_openConfigs_clicked();
+
+    void on_openAbout_clicked();
+
 private:
     // 界面 UI
     Ui::NyaTraceGUI *ui;

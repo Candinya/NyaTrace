@@ -5,8 +5,8 @@ Configs::Configs()
     // 初始化配置
     logLevel = 2;                  // 回报 Warn 和 Critical 的日志
     traceMaxHops = 30;             // 最大发出 30 跳路由追踪
-    traceICMPTimeout = 3000;       // 每个 ICMP 包的超时时间为 3000 毫秒
-    traceIntervalPerThread = 100;  // 每后一个 ICMP 包的发送延迟为 100 毫秒
+    traceTimeout = 3000;           // 每个 ICMP 包的超时时间为 3000 毫秒
+    traceThreadInterval = 100;     // 每后一个 ICMP 包的发送延迟为 100 毫秒
 }
 
 int Configs::GetLogLevel() {
@@ -35,22 +35,26 @@ void Configs::SetTraceMaxHops(int newTraceMaxHops) {
     } // 否则是无效的
 }
 
-unsigned long Configs::GetTraceICMPTimeout() {
-    return traceICMPTimeout;
+unsigned long Configs::GetTraceTimeout() {
+    return traceTimeout;
 }
 
-void Configs::SetTraceICMPTimeout(unsigned long newTraceICMPTimeout) {
-    traceICMPTimeout = newTraceICMPTimeout;
+void Configs::SetTraceTimeout(unsigned long newTraceTimeout) {
+    if (0 < newTraceTimeout && newTraceTimeout <= DEF_TRACE_TIMEOUT_MAX) {
+        traceTimeout = newTraceTimeout;
+    }
+
 }
 
-unsigned long Configs::GetTraceIntervalPerThread() {
-    return traceIntervalPerThread;
+unsigned long Configs::GetTraceThreadInterval() {
+    return traceThreadInterval;
 }
 
-void Configs::SetTraceIntervalPerThread(unsigned long newTraceIntervalPerThread) {
-    traceIntervalPerThread = newTraceIntervalPerThread;
+void Configs::SetTraceThreadInterval(unsigned long newTraceThreadInterval) {
+    if (0 < newTraceThreadInterval && newTraceThreadInterval <= DEF_TRACE_THREAD_INTERVAL_MAX) {
+        traceThreadInterval = newTraceThreadInterval;
+    }
 }
-
 
 
 Configs * gCfg;

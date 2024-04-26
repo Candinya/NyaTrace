@@ -151,7 +151,10 @@ int main(int argc, char *argv[])
     // 初始化主窗口
     ntgw = new NyaTraceGUI();
 
-    // 修改窗口标题
+    // 初始化配置窗口
+    ntcw = new NyaTraceConfigs();
+
+    // 修改主窗口标题
     ntgw->setWindowTitle(version);
 
     // 显示主窗口
