@@ -37,7 +37,8 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>24</pointsize>
+       <family>Consolas</family>
+       <pointsize>18</pointsize>
        <bold>true</bold>
       </font>
      </property>
@@ -54,6 +55,11 @@
    </item>
    <item>
     <widget class="QLabel" name="labelNyaTraceVersion">
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+      </font>
+     </property>
      <property name="text">
       <string>unknown</string>
      </property>
@@ -64,18 +70,29 @@
    </item>
    <item>
     <widget class="QPlainTextEdit" name="plainTextLicense">
+     <property name="font">
+      <font>
+       <family>Microsoft YaHei</family>
+      </font>
+     </property>
      <property name="readOnly">
       <bool>true</bool>
      </property>
      <property name="plainText">
-      <string>Thanks for using NyaTrace.</string>
+      <string>感谢使用 NyaTrace.</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="labelOfficialLink">
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+       <kerning>true</kerning>
+      </font>
+     </property>
      <property name="text">
-      <string>&lt;a href=&quot;https://candymade.net/nyatrace/&quot;&gt;candymade.net/nyatrace&lt;/a&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://candymade.net/nyatrace/&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#62b6e7;&quot;&gt;candymade.net/nyatrace&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -87,6 +104,11 @@
    </item>
    <item>
     <widget class="QLabel" name="labelCopyright">
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+      </font>
+     </property>
      <property name="text">
       <string>(C) 2022-2024 Nya Candy. All rights reserved.</string>
      </property>

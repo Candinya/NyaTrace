@@ -45,7 +45,7 @@
         <property name="font">
          <font>
           <family>Microsoft YaHei</family>
-          <pointsize>12</pointsize>
+          <pointsize>10</pointsize>
          </font>
         </property>
         <property name="text">
