@@ -110,7 +110,9 @@ void TracingWorker::GetIPv4() {
             break;
         } else {
             // 出现错误
-            qWarning() << "ICMP send echo failed with error: " << GetLastError();
+            qWarning() << "[Trace Worker]"
+                       << "ICMP send echo failed with error: "
+                       << GetLastError();
 
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;
@@ -181,7 +183,9 @@ void TracingWorker::GetIPv6() {
             break;
         } else {
             // 出现错误
-            qWarning() << "ICMP send echo failed with error: " << GetLastError();
+            qWarning() << "[Trace Worker]"
+                       << "ICMP send echo failed with error: "
+                       << GetLastError();
 
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;

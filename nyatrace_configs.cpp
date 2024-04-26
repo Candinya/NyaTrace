@@ -56,7 +56,9 @@ void NyaTraceConfigs::setLogLevelValue(int logLevel) {
         break;
     }
 
-    qDebug() << "New log level" << logLevel << targetLogLevel;
+    qDebug() << "[GUI Configs]"
+             << "New log level"
+             << logLevel << targetLogLevel;
 
     // 设置
     ui->labelLogsLevelValue->setText(targetLogLevel);
@@ -64,7 +66,8 @@ void NyaTraceConfigs::setLogLevelValue(int logLevel) {
 
 void NyaTraceConfigs::on_sliderLogsLevel_valueChanged(int value)
 {
-    qDebug() << "sliderLogsLevel value changed" << value;
+    qDebug() << "[GUI Configs]"
+             << "sliderLogsLevel value changed" << value;
     setLogLevelValue(value);
 }
 
@@ -76,7 +79,8 @@ void NyaTraceConfigs::on_saveButton_clicked()
     unsigned long newTraceThreadInterval = ui->spinTraceThreadInterval->value();
 
     // 保存设置
-    qDebug() << "Save new configs"
+    qDebug() << "[GUI Configs]"
+             << "Save new configs"
              << "log level"             << newLogLevel
              << "trace max hops"        << newTraceMaxHops
              << "trace timeout"         << newTraceTimeout

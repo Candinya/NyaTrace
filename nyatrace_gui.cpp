@@ -52,7 +52,8 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     // WinSock2 相关初始化
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) { // 进行相应的socket库绑定,MAKEWORD(2,2)表示使用WINSOCK2版本
         //emit setMessage(QString("WinSock2 动态链接库初始化失败，错误代码： %1 。").arg(WSAGetLastError())); // 提示信息
-        qCritical() << QString("Failed to start winsocks2 library with error: %1").arg(WSAGetLastError());
+        qCritical() << "[Kernel]"
+                    << QString("Failed to start winsocks2 library with error: %1").arg(WSAGetLastError());
     }
 
     // 建立路由追踪线程
@@ -122,7 +123,8 @@ void NyaTraceGUI::ConnectTracingResults() {
             traceResultsModel->setItem(hop-1, 7, new QStandardItem(QString("%1").arg(accuracyRadius)));
 
             // 根据纬度和经度在地图上画一个点和一个圆
-            qDebug() << "Hop:"             << hop
+            qDebug() << "[Trace GUI]"
+                     << "Hop:"             << hop
                      << "Latitude:"        << latitude
                      << "Longitude:"       << longitude
                      << "Accuracy Radius:" << accuracyRadius
@@ -197,7 +199,8 @@ void NyaTraceGUI::ConnectResolveResults() {
             resolveResultsModel->setItem(id-1, 5, new QStandardItem(QString("%1").arg(accuracyRadius)));
 
             // 根据纬度和经度在地图上画一个点和一个圆
-            qDebug() << "ID:"              << id
+            qDebug() << "[Resolve GUI]"
+                     << "ID:"              << id
                      << "Latitude:"        << latitude
                      << "Longitude:"       << longitude
                      << "Accuracy Radius:" << accuracyRadius
@@ -229,7 +232,8 @@ void NyaTraceGUI::ConnectResolveResults() {
 
         resolveResultsModel->setItem(id-1, 9, new QStandardItem(asOrg));
 
-        qDebug() << "ID:" << id << "'s data proceeded.";
+        qDebug() << "[Resolve GUI]"
+                 << "ID:" << id << "'s data proceeded.";
     });
 
     // 更新 UI
@@ -286,7 +290,7 @@ void NyaTraceGUI::InitializeResolving() {
         resolveGeoInfo[i].isValid = false;
     }
 
-    qDebug () << "Resolve mode initialize complete.";
+    qDebug () << "[Resolve GUI]" << "Initialize complete.";
 }
 
 void NyaTraceGUI::InitializeTracing() {
@@ -323,10 +327,14 @@ void NyaTraceGUI::InitializeTracing() {
     ui->tracingProgress->setMaximum(gCfg->GetTraceMaxHops() * 3); // 三种任务，三倍进度
     ui->tracingProgress->setValue(0);
 
-    qDebug () << "Trace mode initialize complete.";
+    qDebug () << "[Trace GUI]"
+              << "Initialize complete.";
 }
 
 void NyaTraceGUI::StartResolving() {
+
+    qDebug () << "[Resolve GUI]"
+              << "Starting...";
 
     // 初始化
     InitializeResolving();
@@ -342,13 +350,15 @@ void NyaTraceGUI::StartResolving() {
     resolveThread->hostname = hostStdString.c_str();
     resolveThread->start();
 
-    qDebug () << "Resolving started.";
+    qDebug () << "[Resolve GUI]"
+              << "Started.";
 
 }
 
 void NyaTraceGUI::StartTracing() {
 
-    qDebug() << "Start route tracing...";
+    qDebug () << "[Trace GUI]"
+              << "Starting...";
 
     // 初始化
     InitializeTracing();
@@ -367,7 +377,8 @@ void NyaTraceGUI::StartTracing() {
     // 设置按钮功能
     ui->startStopTracingButton->setText("中止"); // 更新按钮功能提示
 
-    qDebug () << "Tracing started.";
+    qDebug () << "[Trace GUI]"
+              << "Started.";
 
 }
 
@@ -379,7 +390,8 @@ void NyaTraceGUI::AbortTracing() {
     // 设置提示信息
     ui->statusbar->showMessage("正在回收最后一包...");
 
-    qDebug() << "Abort tracing...";
+    qDebug () << "[Trace GUI]"
+              << "Aborting...";
 }
 
 void NyaTraceGUI::CleanUpResolving(const bool isSucceeded) {
@@ -402,13 +414,15 @@ void NyaTraceGUI::CleanUpResolving(const bool isSucceeded) {
 
     if (isSucceeded) {
 
-        qDebug() << "Work finished successfully in" << consumedTime << (isTimeMilliseconds ? "milliseconds" : "seconds") << ".";
+        qDebug() << "[Resolve GUI]"
+                 << "Work finished successfully in" << consumedTime << (isTimeMilliseconds ? "milliseconds" : "seconds") << ".";
 
         // 设置提示信息
         ui->statusbar->showMessage(QString("解析完成，耗时 %1 %2。").arg(consumedTime).arg(isTimeMilliseconds ? "毫秒" : "秒"));
     } // 否则失败了，不要去动失败的提示信息
 
-    qDebug() << "Resolve clean-up finished";
+    qDebug () << "[Resolve GUI]"
+              << "Clean-up finish.";
 
 }
 
@@ -438,7 +452,8 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
 
     if (isSucceeded) {
 
-        qDebug() << "Work finished successfully in" << consumedTime << (isTimeMilliseconds ? "milliseconds" : "seconds") << ".";
+        qDebug() << "[Trace GUI]"
+                 << "Work finished successfully in" << consumedTime << (isTimeMilliseconds ? "milliseconds" : "seconds") << ".";
 
         // 设置提示信息
         ui->statusbar->showMessage(QString("路由追踪完成，耗时 %1 %2。").arg(consumedTime).arg(isTimeMilliseconds ? "毫秒" : "秒"));
@@ -447,7 +462,8 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
         // 连线
         for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
             if (traceGeoInfo[i].isValid) {
-                qDebug() << "Map: Connecting hop" << i+1;
+                qDebug() << "[Trace GUI]"
+                         << "Map: Connecting hop" << i+1;
 
                 // 连一条线
                 QMetaObject::invokeMethod(
@@ -471,7 +487,8 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
         }
     } // 否则失败了，不要去动失败的提示信息
 
-    qDebug() << "Tracing clean-up finished";
+    qDebug () << "[Trace GUI]"
+              << "Clean-up finish.";
 }
 
 
@@ -483,7 +500,8 @@ void NyaTraceGUI::on_hostInput_returnPressed()
 
 void NyaTraceGUI::on_traceTable_clicked(const QModelIndex &index)
 {
-    qDebug() << "Table index clicked:" << index;
+    qDebug() << "[GUI]"
+             << "Table index clicked:" << index;
 
     // 如果地址有效，就前往地址
     if (traceGeoInfo[index.row()].isValid) {
@@ -510,7 +528,8 @@ void NyaTraceGUI::on_traceTable_clicked(const QModelIndex &index)
 
 void NyaTraceGUI::on_resolveTable_clicked(const QModelIndex &index)
 {
-    qDebug() << "Table index clicked:" << index;
+    qDebug() << "[GUI]"
+             << "Table index clicked:" << index;
 
     currentSelectedIPNo = index.row();
 
@@ -557,10 +576,12 @@ void NyaTraceGUI::on_startStopTracingButton_clicked()
 
     if (tracingThread->isRunning()) {
         // 中止按钮
-        qDebug() << "Tracing process is running, abort it...";
+        qDebug() << "[Trace GUI]"
+                 << "Process is running, abort it...";
         AbortTracing();
     } else {
-        qDebug() << "Tracing process is not running, starting it...";
+        qDebug() << "[Trace GUI]"
+                 << "Process is not running, starting it...";
         // 开始按钮
         StartTracing();
     }
@@ -574,7 +595,8 @@ void NyaTraceGUI::on_openLogs_clicked()
     if (ntlw != nullptr) {
         ntlw->show();
     } else {
-        qWarning() << "NyaTraceLogsWindow(ntlw) is nullptr, cannot open";
+        qWarning() << "[GUI]"
+                   << "NyaTraceLogsWindow(ntlw) is nullptr, cannot open";
     }
 }
 
@@ -585,7 +607,8 @@ void NyaTraceGUI::on_openConfigs_clicked()
     if (ntcw != nullptr) {
         ntcw->show();
     } else {
-        qWarning() << "NyaTraceConfigsWindow(ntcw) is nullptr, cannot open";
+        qWarning() << "[GUI]"
+                   << "NyaTraceConfigsWindow(ntcw) is nullptr, cannot open";
     }
 }
 
