@@ -3,10 +3,11 @@
 Configs::Configs()
 {
     // 初始化配置
-    logLevel = 2;                  // 回报 Warn 和 Critical 的日志
-    traceMaxHops = 30;             // 最大发出 30 跳路由追踪
-    traceTimeout = 3000;           // 每个 ICMP 包的超时时间为 3000 毫秒
-    traceThreadInterval = 100;     // 每后一个 ICMP 包的发送延迟为 100 毫秒
+    logLevel            = 2;    // 回报 Warn 和 Critical 的日志
+    traceMaxHops        = 30;   // 最大发出 30 跳路由追踪
+    traceTimeout        = 3000; // 每个 ICMP 包的超时时间为 3000 毫秒
+    traceThreadInterval = 100;  // 每后一个 ICMP 包的发送延迟为 100 毫秒
+    mapAutoOpen    = true; // 追踪时自动打开地图
 }
 
 int Configs::GetLogLevel() {
@@ -54,6 +55,14 @@ void Configs::SetTraceThreadInterval(unsigned long newTraceThreadInterval) {
     if (0 < newTraceThreadInterval && newTraceThreadInterval <= DEF_TRACE_THREAD_INTERVAL_MAX) {
         traceThreadInterval = newTraceThreadInterval;
     }
+}
+
+bool Configs::GetMapAutoOpen() {
+    return mapAutoOpen;
+}
+
+void Configs::SetMapAutoOpen(bool newTraceAutoOpenMap) {
+    mapAutoOpen = newTraceAutoOpenMap;
 }
 
 

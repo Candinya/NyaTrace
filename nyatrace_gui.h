@@ -3,9 +3,7 @@
 
 #include <QMainWindow>
 #include <QStandardItemModel>
-#include <QQuickWidget>
 
-#include "tracing_defs.h"
 #include "tracing_core.h"
 #include "resolve_core.h"
 #include "configs.h"
@@ -34,10 +32,9 @@ private slots:
 
 
     void on_openLogs_clicked();
-
     void on_openConfigs_clicked();
-
     void on_openAbout_clicked();
+    void on_openMap_clicked();
 
 private:
     // 界面 UI
@@ -86,6 +83,7 @@ private:
     void AbortTracing();
     void CleanUpResolving(const bool isSucceeded);
     void CleanUpTracing(const bool isSucceeded);
+    void OpenMap();
 
 };
 

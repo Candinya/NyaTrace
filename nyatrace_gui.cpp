@@ -8,7 +8,6 @@
 #include <ws2tcpip.h>
 #include <stdio.h>
 #include <QDebug>
-#include <QMetaObject>
 
 NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     : QMainWindow(parent)
@@ -19,11 +18,6 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
 
     // 调整分割线两边的大小
     ui->displaySplitter->setSizes(QList<int>{ 60, 240 });
-    ui->traceSplitter->setSizes(QList<int>{ 60, 40 });
-
-    // 初始化追踪地图 （OSM）
-    ui->tracingMap->setSource(QUrl("qrc:/tracing_map.qml"));
-    ui->tracingMap->show();
 
     // 初始化结果数据模型
     traceResultsModel = new QStandardItemModel();
@@ -130,14 +124,7 @@ void NyaTraceGUI::ConnectTracingResults() {
                      << "Accuracy Radius:" << accuracyRadius
             ;
 
-            QMetaObject::invokeMethod(
-                (QObject*)ui->tracingMap->rootObject(),
-                "drawHopPoint",
-                Qt::DirectConnection,
-                Q_ARG(QVariant, latitude),
-                Q_ARG(QVariant, longitude),
-                Q_ARG(QVariant, accuracyRadius)
-            );
+            ntmw->DrawPoint(latitude, longitude, accuracyRadius);
 
             // 存进数组
             traceGeoInfo[hop-1].isValid = true;
@@ -206,20 +193,13 @@ void NyaTraceGUI::ConnectResolveResults() {
                      << "Accuracy Radius:" << accuracyRadius
             ;
 
+            ntmw->DrawPoint(latitude, longitude, accuracyRadius);
+
             // 存进数组
             resolveGeoInfo[id-1].isValid = true;
             resolveGeoInfo[id-1].latitude = latitude;
             resolveGeoInfo[id-1].longitude = longitude;
             resolveGeoInfo[id-1].accuracyRadius = accuracyRadius;
-
-            QMetaObject::invokeMethod(
-                (QObject*)ui->tracingMap->rootObject(),
-                "drawHopPoint",
-                Qt::DirectConnection,
-                Q_ARG(QVariant, latitude),
-                Q_ARG(QVariant, longitude),
-                Q_ARG(QVariant, accuracyRadius)
-            );
         }
 
         resolveResultsModel->setItem(id-1, 6, new QStandardItem(isp));
@@ -279,11 +259,7 @@ void NyaTraceGUI::InitializeResolving() {
     resolveResultsModel->setHorizontalHeaderLabels(resolveResultLabels);
 
     // 清空地图
-    QMetaObject::invokeMethod(
-        (QObject*)ui->tracingMap->rootObject(),
-        "clearMap",
-        Qt::DirectConnection
-    );
+    ntmw->ClearAll();
 
     // 清空结果数组
     for (int i = 0; i < DEF_RESOLVE_MAX_IPs; i++) {
@@ -312,11 +288,7 @@ void NyaTraceGUI::InitializeTracing() {
     traceResultsModel->setHorizontalHeaderLabels(hopResultLables);
 
     // 清空地图
-    QMetaObject::invokeMethod(
-        (QObject*)ui->tracingMap->rootObject(),
-        "clearMap",
-        Qt::DirectConnection
-    );
+    ntmw->ClearAll();
 
     // 清空结果数组
     for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
@@ -350,6 +322,11 @@ void NyaTraceGUI::StartResolving() {
     resolveThread->hostname = hostStdString.c_str();
     resolveThread->start();
 
+    // 打开地图
+    if (gCfg->GetMapAutoOpen()) {
+        OpenMap();
+    }
+
     qDebug () << "[Resolve GUI]"
               << "Started.";
 
@@ -376,6 +353,11 @@ void NyaTraceGUI::StartTracing() {
 
     // 设置按钮功能
     ui->startStopTracingButton->setText("中止"); // 更新按钮功能提示
+
+    // 打开地图
+    if (gCfg->GetMapAutoOpen()) {
+        OpenMap();
+    }
 
     qDebug () << "[Trace GUI]"
               << "Started.";
@@ -466,24 +448,14 @@ void NyaTraceGUI::CleanUpTracing(const bool isSucceeded) {
                          << "Map: Connecting hop" << i+1;
 
                 // 连一条线
-                QMetaObject::invokeMethod(
-                    (QObject*)ui->tracingMap->rootObject(),
-                    "connectLine",
-                    Qt::DirectConnection,
-                    Q_ARG(QVariant, traceGeoInfo[i].latitude),
-                    Q_ARG(QVariant, traceGeoInfo[i].longitude)
-                );
+                ntmw->ConnectLine(traceGeoInfo[i].latitude, traceGeoInfo[i].longitude);
                 hasValidPoint = true;
             }
         }
 
         // 仅在存在有效点的情况下调整地图，不然就飞了
         if (hasValidPoint) {
-            QMetaObject::invokeMethod(
-                (QObject*)ui->tracingMap->rootObject(),
-                "fitMap",
-                Qt::DirectConnection
-            );
+            ntmw->FitMap();
         }
     } // 否则失败了，不要去动失败的提示信息
 
@@ -503,25 +475,28 @@ void NyaTraceGUI::on_traceTable_clicked(const QModelIndex &index)
     qDebug() << "[GUI]"
              << "Table index clicked:" << index;
 
+    int currentSelectedHopNo = index.row();
+
     // 如果地址有效，就前往地址
-    if (traceGeoInfo[index.row()].isValid) {
-        QMetaObject::invokeMethod(
-            (QObject*)ui->tracingMap->rootObject(),
-            "gotoCoordinate",
-            Qt::DirectConnection,
-            Q_ARG(QVariant, traceGeoInfo[index.row()].latitude),
-            Q_ARG(QVariant, traceGeoInfo[index.row()].longitude),
-            Q_ARG(QVariant, 14), // 缩放等级
-            Q_ARG(QVariant,
-                QString("第 %1 跳 - %2\n%3 - %4")
-                    .arg(index.row() + 1)
-                    .arg(
-                        traceResultsModel->item(index.row(), 1)->text(),
-                        traceResultsModel->item(index.row(), 3)->text(),
-                        traceResultsModel->item(index.row(), 4)->text()
-                    )
-                )
+    if (ntmw->isVisible() && traceGeoInfo[currentSelectedHopNo].isValid) {
+        qDebug() << "[GUI]"
+                 << "Target hop info is valid, goto point" << index;
+
+        auto infoText =
+            QString("第 %1 跳 - %2\n%3 - %4")
+                .arg(currentSelectedHopNo + 1)
+                .arg(
+                    traceResultsModel->item(currentSelectedHopNo, 1)->text(),
+                    traceResultsModel->item(currentSelectedHopNo, 3)->text(),
+                    traceResultsModel->item(currentSelectedHopNo, 4)->text()
+                );
+
+        ntmw->SetTextAndGoto(
+            traceGeoInfo[currentSelectedHopNo].latitude,
+            traceGeoInfo[currentSelectedHopNo].longitude,
+            infoText
         );
+
     }
 }
 
@@ -534,23 +509,23 @@ void NyaTraceGUI::on_resolveTable_clicked(const QModelIndex &index)
     currentSelectedIPNo = index.row();
 
     // 如果地址有效，就前往地址
-    if (resolveGeoInfo[index.row()].isValid) {
-        QMetaObject::invokeMethod(
-            (QObject*)ui->tracingMap->rootObject(),
-            "gotoCoordinate",
-            Qt::DirectConnection,
-            Q_ARG(QVariant, resolveGeoInfo[index.row()].latitude),
-            Q_ARG(QVariant, resolveGeoInfo[index.row()].longitude),
-            Q_ARG(QVariant, 14), // 缩放等级
-            Q_ARG(QVariant,
-                QString("第 %1 个 IP - %2\n%3 - %4")
-                    .arg(index.row() + 1)
-                    .arg(
-                        resolveResultsModel->item(index.row(), 0)->text(),
-                        resolveResultsModel->item(index.row(), 1)->text(),
-                        resolveResultsModel->item(index.row(), 2)->text()
-                    )
-                )
+    if (ntmw->isVisible() && resolveGeoInfo[currentSelectedIPNo].isValid) {
+        qDebug() << "[GUI]"
+                 << "Target IP info is valid, goto point" << index;
+
+        auto infoText =
+            QString("第 %1 个 IP - %2\n%3 - %4")
+                .arg(currentSelectedIPNo + 1)
+                .arg(
+                    resolveResultsModel->item(currentSelectedIPNo, 0)->text(),
+                    resolveResultsModel->item(currentSelectedIPNo, 1)->text(),
+                    resolveResultsModel->item(currentSelectedIPNo, 2)->text()
+                );
+
+        ntmw->SetTextAndGoto(
+            resolveGeoInfo[currentSelectedIPNo].latitude,
+            resolveGeoInfo[currentSelectedIPNo].longitude,
+            infoText
         );
     }
 
@@ -624,6 +599,23 @@ void NyaTraceGUI::on_openAbout_clicked()
     } else {
         qWarning() << "[GUI]"
                    << "NyaTraceAboutWindow(ntaw) is nullptr, cannot open";
+    }
+}
+
+
+void NyaTraceGUI::on_openMap_clicked()
+{
+    // 显示地图
+    OpenMap();
+}
+
+void NyaTraceGUI::OpenMap() {
+    if (ntmw != nullptr) {
+        ntmw->show();
+        ntmw->activateWindow();
+    } else {
+        qWarning() << "[GUI]"
+                   << "NyaTraceMapWindow(ntmw) is nullptr, cannot open";
     }
 }
 

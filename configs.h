@@ -25,11 +25,15 @@ public:
     unsigned long GetTraceThreadInterval();
     void SetTraceThreadInterval(unsigned long);
 
+    bool GetMapAutoOpen();
+    void SetMapAutoOpen(bool);
+
 private:
     int logLevel;
     int traceMaxHops;
     unsigned long traceTimeout;
     unsigned long traceThreadInterval;
+    bool mapAutoOpen;
 
 };
 

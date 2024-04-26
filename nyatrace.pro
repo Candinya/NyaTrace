@@ -23,6 +23,7 @@ SOURCES += \
     nyatrace_gui.cpp \
     main.cpp \
     nyatrace_logs.cpp \
+    nyatrace_map.cpp \
     nyatrace_window.cpp \
     resolve_core.cpp \
     tracing_core.cpp \
@@ -43,6 +44,7 @@ HEADERS += \
     nyatrace_configs.h \
     nyatrace_gui.h \
     nyatrace_logs.h \
+    nyatrace_map.h \
     nyatrace_window.h \
     resolve_core.h \
     tracing_core.h \
@@ -54,7 +56,8 @@ FORMS += \
     nyatrace_about.ui \
     nyatrace_configs.ui \
     nyatrace_gui.ui \
-    nyatrace_logs.ui
+    nyatrace_logs.ui \
+    nyatrace_map.ui
 
 LIBS += \
     -lws2_32 \

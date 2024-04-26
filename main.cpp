@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QDateTime>
 #include <QMutex>
+#include <QDebug>
 
 // 使用互斥锁以避免多线程异步写入日志导致冲突
 QMutex logMutex;
@@ -149,8 +150,8 @@ int main(int argc, char *argv[])
         qInfo() << "No theme found, start with default UI.";
     }
 
-    // 初始化主窗口
-    ntgw = new NyaTraceGUI();
+    // 初始化地图窗口
+    ntmw = new NyaTraceMap();
 
     // 初始化配置窗口
     ntcw = new NyaTraceConfigs();
@@ -160,6 +161,9 @@ int main(int argc, char *argv[])
 
     // 设置关于窗口的版本号
     ntaw->SetVersion(tagVersion);
+
+    // 初始化主窗口
+    ntgw = new NyaTraceGUI();
 
     // 修改主窗口标题
     ntgw->setWindowTitle(fullVersion);
