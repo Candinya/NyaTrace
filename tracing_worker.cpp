@@ -1,6 +1,7 @@
 #include <QDebug>
 
 #include "tracing_worker.h"
+#include "configs.h"
 
 /**
  * TracingWorker
@@ -98,7 +99,7 @@ void TracingWorker::GetIPv4() {
                 hIcmp, NULL, NULL, NULL,
                 ((sockaddr_in*)targetIPAddress)->sin_addr.s_addr, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
-                DEF_ICMP_TIMEOUT
+                gCfg->GetTraceTimeout()
             ) != 0
         ) {
             // 得到返回
@@ -109,7 +110,9 @@ void TracingWorker::GetIPv4() {
             break;
         } else {
             // 出现错误
-            qWarning() << "ICMP send echo failed with error: " << GetLastError();
+            qWarning() << "[Trace Worker]"
+                       << "ICMP send echo failed with error: "
+                       << GetLastError();
 
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;
@@ -169,7 +172,7 @@ void TracingWorker::GetIPv6() {
                 hIcmp6, NULL, NULL, NULL,
                 (sockaddr_in6*)sourceIPAddress, (sockaddr_in6*)targetIPAddress, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
-                DEF_ICMP_TIMEOUT
+                gCfg->GetTraceTimeout()
             ) != 0
         ) {
             // 得到返回
@@ -180,7 +183,9 @@ void TracingWorker::GetIPv6() {
             break;
         } else {
             // 出现错误
-            qWarning() << "ICMP send echo failed with error: " << GetLastError();
+            qWarning() << "[Trace Worker]"
+                       << "ICMP send echo failed with error: "
+                       << GetLastError();
 
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;

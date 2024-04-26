@@ -26,12 +26,14 @@ bool ParseIPAddress(const char * ipStr, sockaddr_storage & targetIPAddress) {
 
     if (inet_pton(AF_INET, ipStr, &addr4) != 0) {
         // 输入是 IPv4 地址
-        qDebug() << "It's IPv4";
+        qDebug() << "[Trace Utils]"
+                 << "It's IPv4";
         targetIPAddress.ss_family = AF_INET;
         (*(sockaddr_in*)&targetIPAddress).sin_addr = addr4;
     } else if (inet_pton(AF_INET6, ipStr, &addr6) != 0) {
         // 输入是 IPv6 地址
-        qDebug() << "It's IPv6";
+        qDebug() << "[Trace Utils]"
+                 << "It's IPv6";
         targetIPAddress.ss_family = AF_INET6;
         (*(sockaddr_in6*)&targetIPAddress).sin6_addr = addr6;
     } else {

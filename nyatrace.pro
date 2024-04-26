@@ -11,15 +11,19 @@ CONFIG += c++11
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    configs.cpp \
     ipdb.cpp \
     libmaxminddb\data-pool.c \
     libmaxminddb\maxminddb.c \
+    nyatrace_about.cpp \
+    nyatrace_configs.cpp \
     nyatrace_gui.cpp \
     main.cpp \
     nyatrace_logs.cpp \
+    nyatrace_map.cpp \
     nyatrace_window.cpp \
     resolve_core.cpp \
     tracing_core.cpp \
@@ -27,6 +31,7 @@ SOURCES += \
     tracing_worker.cpp
 
 HEADERS += \
+    configs.h \
     data-pool.h \
     ipdb.h \
     ipdb_settings.h \
@@ -35,8 +40,11 @@ HEADERS += \
     libmaxminddb\maxminddb.h \
     libmaxminddb\maxminddb_config.h \
     mode.h \
+    nyatrace_about.h \
+    nyatrace_configs.h \
     nyatrace_gui.h \
     nyatrace_logs.h \
+    nyatrace_map.h \
     nyatrace_window.h \
     resolve_core.h \
     tracing_core.h \
@@ -45,8 +53,11 @@ HEADERS += \
     tracing_worker.h
 
 FORMS += \
+    nyatrace_about.ui \
+    nyatrace_configs.ui \
     nyatrace_gui.ui \
-    nyatrace_logs.ui
+    nyatrace_logs.ui \
+    nyatrace_map.ui
 
 LIBS += \
     -lws2_32 \

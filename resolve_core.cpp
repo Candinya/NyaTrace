@@ -17,7 +17,8 @@ void ResolveCore::run() {
     std::string hostStdStr = hostname.toStdString();
     const char * hostCharStr = hostStdStr.c_str();
 
-    qDebug() << "Target host: " << hostCharStr;
+    qDebug() << "[Resolve Core]"
+             << "Target host: " << hostCharStr;
 
     sockaddr_storage targetIPAddress; // 用于存储目标地址
 
@@ -29,7 +30,8 @@ void ResolveCore::run() {
         GetInfo(1, &targetIPAddress);
     } else {
         // 按照主机名解析
-        qDebug() << "Target host is not IP address, resolving...";
+        qDebug() << "[Resolve Core]"
+                 << "Target host is not IP address, resolving...";
 
         auto resolveResult = ResolveAllAddress(hostCharStr);
 
@@ -63,7 +65,8 @@ void ResolveCore::run() {
         } else {
             // 解析失败
             auto err = WSAGetLastError();
-            qCritical() << "Failed to resolve host with error: " << err;
+            qCritical() << "[Resolve Core]"
+                        << "Failed to resolve host with error: " << err;
             emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(err));
             emit end(false);
             return; // 结束

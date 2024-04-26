@@ -3,11 +3,10 @@
 
 #include <QMainWindow>
 #include <QStandardItemModel>
-#include <QQuickWidget>
 
-#include "tracing_defs.h"
 #include "tracing_core.h"
 #include "resolve_core.h"
+#include "configs.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class NyaTraceGUI; }
@@ -33,6 +32,9 @@ private slots:
 
 
     void on_openLogs_clicked();
+    void on_openConfigs_clicked();
+    void on_openAbout_clicked();
+    void on_openMap_clicked();
 
 private:
     // 界面 UI
@@ -65,8 +67,8 @@ private:
         unsigned short accuracyRadius;
     };
 
-    GeoInfo resolveGeoInfo[DEF_MAX_IPs];
-    GeoInfo traceGeoInfo[DEF_MAX_HOP];
+    GeoInfo resolveGeoInfo[DEF_RESOLVE_MAX_IPs];
+    GeoInfo traceGeoInfo[DEF_TRACE_MAX_HOPs];
 
     // 开始时间计时器
     clock_t startTime;
@@ -81,6 +83,7 @@ private:
     void AbortTracing();
     void CleanUpResolving(const bool isSucceeded);
     void CleanUpTracing(const bool isSucceeded);
+    void OpenMap();
 
 };
 

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NyaTraceMap</class>
+ <widget class="QMainWindow" name="NyaTraceMap">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>地图</string>
+  </property>
+  <widget class="QWidget" name="mainFrame">
+    <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+      <widget class="QQuickWidget" name="tracingMap">
+      <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+        </sizepolicy>
+      </property>
+      <property name="minimumSize">
+        <size>
+        <width>0</width>
+        <height>0</height>
+        </size>
+      </property>
+      <property name="resizeMode">
+        <enum>QQuickWidget::SizeRootObjectToView</enum>
+      </property>
+      </widget>
+    </item>
+    </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QQuickWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">QtQuickWidgets/QQuickWidget</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

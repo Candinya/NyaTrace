@@ -15,14 +15,16 @@
 
 TracingCore::TracingCore() {
 
-    qDebug() << "Tracing Core start constructing...";
+    qDebug() << "[Trace Core]"
+             << "Tracing Core start constructing...";
 
     // 载入依赖的动态链接库
     hIcmpDll = LoadLibraryA("IPHLPAPI.DLL");
     if (hIcmpDll == NULL) {
         //emit setMessage(QString("icmp.dll 动态链接库加载失败"));
         WSACleanup();
-        qCritical() << "Failed to load ICMP module";
+        qCritical() << "[Trace Core]"
+                    << "Failed to load ICMP module";
     }
 
     // 从动态链接库中获取所需的函数入口地址
@@ -34,19 +36,21 @@ TracingCore::TracingCore() {
     if ((hIcmp = IcmpCreateFile()) == INVALID_HANDLE_VALUE) {
         //emit setMessage(QString("ICMP 句柄打开失败"));
         WSACleanup();
-        qCritical() << "Failed to open ICMP handle";
+        qCritical() << "[Trace Core]"
+                    << "Failed to open ICMP handle";
     }
     if ((hIcmp6 = Icmp6CreateFile()) == INVALID_HANDLE_VALUE) {
         //emit setMessage(QString("ICMP 句柄打开失败"));
         WSACleanup();
-        qCritical() << "Failed to open ICMP6 handle";
+        qCritical() << "[Trace Core]"
+                    << "Failed to open ICMP6 handle";
     }
 
     // 新建一个线程池
     tracingPool = new QThreadPool;
 
     // 清空子线程数组
-    for (int i = 0; i < DEF_MAX_HOP; i++) {
+    for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
         workers[i] = NULL;
     }
 }
@@ -74,7 +78,8 @@ void TracingCore::run() {
     std::string hostStdStr = hostname.toStdString();
     const char * hostCharStr = hostStdStr.c_str();
 
-    qDebug() << "Target host: " << hostCharStr;
+    qDebug() << "[Trace Core]"
+             << "Target host: " << hostCharStr;
 
     sockaddr_storage targetIPAddress; // 用于存储目标地址
 
@@ -89,21 +94,22 @@ void TracingCore::run() {
 
         PrintIPAddress(&targetIPAddress, printIPAddress);
 
-        qDebug() << "Tracing route to " << printIPAddress
-             << " with maximun hops " << DEF_MAX_HOP;
+        qDebug() << "[Trace Core]"
+                 << "Tracing route to " << printIPAddress
+                 << " with maximun hops " << gCfg->GetTraceMaxHops();
         emit setMessage(
             QString("开始追踪路由 %1 ，最大跃点数为 %2 。")
                .arg(printIPAddress)
-               .arg(DEF_MAX_HOP)
+               .arg(gCfg->GetTraceMaxHops())
         );
     }
 
     // 初始化最大跳数据
-    maxHop    = DEF_MAX_HOP;
-    oldMaxHop = DEF_MAX_HOP;
+    maxHop    = gCfg->GetTraceMaxHops();
+    oldMaxHop = gCfg->GetTraceMaxHops();
 
     // 置线程池最大线程计数为跳数上限，让所有的线程能一起运行
-    tracingPool->setMaxThreadCount(DEF_MAX_HOP);
+    tracingPool->setMaxThreadCount(gCfg->GetTraceMaxHops());
 
     // 用于存储当前地址
     sockaddr_storage sourceIPAddress;
@@ -117,18 +123,21 @@ void TracingCore::run() {
     // 使用任意出站 IP ，如果设计成可以从列表中选取可能会更好（这是一个可以优化的点）
     switch(sourceIPAddress.ss_family) {
     case AF_INET:
-        qDebug() << "Binding any outbound IPv4 address";
+        qDebug() << "[Trace Core]"
+                 << "Binding any outbound IPv4 address";
         ((sockaddr_in*)&sourceIPAddress)->sin_addr = in4addr_any;
         break;
     case AF_INET6:
-        qDebug() << "Binding any outbound IPv6 address";
+        qDebug() << "[Trace Core]"
+                 << "Binding any outbound IPv6 address";
         ((sockaddr_in6*)&sourceIPAddress)->sin6_addr = in6addr_any;
         break;
     }
 
     // 使用子线程开始追踪路由
     for (int i = 0; (i < maxHop) && !isStopping; i++) {
-        qDebug() << "TTL: " << i + 1;
+        qDebug() << "[Trace Core]"
+                 << "TTL: " << i + 1;
 
         workers[i] = new TracingWorker;
 
@@ -166,7 +175,8 @@ void TracingCore::run() {
                 // 发出状态命令，删除表中的多余行（暂时好像不需要？）
 
                 // 调试输出
-                qDebug() << "Max hop found:" << hop;
+                qDebug() << "[Trace Core]"
+                         << "Max hop found:" << hop;
 
             }
 
@@ -222,7 +232,8 @@ void TracingCore::run() {
         connect(workers[i], &TracingWorker::fin, this, [=](const int hop) {
 
             // 子线程运行完成，标记当前 worker 为 NULL
-            qDebug() << "Hop " << hop << " finished.";
+            qDebug() << "[Trace Core]"
+                     << "Hop " << hop << " finished.";
 
             // 回收子线程
             workers[hop - 1]->deleteLater();
@@ -236,7 +247,7 @@ void TracingCore::run() {
         tracingPool->start(workers[i]);
 
         // 休息一会，来尽可能创造到达目标主机的首包时间差
-        usleep(DEF_INTERVAL_PER_THREAD);
+        usleep(gCfg->GetTraceThreadInterval());
 
     }
 
@@ -244,7 +255,8 @@ void TracingCore::run() {
     tracingPool->waitForDone();
 
     // 追踪完成，更新状态
-    qDebug() << "Trace Route finish.";
+    qDebug() << "[Trace Core]"
+             << "Trace Route finish.";
 
     emit end(true);
 
@@ -255,7 +267,7 @@ void TracingCore::requestStop() {
     isStopping = true;
 
     // 对每一个子线程发出停止信号
-    for (int i = 0; i < DEF_MAX_HOP; i++) {
+    for (int i = 0; i < gCfg->GetTraceMaxHops(); i++) {
         if (workers[i] != NULL) {
             workers[i]->requestStop();
         }
