@@ -8,7 +8,7 @@ Configs::Configs()
     traceTimeout        = 3000; // 每个 ICMP 包的超时时间为 3000 毫秒
     traceThreadInterval = 100;  // 每后一个 ICMP 包的发送延迟为 100 毫秒
     autoOpenMap         = true; // 解析或追踪时自动打开地图
-    autoStartTrace      = true; // 解析完成后自动开始追踪
+    autoStartTrace      = false; // 解析完成后自动开始追踪
 }
 
 int Configs::GetLogLevel() {
