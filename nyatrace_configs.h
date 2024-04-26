@@ -15,7 +15,11 @@ public:
     explicit NyaTraceConfigs(QWidget *parent = nullptr);
     ~NyaTraceConfigs();
 
+protected:
+    void showEvent(QShowEvent *);
+
 private slots:
+    void initializeCurrentValue();
     void setLogLevelValue(int);
 
     void on_sliderLogsLevel_valueChanged(int value);

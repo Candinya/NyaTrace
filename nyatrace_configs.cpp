@@ -11,28 +11,52 @@ NyaTraceConfigs::NyaTraceConfigs(QWidget *parent) :
     // 初始化界面 UI
     ui->setupUi(this);
 
-    // 初始化配置项
+    // 初始化配置项极值
     ui->sliderLogsLevel->setMinimum(0);
     ui->sliderLogsLevel->setMaximum(3);
-    ui->sliderLogsLevel->setSliderPosition(gCfg->GetLogLevel());
-    // setLogLevelValue(gCfg->GetLogLevel());
 
     ui->spinTraceMaxHops->setMinimum(1);
     ui->spinTraceMaxHops->setMaximum(DEF_TRACE_MAX_HOPs);
-    ui->spinTraceMaxHops->setValue(gCfg->GetTraceMaxHops());
 
     ui->spinTraceTimeout->setMinimum(0);
     ui->spinTraceTimeout->setMaximum(DEF_TRACE_TIMEOUT_MAX);
-    ui->spinTraceTimeout->setValue(gCfg->GetTraceTimeout());
+    ui->spinTraceTimeout->setSingleStep(1000);
 
     ui->spinTraceThreadInterval->setMinimum(0);
     ui->spinTraceThreadInterval->setMaximum(DEF_TRACE_THREAD_INTERVAL_MAX);
-    ui->spinTraceThreadInterval->setValue(gCfg->GetTraceThreadInterval());
+    ui->spinTraceThreadInterval->setSingleStep(100);
+
+    // 初始化现有配置
+    initializeCurrentValue();
 }
 
 NyaTraceConfigs::~NyaTraceConfigs()
 {
     delete ui;
+}
+
+void NyaTraceConfigs::showEvent(QShowEvent * event) {
+    // 重载 showEvent 以追加启动时的功能事件
+    qDebug() << "[GUI Configs]"
+             << "Execute custom showEvent"
+    ;
+
+    // 先调用官方事件
+    QWidget::showEvent( event );
+
+    // 追加自定义函数
+    initializeCurrentValue();
+}
+
+void NyaTraceConfigs::initializeCurrentValue() {
+    // 使用现有设置初始化
+    qDebug() << "[GUI Configs]"
+             << "Initialize with current configurations"
+    ;
+    ui->sliderLogsLevel->setSliderPosition(gCfg->GetLogLevel()           );
+    ui->spinTraceMaxHops->setValue(        gCfg->GetTraceMaxHops()       );
+    ui->spinTraceTimeout->setValue(        gCfg->GetTraceTimeout()       );
+    ui->spinTraceThreadInterval->setValue( gCfg->GetTraceThreadInterval());
 }
 
 void NyaTraceConfigs::setLogLevelValue(int logLevel) {
