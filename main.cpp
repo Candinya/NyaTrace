@@ -113,6 +113,11 @@ int main(int argc, char *argv[])
     // 打印版本号
     qDebug() << "Booting" << fullVersion << "...";
 
+    // 初始化项目基本信息
+    QCoreApplication::setOrganizationName("Nya Candy");
+    QCoreApplication::setOrganizationDomain("candymade.net");
+    QCoreApplication::setApplicationName("NyaTrace");
+
     // 初始化配置文件
     gCfg = new Configs();
 
