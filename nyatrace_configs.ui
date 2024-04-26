@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -71,9 +71,9 @@
       </item>
      </layout>
     </widget>
-  </item>
-  <item>
-    <widget class="QGroupBox" name="groupMap">
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupAuto">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
        <horstretch>0</horstretch>
@@ -81,19 +81,26 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>地图</string>
+      <string>自动化</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-        <layout class="QHBoxLayout" name="partTraceAutoOpenMap">
-         <item>
-          <widget class="QCheckBox" name="checkAutoOpenMap">
-           <property name="text">
-            <string>开始追踪时自动打开地图</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QCheckBox" name="checkAutoStartTrace">
+          <property name="text">
+           <string>解析完成后自动开始追踪</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkAutoOpenMap">
+          <property name="text">
+           <string>解析或追踪时自动打开地图</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>

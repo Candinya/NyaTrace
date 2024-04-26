@@ -17,7 +17,7 @@ NyaTraceGUI::NyaTraceGUI(QWidget *parent)
     ui->setupUi(this);
 
     // 调整分割线两边的大小
-    ui->displaySplitter->setSizes(QList<int>{ 60, 240 });
+    ui->displaySplitter->setSizes(QList<int>{ 60, 120 });
 
     // 初始化结果数据模型
     traceResultsModel = new QStandardItemModel();
@@ -230,7 +230,7 @@ void NyaTraceGUI::ConnectResolveResults() {
             // 解锁追踪功能
             ui->startStopTracingButton->setDisabled(false);
 
-            if (ui->autoStartTrace->isChecked()) {
+            if (gCfg->GetAutoStartTrace()) {
                 // 开始追踪
                 currentSelectedIPNo = 0;
                 ui->resolveTable->selectRow(currentSelectedIPNo);
@@ -323,7 +323,7 @@ void NyaTraceGUI::StartResolving() {
     resolveThread->start();
 
     // 打开地图
-    if (gCfg->GetMapAutoOpen()) {
+    if (gCfg->GetAutoOpenMap()) {
         OpenMap();
     }
 
@@ -355,7 +355,7 @@ void NyaTraceGUI::StartTracing() {
     ui->startStopTracingButton->setText("中止"); // 更新按钮功能提示
 
     // 打开地图
-    if (gCfg->GetMapAutoOpen()) {
+    if (gCfg->GetAutoOpenMap()) {
         OpenMap();
     }
 
