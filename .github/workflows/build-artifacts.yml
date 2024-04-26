@@ -81,6 +81,11 @@ jobs:
       run: |
         Copy-Item -Recurse theme workspace\${env:ARCHIVE_NAME}\
 
+    - name: Prepare icon file
+      shell: pwsh
+      run: |
+        Copy-Item -Recurse icon.ico workspace\${env:ARCHIVE_NAME}\
+
     - name: Prepare MMDB notices
       shell: pwsh
       run: |
