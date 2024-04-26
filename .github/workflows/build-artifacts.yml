@@ -17,7 +17,7 @@ jobs:
     - name: Install Qt environment
       uses: jurplel/install-qt-action@v3
       with:
-        version: '5.15.2'
+        version: '6.7.0'
         host: 'windows'
         target: 'desktop'
         arch: 'win64_msvc2019_64'
@@ -60,7 +60,7 @@ jobs:
     - name: Win Deploy Qt
       shell: cmd
       run: |
-        call "%Qt5_DIR%\bin\qtenv2.bat"
+        call "%Qt6_DIR%\bin\qtenv2.bat"
         for /f "delims=" %%d in ( 'vswhere.exe -latest -property installationPath' ) do @( call "%%d\VC\Auxiliary\Build\vcvars64.bat" )
         chdir /d %GITHUB_WORKSPACE%\workspace\%ARCHIVE_NAME%
         windeployqt --qmldir %GITHUB_WORKSPACE% --release NyaTrace.exe
