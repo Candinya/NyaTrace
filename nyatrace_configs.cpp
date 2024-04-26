@@ -97,7 +97,7 @@ void NyaTraceConfigs::on_sliderLogsLevel_valueChanged(int value)
     setLogLevelValue(value);
 }
 
-void NyaTraceConfigs::on_saveButton_clicked()
+void NyaTraceConfigs::on_btnApply_clicked()
 {
     int           newLogLevel             = ui->sliderLogsLevel->value();
     int           newTraceMaxHops         = ui->spinTraceMaxHops->value();
@@ -106,9 +106,9 @@ void NyaTraceConfigs::on_saveButton_clicked()
     bool          newAutoOpenMap     = ui->checkAutoOpenMap->isChecked();
     bool          newAutoStartTrace       = ui->checkAutoStartTrace->isChecked();
 
-    // 保存设置
+    // 应用设置
     qDebug() << "[GUI Configs]"
-             << "Save new configs"
+             << "Apply new configs"
              << "log level"             << newLogLevel
              << "trace max hops"        << newTraceMaxHops
              << "trace timeout"         << newTraceTimeout

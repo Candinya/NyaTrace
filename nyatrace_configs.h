@@ -23,7 +23,7 @@ private slots:
     void setLogLevelValue(int);
 
     void on_sliderLogsLevel_valueChanged(int value);
-    void on_saveButton_clicked();
+    void on_btnApply_clicked();
 
 
 private:
