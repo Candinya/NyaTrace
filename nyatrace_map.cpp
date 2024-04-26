@@ -11,7 +11,7 @@ NyaTraceMap::NyaTraceMap(QWidget *parent) :
     ui->setupUi(this);
 
     // 初始化追踪地图 （OSM）
-    ui->tracingMap->setSource(QUrl("qrc:/tracing_map.qml"));
+    ui->tracingMap->setSource(QUrl("qrc:/nyatrace_map.qml"));
     ui->tracingMap->show();
 }
 
