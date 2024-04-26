@@ -48,7 +48,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
         QString crashTs = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
 
         // 创建以时间戳命名的崩溃日志，存储到系统临时目录中
-        QString crashReportFileName = QDir::cleanPath(QDir::tempPath() + QDir::separator() +QString("NyaTrace_CrashReport_%1.log").arg(crashTs));
+        QString crashReportFileName = QDir::cleanPath(QDir::tempPath() + QDir::separator() + QString("NyaTrace_CrashReport_%1.log").arg(crashTs));
 
         // 打开文件，创建写入流
         QFile crashReportFile(crashReportFileName);
