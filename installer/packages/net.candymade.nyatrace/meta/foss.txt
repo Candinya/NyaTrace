@@ -1,5 +1,0 @@
-Please do NOT use this software for commercial related purposes.
-
-This is a FOSS (Free and Open Source Software) and should be free forever.
-
-Visit project homepage at https://candymade.net/nyatrace .

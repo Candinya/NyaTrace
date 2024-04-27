@@ -6,8 +6,8 @@
     <Version>0.2.0.0</Version>
     <ReleaseDate>2022-12-27</ReleaseDate>
     <Licenses>
-        <License name="GPL V3" file="gplv3.txt" priority="2" />
-        <License name="FOSS" file="foss.txt" priority="1" />
+        <License name="关于项目" file="about.txt" priority="1" />
+        <License name="AGPL 3.0" file="agplv3.txt" priority="2" />
     </Licenses>
     <Default>script</Default>
     <Script>installscript.qs</Script>
