@@ -21,7 +21,7 @@
 ## 使用
 
 1. 从 Release 页面下载预先构建的可执行文件压缩包。
-2. 从 MaxMind 下载 GeoIP2-City.mmdb 和 GeoIP2-ISP.mmdb 文件，放置在可执行文件目录的 mmdb 目录下。
+2. （可选）如果您需要使用详细信息查询和地理位置定位功能，请从 MaxMind 下载 GeoIP2-City.mmdb 和 GeoIP2-ISP.mmdb 文件，放置在可执行文件目录的 mmdb 目录下。没有它们也能正常执行追踪功能。
 3. 运行程序，输入需要路由追踪的地址，开始追踪。
 
 ## 提示

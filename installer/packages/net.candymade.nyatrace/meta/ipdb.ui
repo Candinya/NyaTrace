@@ -29,7 +29,7 @@
      </property>
      <property name="text">
       <string>
-在启动应用程序之前，请下载 MaxMind 的 GeoIP2-City.mmdb 和 GeoIP2-ISP.mmdb 数据库至应用程序的 mmdb 目录下，以确保程序正常工作。
+如果您需要使用详细信息查询和地理位置定位功能，在启动应用程序之前，请下载 MaxMind 的 GeoIP2-City.mmdb 和 GeoIP2-ISP.mmdb 数据库至应用程序的 mmdb 目录下，以确保程序正常工作。
 
 如果您没有 GeoIP2 数据库，您也可以使用 GeoLite2 或其他同格式数据库作为替代，将其重命名为上文指定的格式即可。
       </string>
