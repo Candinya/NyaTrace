@@ -43,6 +43,7 @@ Rectangle {
         path: []
     }
 
+    // 提示文本
     MapQuickItem {
         id: mapTooltip
         visible: false
@@ -58,8 +59,16 @@ Rectangle {
         }
     }
 
-    // 画一个追踪点
+    // 共享追踪点的 QML 组件
+    property var mapPointComponent;
+    function loadMapPointComponent() {
+        console.log("mapPointComponent loading");
+        mapPointComponent = Qt.createComponent("nyatrace_map_point.qml");
+    }
 
+    Component.onCompleted: loadMapPointComponent();
+
+    // 画一个追踪点
     property var drewPoints: [];
     function drawHopPoint(latitude, longitude, accuracyRadius) {
         if (drewPoints.findIndex((point) => point.latitude === latitude && point.longitude === longitude) !== -1) {
@@ -74,52 +83,15 @@ Rectangle {
         }
 
         // 画组
-        const hopPoint = Qt.createQmlObject(`
-            import QtQuick
-            import QtLocation
-            import QtPositioning
-
-            MapItemGroup {
-                id: hopGroup
-                property real latitude: 34.7732
-                property real longitude: 113.722
-                property real accuracyRadius: 1000
-
-                property string themeColor: "#ff7163"
-
-                MapQuickItem {
-                    sourceItem: Rectangle {
-                        width: 14
-                        height: 14
-                        color: hopGroup.themeColor
-                        border.width: 2
-                        border.color: "white"
-                        smooth: true
-                        radius: 7
-                    }
-                    coordinate: QtPositioning.coordinate(hopGroup.latitude, hopGroup.longitude)
-                    opacity: 1.0
-                    anchorPoint: Qt.point(sourceItem.width/2, sourceItem.height/2)
-                }
-
-                MapCircle {
-                    color: hopGroup.themeColor
-                    opacity: 0.18
-                    radius: hopGroup.accuracyRadius
-                    center: QtPositioning.coordinate(hopGroup.latitude, hopGroup.longitude)
-                    border.width: 3
-                    border.color: hopGroup.themeColor
-                }
-            }
-        `, view.map);
+        const mapPointObject = mapPointComponent.createObject(view.map);
 
         // 设置组属性
-        hopPoint.latitude = latitude
-        hopPoint.longitude = longitude
-        hopPoint.accuracyRadius = accuracyRadius
+        mapPointObject.latitude = latitude;
+        mapPointObject.longitude = longitude;
+        mapPointObject.accuracyRadius = accuracyRadius;
 
         // 添加到地图
-        view.map.addMapItemGroup(hopPoint);
+        view.map.addMapItemGroup(mapPointObject);
     }
 
     // 给线添加一个点

@@ -67,7 +67,8 @@ DEFINES += \
     _WINSOCKAPI_
 
 RESOURCES += \
-    nyatrace_map.qml
+    nyatrace_map.qml \
+    nyatrace_map_point.qml
 
 RC_ICONS += \
     icon.ico
