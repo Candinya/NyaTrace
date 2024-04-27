@@ -13,6 +13,8 @@ class Configs
 public:
     Configs();
 
+    void Save();
+
     int GetLogLevel();
     void SetLogLevel(int);
 
@@ -33,9 +35,11 @@ public:
 
 private:
     int logLevel;
-    int traceMaxHops;
+
+    int           traceMaxHops;
     unsigned long traceTimeout;
     unsigned long traceThreadInterval;
+
     bool autoOpenMap;
     bool autoStartTrace;
 

@@ -97,8 +97,7 @@ void NyaTraceConfigs::on_sliderLogsLevel_valueChanged(int value)
     setLogLevelValue(value);
 }
 
-void NyaTraceConfigs::on_btnApply_clicked()
-{
+void NyaTraceConfigs::Apply() {
     int           newLogLevel             = ui->sliderLogsLevel->value();
     int           newTraceMaxHops         = ui->spinTraceMaxHops->value();
     unsigned long newTraceTimeout         = ui->spinTraceTimeout->value();
@@ -123,10 +122,27 @@ void NyaTraceConfigs::on_btnApply_clicked()
     gCfg->SetTraceThreadInterval(newTraceThreadInterval);
     gCfg->SetAutoOpenMap(        newAutoOpenMap        );
     gCfg->SetAutoStartTrace(     newAutoStartTrace     );
+}
 
-    // 关闭窗口
-    this->hide();
+void NyaTraceConfigs::on_btnApply_clicked()
+{
+    // 应用配置
+    Apply();
 }
 
 
+
+
+void NyaTraceConfigs::on_btnSave_clicked()
+{
+    // 应用配置
+    Apply();
+
+    // 保存配置
+    gCfg->Save();
+
+    // 关闭窗口
+    this->hide();
+
+}
 

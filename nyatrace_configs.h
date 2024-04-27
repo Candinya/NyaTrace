@@ -21,10 +21,13 @@ protected:
 private slots:
     void initializeCurrentValue();
     void setLogLevelValue(int);
+    void Apply();
 
     void on_sliderLogsLevel_valueChanged(int value);
     void on_btnApply_clicked();
 
+
+    void on_btnSave_clicked();
 
 private:
     Ui::NyaTraceConfigs *ui;

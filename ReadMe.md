@@ -28,6 +28,7 @@
 
 1. 如果您没有 GeoIP2 数据库，您也可以使用 GeoLite2 （即免费版的）数据库作为替代（ GeoIP2-ISP 请用 GeoLite2-ASN 代替），将其重命名为上文指定的格式即可。
 2. 如果觉得现在这个主题不好看，您可以参照 [qt-material#25](https://github.com/UN-GCPDS/qt-material/issues/25#issuecomment-835368713) 中给出的主题生成步骤配置您喜欢的主题，并替换掉 theme 目录下的 qss 样式文件（请记得删去生成文件中的字体设置，要不然中文回落到宋体会很难看）。如果您喜欢 Qt 默认的主题，可以直接删除整个 theme 目录。
+3. 配置文件会被保存在 `FOLDERID_RoamingAppData\Nya Candy\NyaTrace.ini` 这个文件中，例如对我来说是 `C:\Users\Candinya\AppData\Roaming\Nya Candy\NyaTrace.ini` 这里。
 
 ## 后续的开发方向
 
@@ -35,7 +36,7 @@
 2. ~~多倍+并行发包以提升质量与追踪速度~~ 已经完成
 3. ~~支持 IPv6 追踪~~ 已经完成
 4. ~~集成一个地图服务~~ 已经完成
-5. ~~读写配置项~~ 部分完成*（单次生效，不会保存）
+5. ~~读写配置项~~ 已经完成
 6. ~~主题与美化~~ 已经完成
 7. 跨平台兼容
 
