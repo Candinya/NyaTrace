@@ -24,6 +24,7 @@ jobs:
         install-deps: 'true'
         cache: 'true'
         tools: 'tools_opensslv3_x64 tools_ifw'
+        modules: 'qtlocation qtpositioning'
         
     - name: Checkout codes
       uses: actions/checkout@v4
