@@ -1,12 +1,12 @@
-import QtQuick 2.15
-import QtLocation 5.15
-import QtPositioning 5.15
+import QtQuick
+import QtLocation
+import QtPositioning
 
 Rectangle {
     id: container
     anchors.fill: parent
 
-    // 参考 https://doc.qt.io/qt-5/location-plugin-osm.html
+    // 参考 https://doc.qt.io/qt-6/location-plugin-osm.html
     Plugin {
         id: osmPlugin
         name: "osm"
@@ -23,13 +23,13 @@ Rectangle {
     }
 
     // 地图
-    Map {
-        id: map
-        plugin: osmPlugin
+    MapView {
+        id: view
+        map.plugin: osmPlugin
         anchors.fill: parent
-        center: QtPositioning.coordinate(36, 120)
+        map.center: QtPositioning.coordinate(36, 120)
         smooth: true
-        zoomLevel: 2
+        map.zoomLevel: 2
         layer.enabled: true
         layer.samples: 8
 
@@ -75,9 +75,9 @@ Rectangle {
 
         // 画组
         const hopPoint = Qt.createQmlObject(`
-            import QtQuick 2.15
-            import QtLocation 5.15
-            import QtPositioning 5.15
+            import QtQuick
+            import QtLocation
+            import QtPositioning
 
             MapItemGroup {
                 id: hopGroup
@@ -111,7 +111,7 @@ Rectangle {
                     border.color: hopGroup.themeColor
                 }
             }
-        `, map);
+        `, view.map);
 
         // 设置组属性
         hopPoint.latitude = latitude
@@ -119,7 +119,7 @@ Rectangle {
         hopPoint.accuracyRadius = accuracyRadius
 
         // 添加到地图
-        map.addMapItemGroup(hopPoint);
+        view.map.addMapItemGroup(hopPoint);
     }
 
     // 给线添加一个点
@@ -131,8 +131,8 @@ Rectangle {
     // 前往某个区域，并显示提示信息
     function gotoCoordinate(latitude, longitude, zoomLevel, message) {
         const newPosition = QtPositioning.coordinate(latitude, longitude);
-        map.center = newPosition;
-        map.zoomLevel = zoomLevel;
+        view.map.center = newPosition;
+        view.map.zoomLevel = zoomLevel;
         mapTooltip.sourceItem.text = message;
         mapTooltip.coordinate = newPosition;
         mapTooltip.visible = true;
@@ -140,13 +140,13 @@ Rectangle {
 
     // 自动调整地图大小
     function fitMap() {
-        map.fitViewportToVisibleMapItems();
+        view.map.fitViewportToVisibleMapItems();
     }
 
     // 清空地图
     function clearMap() {
         // 清空地图上的物品
-        map.clearMapItems();
+        view.map.clearMapItems();
 
         // 清空追踪线
         for (const c of tracingLine.path) {
@@ -154,13 +154,13 @@ Rectangle {
         }
 
         // 把线加回地图
-        map.addMapItem(tracingLine);
+        view.map.addMapItem(tracingLine);
 
         // 隐藏提示信息
         mapTooltip.visible = false;
 
         // 把提示信息加回地图
-        map.addMapItem(mapTooltip);
+        view.map.addMapItem(mapTooltip);
 
         // 清空已经画过的记录列表
         drewPoints.splice(0, drewPoints.length);

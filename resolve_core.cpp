@@ -65,7 +65,7 @@ void ResolveCore::run() {
         } else {
             // 解析失败
             auto err = WSAGetLastError();
-            qCritical() << "[Resolve Core]"
+            qWarning() << "[Resolve Core]"
                         << "Failed to resolve host with error: " << err;
             emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(err));
             emit end(false);
