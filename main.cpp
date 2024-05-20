@@ -25,19 +25,19 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     switch (type) {
     case QtDebugMsg:
         level = QString("Debug");
-        printToLogsTable = gCfg->GetLogLevel() <= 0;
+        printToLogsTable = gCfg->GetLogLevel() <= ConfigLogLevelDebug;
         break;
     case QtInfoMsg:
         level = QString("Info");
-        printToLogsTable = gCfg->GetLogLevel() <= 1;
+        printToLogsTable = gCfg->GetLogLevel() <= ConfigLogLevelInfo;
         break;
     case QtWarningMsg:
         level = QString("Warning");
-        printToLogsTable = gCfg->GetLogLevel() <= 2;
+        printToLogsTable = gCfg->GetLogLevel() <= ConfigLogLevelWarning;
         break;
     case QtCriticalMsg:
         level = QString("Critical");
-        printToLogsTable = gCfg->GetLogLevel() <= 3;
+        printToLogsTable = gCfg->GetLogLevel() <= ConfigLogLevelCritical;
         break;
     case QtFatalMsg:
         // 特殊处理： Fatal 是完全无法恢复、需要立刻停止级别的错误，所以不应该进入正常处理流程，而应该尽快结束程序。

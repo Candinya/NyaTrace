@@ -537,7 +537,14 @@ void NyaTraceGUI::on_resolveTable_doubleClicked(const QModelIndex &index)
     // 不需要再指定 index ，因为在单击的时候已经确定好了是哪一个
     Q_UNUSED(index);
 
-    StartTracing();
+    switch (gCfg->GetResolveDoubleClickAction()) {
+    case ConfigResolveDoubleClickActionStartTrace:
+        StartTracing();
+        break;
+    case ConfigResolveDoubleClickActionOpenMap:
+        OpenMap();
+        break;
+    }
 }
 
 

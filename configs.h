@@ -8,6 +8,19 @@ const int DEF_TRACE_MAX_HOPs = 100;                        // trace 最大跳站
 const unsigned long DEF_TRACE_TIMEOUT_MAX = 10000;         // trace 最大超时时间
 const unsigned long DEF_TRACE_THREAD_INTERVAL_MAX = 3000; // 每个线程的最大启动延迟
 
+// 一些预定义的枚举
+enum ConfigLogLevel {
+    ConfigLogLevelDebug,
+    ConfigLogLevelInfo,
+    ConfigLogLevelWarning,
+    ConfigLogLevelCritical
+};
+enum ConfigResolveDoubleClickAction {
+    ConfigResolveDoubleClickActionStartTrace,
+    ConfigResolveDoubleClickActionOpenMap
+};
+
+
 class Configs
 {
 public:
@@ -15,10 +28,10 @@ public:
 
     void Save();
 
-    int GetLogLevel();
+    int  GetLogLevel();
     void SetLogLevel(int);
 
-    int GetTraceMaxHops();
+    int  GetTraceMaxHops();
     void SetTraceMaxHops(int);
 
     unsigned long GetTraceTimeout();
@@ -33,6 +46,9 @@ public:
     bool GetAutoStartTrace();
     void SetAutoStartTrace(bool);
 
+    int  GetResolveDoubleClickAction();
+    void SetResolveDoubleClickAction(int);
+
 private:
     int logLevel;
 
@@ -42,6 +58,8 @@ private:
 
     bool autoOpenMap;
     bool autoStartTrace;
+
+    int resolveDoubleClickAction;
 
 };
 

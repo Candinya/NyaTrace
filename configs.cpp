@@ -11,7 +11,7 @@ Configs::Configs()
     QSettings settings;
 
     // 初始化配置
-    logLevel = settings.value("LogLevel", 2).toInt(); // 回报 Warn 和 Critical 的日志
+    logLevel = settings.value("LogLevel", ConfigLogLevelWarning).toInt(); // 回报 Warn 和 Critical 的日志
 
     settings.beginGroup("Trace");
     traceMaxHops        = settings.value("MaxHops", 30).toInt();               // 最大发出 30 跳路由追踪
@@ -22,6 +22,10 @@ Configs::Configs()
     settings.beginGroup("Auto");
     autoOpenMap         = settings.value("OpenMap", true).toBool();     // 解析或追踪时自动打开地图
     autoStartTrace      = settings.value("StartTrace", false).toBool(); // 解析完成后自动开始追踪
+    settings.endGroup();
+
+    settings.beginGroup("Resolve");
+    resolveDoubleClickAction = settings.value("DoubleClickAction", ConfigResolveDoubleClickActionStartTrace).toInt();
     settings.endGroup();
 }
 
@@ -48,6 +52,10 @@ void Configs::Save() {
     settings.setValue("OpenMap",    autoOpenMap   );
     settings.setValue("StartTrace", autoStartTrace);
     settings.endGroup();
+
+    settings.beginGroup("Resolve");
+    settings.setValue("DoubleClickAction", resolveDoubleClickAction);
+    settings.endGroup();
 }
 
 int Configs::GetLogLevel() {
@@ -55,11 +63,7 @@ int Configs::GetLogLevel() {
 }
 
 void Configs::SetLogLevel(int newLogLevel) {
-    // Debug    0
-    // Info     1
-    // Warn     2
-    // Critical 3
-    if (0 <= newLogLevel && newLogLevel <= 3) {
+    if (ConfigLogLevelDebug <= newLogLevel && newLogLevel <= ConfigLogLevelCritical) {
         // 有效的
         logLevel = newLogLevel;
     } // 否则是无效的
@@ -111,6 +115,17 @@ bool Configs::GetAutoStartTrace() {
 
 void Configs::SetAutoStartTrace(bool newAutoStartTrace) {
     autoStartTrace = newAutoStartTrace;
+}
+
+int Configs::GetResolveDoubleClickAction() {
+    return resolveDoubleClickAction;
+}
+
+void Configs::SetResolveDoubleClickAction(int newResolveDoubleClickAction) {
+    if (ConfigResolveDoubleClickActionStartTrace <= resolveDoubleClickAction && resolveDoubleClickAction <= ConfigResolveDoubleClickActionOpenMap) {
+        // 有效的
+        resolveDoubleClickAction = newResolveDoubleClickAction;
+    } // 否则是无效的
 }
 
 
