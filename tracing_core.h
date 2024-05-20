@@ -21,6 +21,8 @@ public: // 共享变量区
 
 private: // 私有变量区
 
+#ifdef Q_OS_WIN
+
     // 定义动态链接库
     HMODULE hIcmpDll;
 
@@ -32,6 +34,13 @@ private: // 私有变量区
     // 定义动态链接库句柄
     HANDLE hIcmp;
     HANDLE hIcmp6;
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
 
     // 追踪线程的线程池
     QThreadPool * tracingPool;

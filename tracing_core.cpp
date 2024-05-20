@@ -5,8 +5,17 @@
 #include "tracing_core.h"
 #include "tracing_utils.h"
 
+#ifdef Q_OS_WIN
+
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
 
 /**
  * TracingCore
@@ -17,6 +26,8 @@ TracingCore::TracingCore() {
 
     qDebug() << "[Trace Core]"
              << "Tracing Core start constructing...";
+
+#ifdef Q_OS_WIN
 
     // 载入依赖的动态链接库
     hIcmpDll = LoadLibraryA("IPHLPAPI.DLL");
@@ -46,6 +57,13 @@ TracingCore::TracingCore() {
                     << "Failed to open ICMP6 handle";
     }
 
+#endif
+#ifdef Q_OS_UNIX
+
+    // TODO
+
+#endif
+
     // 新建一个线程池
     tracingPool = new QThreadPool;
 
@@ -62,12 +80,21 @@ TracingCore::~TracingCore() {
     // 销毁线程池
     delete tracingPool;
 
+#ifdef Q_OS_WIN
+
     // 回收资源
     IcmpCloseHandle(hIcmp);
     IcmpCloseHandle(hIcmp6);
 
     // 释放动态链接库
     FreeLibrary(hIcmpDll);
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
 }
 
 void TracingCore::run() {
@@ -84,10 +111,10 @@ void TracingCore::run() {
     sockaddr_storage targetIPAddress; // 用于存储目标地址
 
     // 清空目标地址
-    ZeroMemory(&targetIPAddress, sizeof(sockaddr_storage));
+    memset(&targetIPAddress, 0, sizeof(sockaddr_storage));
 
     char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
-    ZeroMemory(printIPAddress, sizeof(printIPAddress));
+    memset(printIPAddress, 0, sizeof(printIPAddress));
 
     if (ParseIPAddress(hostCharStr, targetIPAddress)) {
         // 解析成功，更新状态
@@ -115,7 +142,7 @@ void TracingCore::run() {
     sockaddr_storage sourceIPAddress;
 
     // 清空当前地址
-    ZeroMemory(&sourceIPAddress, sizeof(sockaddr_storage));
+    memset(&sourceIPAddress, 0, sizeof(sockaddr_storage));
 
     // 相同传输协议栈
     sourceIPAddress.ss_family = targetIPAddress.ss_family;
@@ -125,7 +152,18 @@ void TracingCore::run() {
     case AF_INET:
         qDebug() << "[Trace Core]"
                  << "Binding any outbound IPv4 address";
+
+#ifdef Q_OS_WIN
+
         ((sockaddr_in*)&sourceIPAddress)->sin_addr = in4addr_any;
+
+#endif
+#ifdef Q_OS_UNIX
+
+        ((sockaddr_in*)&sourceIPAddress)->sin_addr.s_addr = htonl(INADDR_ANY);
+
+#endif
+
         break;
     case AF_INET6:
         qDebug() << "[Trace Core]"
@@ -144,8 +182,19 @@ void TracingCore::run() {
         workers[i]->iTTL = i + 1;
         workers[i]->sourceIPAddress = &sourceIPAddress;
         workers[i]->targetIPAddress = &targetIPAddress;
+
+#ifdef Q_OS_WIN
+
         workers[i]->hIcmp  = hIcmp;
         workers[i]->hIcmp6 = hIcmp6;
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
+
         workers[i]->ipdb = ipdb;
 
         connect(workers[i], &TracingWorker::reportIPAndTimeConsumption, this, [=](const int hop, const unsigned long timeConsumption, const QString & ipAddress, const bool isValid, const bool isTargetHost) {

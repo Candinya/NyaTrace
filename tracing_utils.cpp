@@ -6,7 +6,7 @@ addrinfo * ResolveAllAddress(const char * hostname) {
     addrinfo * resolveResult = NULL;
     addrinfo   resolveHints;
 
-    ZeroMemory(&resolveHints, sizeof(resolveHints));
+    memset(&resolveHints, 0, sizeof(resolveHints));
 
     resolveHints.ai_family   = AF_UNSPEC;
     resolveHints.ai_socktype = SOCK_STREAM;
@@ -21,8 +21,8 @@ addrinfo * ResolveAllAddress(const char * hostname) {
 
 bool ParseIPAddress(const char * ipStr, sockaddr_storage & targetIPAddress) {
 
-    IN_ADDR  addr4; // IPv4 地址的暂存区域
-    IN6_ADDR addr6; // IPv6 地址的暂存区域
+    in_addr  addr4; // IPv4 地址的暂存区域
+    in6_addr addr6; // IPv6 地址的暂存区域
 
     if (inet_pton(AF_INET, ipStr, &addr4) != 0) {
         // 输入是 IPv4 地址

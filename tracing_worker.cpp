@@ -15,7 +15,7 @@ TracingWorker::TracingWorker() {
 
     // 分配当前跳地址的存储空间
     currentHopIPAddress = new sockaddr_storage;
-    ZeroMemory(currentHopIPAddress, sizeof(sockaddr_storage));
+    memset(currentHopIPAddress, 0, sizeof(sockaddr_storage));
 
 }
 
@@ -69,6 +69,8 @@ void TracingWorker::run() {
 void TracingWorker::GetIPv4() {
 
     // 第一步：追踪
+#ifdef Q_OS_WIN
+
     // ICMP 包发送缓冲区和接收缓冲区
     IP_OPTION_INFORMATION IpOption;
     char SendData[DEF_ICMP_DATA_SIZE];
@@ -78,9 +80,16 @@ void TracingWorker::GetIPv4() {
     PICMP_ECHO_REPLY pEchoReply;
 
     // 初始化内存区间
-    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
-    ZeroMemory(SendData, sizeof(SendData));
+    memset(&IpOption, 0,sizeof(IP_OPTION_INFORMATION));
+    memset(SendData, 0, sizeof(SendData));
     pEchoReply = (PICMP_ECHO_REPLY)ReplyBuf;
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
 
     // 设置 TTL
     IpOption.Ttl = iTTL;
@@ -95,12 +104,22 @@ void TracingWorker::GetIPv4() {
 
         // 发送数据报并等待消息到达
         if (
+
+#ifdef Q_OS_WIN
             IcmpSendEcho2(
                 hIcmp, NULL, NULL, NULL,
                 ((sockaddr_in*)targetIPAddress)->sin_addr.s_addr, SendData, sizeof (SendData), &IpOption,
                 ReplyBuf, sizeof(ReplyBuf),
                 gCfg->GetTraceTimeout()
             ) != 0
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
+
         ) {
             // 得到返回
             ((sockaddr_in*)currentHopIPAddress)->sin_addr.s_addr = pEchoReply->Address;
@@ -110,9 +129,21 @@ void TracingWorker::GetIPv4() {
             break;
         } else {
             // 出现错误
+
+#ifdef Q_OS_WIN
+
+            auto err = GetLastError();
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
+
             qWarning() << "[Trace Worker]"
                        << "ICMP send echo failed with error: "
-                       << GetLastError();
+                       << err;
 
             // 这里可以无视条件回报，因为失败的请求一定不会被认为是目标主机
             timeoutCount++;
@@ -151,8 +182,8 @@ void TracingWorker::GetIPv6() {
     PICMPV6_ECHO_REPLY pEchoReply;
 
     // 初始化内存区间
-    ZeroMemory(&IpOption,sizeof(IP_OPTION_INFORMATION));
-    ZeroMemory(SendData, sizeof(SendData));
+    memset(&IpOption, 0,sizeof(IP_OPTION_INFORMATION));
+    memset(SendData, 0, sizeof(SendData));
     pEchoReply = (PICMPV6_ECHO_REPLY)ReplyBuf;
 
     // 设置 TTL

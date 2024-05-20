@@ -16,8 +16,8 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs depr
 SOURCES += \
     configs.cpp \
     ipdb.cpp \
-    libmaxminddb\data-pool.c \
-    libmaxminddb\maxminddb.c \
+    libmaxminddb/data-pool.c \
+    libmaxminddb/maxminddb.c \
     nyatrace_about.cpp \
     nyatrace_configs.cpp \
     nyatrace_gui.cpp \
@@ -35,10 +35,10 @@ HEADERS += \
     data-pool.h \
     ipdb.h \
     ipdb_settings.h \
-    libmaxminddb\data-pool.h \
-    libmaxminddb\maxminddb-compat-util.h \
-    libmaxminddb\maxminddb.h \
-    libmaxminddb\maxminddb_config.h \
+    libmaxminddb/data-pool.h \
+    libmaxminddb/maxminddb-compat-util.h \
+    libmaxminddb/maxminddb.h \
+    libmaxminddb/maxminddb_config.h \
     mode.h \
     nyatrace_about.h \
     nyatrace_configs.h \

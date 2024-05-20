@@ -75,3 +75,6 @@ Thumbs.db
 
 # Built data for installer creation
 installer/packages/net.candymade.nyatrace/data/
+
+# macOS build
+build/

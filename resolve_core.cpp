@@ -23,7 +23,7 @@ void ResolveCore::run() {
     sockaddr_storage targetIPAddress; // 用于存储目标地址
 
     // 清空目标地址
-    ZeroMemory(&targetIPAddress, sizeof(sockaddr_storage));
+    memset(&targetIPAddress, 0, sizeof(sockaddr_storage));
 
     if (ParseIPAddress(hostCharStr, targetIPAddress)) {
         // 解析成功，更新状态
@@ -64,7 +64,36 @@ void ResolveCore::run() {
             }
         } else {
             // 解析失败
+
+#ifdef Q_OS_WIN
+
             auto err = WSAGetLastError();
+
+#endif
+#ifdef Q_OS_UNIX
+
+            QString err;
+
+            switch (h_errno) {
+            case HOST_NOT_FOUND:
+                err = "找不到主机";
+                break;
+            case NO_ADDRESS:
+                err = "没有查询到地址";
+                break;
+            case NO_RECOVERY:
+                err = "无法恢复的解析错误";
+                break;
+            case TRY_AGAIN:
+                err = "名称解析暂时不可用";
+                break;
+            default:
+                err = "未知问题";
+                break;
+            }
+
+#endif
+
             qWarning() << "[Resolve Core]"
                         << "Failed to resolve host with error: " << err;
             emit setMessage(QString("主机名解析失败，错误代码： %1 。").arg(err));
@@ -81,7 +110,7 @@ void ResolveCore::GetInfo(int id, sockaddr_storage * targetIPAddress) {
     // 查询 IP 对应的信息
 
     char printIPAddress[INET6_ADDRSTRLEN]; // INET6_ADDRSTRLEN 大于 INET_ADDRSTRLEN ，所以可以兼容（虽然可能有点浪费）
-    ZeroMemory(printIPAddress, sizeof(printIPAddress));
+    memset(printIPAddress, 0, sizeof(printIPAddress));
     PrintIPAddress(targetIPAddress, printIPAddress);
 
     // 准备从 City 数据库中查询结果

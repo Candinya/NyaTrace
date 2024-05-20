@@ -25,9 +25,18 @@ public: // 共享变量区
     // 目标主机地址
     sockaddr_storage * targetIPAddress;
 
+#ifdef Q_OS_WIN
+
     // 定义动态链接库句柄
     HANDLE hIcmp;
     HANDLE hIcmp6;
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
 
     // 用于读取 IP 对应数据的类操作接口
     IPDB * ipdb;

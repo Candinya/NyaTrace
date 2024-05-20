@@ -40,8 +40,17 @@ private:
     // 界面 UI
     Ui::NyaTraceGUI *ui;
 
+#ifdef Q_OS_WIN
+
     // 一种数据结构。这个结构被用来存储被 WSAStartup 函数调用后返回的 Windows Sockets 数据
     WSADATA wsa;
+
+#endif
+#ifdef Q_OS_UNIX
+
+// TODO
+
+#endif
 
     // 用于路由追踪的子线程
     TracingCore * tracingThread;
