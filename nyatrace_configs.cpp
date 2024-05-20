@@ -59,22 +59,24 @@ void NyaTraceConfigs::initializeCurrentValue() {
     ui->spinTraceThreadInterval->setValue( gCfg->GetTraceThreadInterval());
     ui->checkAutoOpenMap->setChecked(      gCfg->GetAutoOpenMap()        );
     ui->checkAutoStartTrace->setChecked(   gCfg->GetAutoStartTrace()     );
+    ui->radioResolveDoubleClickActionStartTrace->setChecked(gCfg->GetResolveDoubleClickAction() == ConfigResolveDoubleClickActionStartTrace);
+    ui->radioResolveDoubleClickActionOpenMap->setChecked(   gCfg->GetResolveDoubleClickAction() == ConfigResolveDoubleClickActionOpenMap   );
 }
 
 void NyaTraceConfigs::setLogLevelValue(int logLevel) {
     // 根据日志等级映射
     QString targetLogLevel;
     switch(logLevel) {
-    case 0:
+    case ConfigLogLevelDebug:
         targetLogLevel = "Debug";
         break;
-    case 1:
+    case ConfigLogLevelInfo:
         targetLogLevel = "Info";
         break;
-    case 2:
+    case ConfigLogLevelWarning:
         targetLogLevel = "Warning";
         break;
-    case 3:
+    case ConfigLogLevelCritical:
         targetLogLevel = "Critical";
         break;
     default:
@@ -104,6 +106,13 @@ void NyaTraceConfigs::Apply() {
     unsigned long newTraceThreadInterval = ui->spinTraceThreadInterval->value();
     bool          newAutoOpenMap     = ui->checkAutoOpenMap->isChecked();
     bool          newAutoStartTrace       = ui->checkAutoStartTrace->isChecked();
+    int           newResolveDoubleClickAction = ConfigResolveDoubleClickActionStartTrace;
+
+    if (ui->radioResolveDoubleClickActionStartTrace->isChecked()) {
+        newResolveDoubleClickAction = ConfigResolveDoubleClickActionStartTrace;
+    } else if (ui->radioResolveDoubleClickActionOpenMap->isChecked()) {
+        newResolveDoubleClickAction = ConfigResolveDoubleClickActionOpenMap;
+    }
 
     // 应用设置
     qDebug() << "[GUI Configs]"
@@ -122,6 +131,7 @@ void NyaTraceConfigs::Apply() {
     gCfg->SetTraceThreadInterval(newTraceThreadInterval);
     gCfg->SetAutoOpenMap(        newAutoOpenMap        );
     gCfg->SetAutoStartTrace(     newAutoStartTrace     );
+    gCfg->SetResolveDoubleClickAction(newResolveDoubleClickAction);
 }
 
 void NyaTraceConfigs::on_btnApply_clicked()
