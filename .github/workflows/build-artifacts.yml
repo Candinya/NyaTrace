@@ -99,11 +99,6 @@ jobs:
       run: |
         Copy-Item ${env:IQTA_TOOLS}'\OpenSSLv3\Win_x64\bin\lib*-x64.dll' workspace\${env:ARCHIVE_NAME}\
 
-    - name: Prepare AGPL-3.0 license file
-      shell: pwsh
-      run: |
-        Copy-Item AGPL-3.0.txt LICENSE
-
     - name: Package artifacts
       shell: pwsh
       run: |

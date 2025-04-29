@@ -7,7 +7,7 @@
     <ReleaseDate>2022-12-27</ReleaseDate>
     <Licenses>
         <License name="关于项目" file="about.txt" priority="1" />
-        <License name="AGPL 3.0" file="agplv3.txt" priority="2" />
+        <License name="GPL 3.0" file="gplv3.txt" priority="2" />
     </Licenses>
     <Default>script</Default>
     <Script>installscript.qs</Script>
